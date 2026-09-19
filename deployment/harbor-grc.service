@@ -1,0 +1,20 @@
+[Unit]
+Description=Harbor GRC — local governance, risk and compliance
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/viral/projects/harbor-grc
+ExecStart=/home/viral/projects/harbor-grc/.venv/bin/python -m server
+Environment=PORT=8765
+Environment=HARBOR_DATA_DIR=/home/viral/projects/harbor-grc/data
+Environment=PYTHONDONTWRITEBYTECODE=1
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

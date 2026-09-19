@@ -1,0 +1,3 @@
+# Harbor GRC development rules
+
+Read BUILD_SPEC.md before work. Keep backend in server/ and tests/backend/, frontend in client/. Parent owns scripts/, deployment/, docs/, README. Work only within this project. Do not read user credentials or unrelated private files. No root commands, public exposure, telemetry, external account operations, or commits without independent review. Use strict vertical TDD. Never write test fixtures into production data/. Keep cloud connectors explicitly inactive unless actually implemented; no fake evidence or metrics. Track limitations honestly. Store real data only in local SQLite/uploads, not browser localStorage.

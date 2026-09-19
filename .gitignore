@@ -1,0 +1,12 @@
+.venv/
+client/node_modules/
+client/dist/
+data/
+backups/
+.pytest_cache/
+__pycache__/
+*.pyc
+.env
+*.log
+artifacts/*.zip
+artifacts/browser-state*

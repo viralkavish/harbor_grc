@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": 1,
+      "url": "https://vanta.com/pricing",
+      "title": "",
+      "accessed": "2026-09-19"
+    },
+    {
+      "id": 2,
+      "url": "https://vanta.com/trust-management-platform",
+      "title": "",
+      "accessed": "2026-09-19"
+    },
+    {
+      "id": 3,
+      "url": "https://vanta.com/products/vendor-risk-management",
+      "title": "",
+      "accessed": "2026-09-19"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+export type DataRecord = { id: string; title: string; status: string; owner?: string; description?: string; created_at?: string; updated_at?: string; [key: string]: any };
+export type Field = {key: string; label: string; type: 'text'|'textarea'|'number'|'date'|'select'|'multiselect'|'boolean'|'json'|'email'|'url'; required?: boolean; readonly?: boolean; options?: (string|{value: string; label: string})[]; default?: any};
+export type ResourceSchema = {label: string; singular: string; statuses: string[]; fields: Field[]};
+export type Schema = {resources: Record<string, ResourceSchema>};
+export type Workspace = {name: string; organization: string; owner: string; description: string; trust_title: string; trust_description: string; trust_policy_ids: string[]; trust_evidence_ids: string[]};
+export type Bootstrap = {workspace: Workspace; csrf_token: string; counts: Record<string,number>; frameworks: DataRecord[]; capabilities: any};
+export type ListResult = {items: DataRecord[]; total: number};
+export type Navigate = (resource: string, id?: string, prefill?: Record<string,unknown>) => void;
+export type Notify = (message: string, kind?: 'success'|'error') => void;
+export type Entry = {id?: string; user: string; access: string; decision: 'pending'|'keep'|'revoke'; notes: string};
+export type Question = {id?: string; question: string; answer: string; status: 'unanswered'|'draft'|'approved'; source_ids: string[]};

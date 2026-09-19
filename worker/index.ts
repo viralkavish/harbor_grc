@@ -11,6 +11,7 @@ export interface Env {
 
 const ALLOWED_EMAIL = "viralrish@gmail.com";
 const AUTH_SECRET = "harbor-sec-key-2026-vdesai-grc-access-gate";
+const GOOGLE_CLIENT_ID = "209703778386-glharun770c5rop8muj28evpuftcahad.apps.googleusercontent.com";
 
 // Simple HMAC-SHA256 signature for session cookies
 async function signToken(data: string): Promise<string> {
@@ -120,12 +121,16 @@ async function getOrSeed<T>(kv: KVNamespace, key: string, fallback: T): Promise<
 
 // Generate the Google Login Gateway HTML
 function renderLoginPage(errorMsg?: string): Response {
+  const nonce = "harbor_" + Date.now();
+  const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${encodeURIComponent("https://harbor.vdesai.com/auth/callback")}&response_type=token%20id_token&scope=openid%20email%20profile&nonce=${nonce}`;
+
   const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Harbor GRC — Restricted Security Access</title>
+  <title>Harbor GRC — Google Authentication</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       --bg: #172b27;
@@ -146,47 +151,75 @@ function renderLoginPage(errorMsg?: string): Response {
       display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
       background: #ffffff; border: 1px solid #dadce0; border-radius: 6px; padding: 12px 16px;
       font-size: 14px; font-weight: 500; color: #3c4043; cursor: pointer; transition: all 0.2s;
-      text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 14px;
     }
     .btn-google:hover { background: #f8f9fa; border-color: #c1c3c7; }
-    .btn-submit {
-      width: 100%; background: var(--accent); color: white; border: none; border-radius: 6px;
-      padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 12px;
-    }
-    .btn-submit:hover { background: #106652; }
+    .divider { display: flex; align-items: center; margin: 16px 0; color: var(--muted); font-size: 12px; }
+    .divider::before, .divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--border); }
+    .divider::before { margin-right: 10px; }
+    .divider::after { margin-left: 10px; }
     .footer { margin-top: 24px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 16px; }
     .error { background: #fff5f5; border: 1px solid #feb2b2; color: #c53030; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 16px; text-align: left; }
-    input[type="email"] { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; margin-bottom: 10px; outline: none; }
+    #statusMsg { font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="logo">⚓</div>
     <h1>Harbor GRC</h1>
-    <div class="auth-badge">Restricted Access Control Policy</div>
-    <p>This governance, risk, and compliance workspace is protected by Zero Trust access policy. Only the authorized administrator account is permitted.</p>
+    <div class="auth-badge">Google OAuth Policy Enforcement</div>
+    <p>Sign in with your Google Account to access this compliance workspace. Only the designated administrator account (<strong>${ALLOWED_EMAIL}</strong>) is authorized.</p>
 
     ${errorMsg ? `<div class="error">${errorMsg}</div>` : ''}
+    <div id="statusMsg"></div>
 
-    <form method="POST" action="/auth/verify">
-      <div style="text-align: left; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--muted);">Authorized Google Account</div>
-      <input type="email" name="email" value="${ALLOWED_EMAIL}" readonly style="background: #f6f8f7; color: var(--ink); font-weight: 600;" />
-      <button type="submit" class="btn-google">
-        <svg width="18" height="18" viewBox="0 0 18 18">
-          <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.92a8.78 8.78 0 0 0 2.68-6.62z"/>
-          <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.8.54-1.83.87-3.05.87-2.34 0-4.33-1.58-5.04-3.71H.95v2.33A8.99 8.99 0 0 0 9 18z"/>
-          <path fill="#FBBC05" d="M3.96 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.28-1.72V4.95H.95A8.99 8.99 0 0 0 0 9c0 1.45.35 2.82.95 4.05l3.01-2.33z"/>
-          <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A8.99 8.99 0 0 0 .95 4.95l3.01 2.33c.71-2.13 2.7-3.7 5.04-3.7z"/>
-        </svg>
-        Authenticate with Google (viralrish@gmail.com)
-      </button>
-    </form>
+    <!-- Official Google Identity Services Container -->
+    <div id="g_id_onload"
+      data-client_id="${GOOGLE_CLIENT_ID}"
+      data-callback="handleCredentialResponse"
+      data-auto_prompt="true"
+      data-ux_mode="popup">
+    </div>
+    <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left" style="display:flex;justify-content:center;margin-bottom:14px;"></div>
+
+    <div class="divider">or continue via Google OAuth redirect</div>
+
+    <!-- Direct Google OAuth 2.0 Redirect Link -->
+    <a href="${googleOAuthUrl}" class="btn-google">
+      <svg width="18" height="18" viewBox="0 0 18 18">
+        <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.92a8.78 8.78 0 0 0 2.68-6.62z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.8.54-1.83.87-3.05.87-2.34 0-4.33-1.58-5.04-3.71H.95v2.33A8.99 8.99 0 0 0 9 18z"/>
+        <path fill="#FBBC05" d="M3.96 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.28-1.72V4.95H.95A8.99 8.99 0 0 0 0 9c0 1.45.35 2.82.95 4.05l3.01-2.33z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A8.99 8.99 0 0 0 .95 4.95l3.01 2.33c.71-2.13 2.7-3.7 5.04-3.7z"/>
+      </svg>
+      Redirect to Google Login
+    </a>
 
     <div class="footer">
-      Domain: <strong>harbor.vdesai.com</strong> · Cloudflare Zero Trust Enforcement<br/>
-      Protected by strict single-user policy.
+      Domain: <strong>harbor.vdesai.com</strong> · Google OAuth 2.0 / OpenID Connect<br/>
+      Strict policy: Access allowed exclusively for <strong>${ALLOWED_EMAIL}</strong>
     </div>
   </div>
+
+  <script>
+    function handleCredentialResponse(response) {
+      document.getElementById('statusMsg').innerText = 'Verifying Google token with OAuth servers...';
+      fetch('/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential })
+      }).then(r => r.json()).then(data => {
+        if (data.success) {
+          window.location.href = data.redirect || '/';
+        } else {
+          alert(data.error || 'Access Denied: Only viralrish@gmail.com is permitted.');
+          window.location.reload();
+        }
+      }).catch(err => {
+        alert('Authentication error: ' + err.message);
+      });
+    }
+  </script>
 </body>
 </html>`;
 
@@ -194,6 +227,50 @@ function renderLoginPage(errorMsg?: string): Response {
     headers: { "Content-Type": "text/html; charset=utf-8" },
     status: errorMsg ? 403 : 200
   });
+}
+
+function renderCallbackPage(): Response {
+  const html = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Verifying Google Authentication...</title>
+  <style>
+    body { background: #172b27; color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    .box { background: white; color: #182824; padding: 32px; border-radius: 8px; text-align: center; max-width: 400px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h3>Verifying with Google...</h3>
+    <p style="font-size: 13px; color: #62736d; margin-top: 8px;">Exchanging identity credentials and validating security policy.</p>
+  </div>
+  <script>
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash || window.location.search);
+    const idToken = params.get('id_token') || params.get('credential');
+
+    if (!idToken) {
+      document.querySelector('.box').innerHTML = '<h3 style="color: #c53030;">Authentication Failed</h3><p>No identity token received from Google.</p><a href="/auth/login">Return to Login</a>';
+    } else {
+      fetch('/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: idToken })
+      }).then(r => r.json()).then(data => {
+        if (data.success) {
+          window.location.href = data.redirect || '/';
+        } else {
+          document.querySelector('.box').innerHTML = '<h3 style="color: #c53030;">Access Denied</h3><p>' + (data.error || 'Account not authorized.') + '</p><a href="/auth/login">Return to Login</a>';
+        }
+      }).catch(e => {
+        document.querySelector('.box').innerHTML = '<h3 style="color: #c53030;">Verification Error</h3><p>' + e.message + '</p><a href="/auth/login">Return to Login</a>';
+      });
+    }
+  </script>
+</body>
+</html>`;
+  return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 
 export default {
@@ -216,6 +293,62 @@ export default {
     // 2. Authentication Routes
     if (url.pathname === "/auth/login") {
       return renderLoginPage();
+    }
+
+    if (url.pathname === "/auth/callback") {
+      return renderCallbackPage();
+    }
+
+    if (url.pathname === "/auth/google" && request.method === "POST") {
+      try {
+        const body: any = await request.json().catch(() => ({}));
+        const credential = body.credential;
+        if (!credential) {
+          return new Response(JSON.stringify({ error: "No Google credential token provided" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
+        // Verify token with Google's official tokeninfo endpoint
+        const googleResp = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
+        if (!googleResp.ok) {
+          return new Response(JSON.stringify({ error: "Failed to verify token with Google OAuth servers" }), {
+            status: 401,
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
+        const tokenData: any = await googleResp.json();
+        const googleEmail = String(tokenData.email || "").trim().toLowerCase();
+
+        // Strict Policy Enforcement
+        if (googleEmail !== ALLOWED_EMAIL.toLowerCase()) {
+          return new Response(JSON.stringify({
+            error: `Access Denied: Google account '${googleEmail}' is not authorized. Only ${ALLOWED_EMAIL} is permitted.`
+          }), {
+            status: 403,
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+
+        // Validated! Issue signed session token
+        const payload = JSON.stringify({ email: googleEmail, name: tokenData.name, exp: Date.now() + 7 * 86400 * 1000 });
+        const sessionToken = await signToken(btoa(payload));
+
+        return new Response(JSON.stringify({ success: true, redirect: "/" }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Set-Cookie": `harbor_auth=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`
+          }
+        });
+      } catch (err: any) {
+        return new Response(JSON.stringify({ error: "Authentication exception: " + err.message }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
     }
 
     if (url.pathname === "/auth/verify" && request.method === "POST") {

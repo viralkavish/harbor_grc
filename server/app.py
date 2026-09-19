@@ -25,6 +25,7 @@ from .continuous_tests import continuous_tests_router
 from .personnel_ops import personnel_router
 from .system_description_ops import system_description_router
 from .roadmap_ops import roadmap_router
+from .soc2_engine import soc2_router
 from .resource_routes import resource_router
 
 
@@ -106,6 +107,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
     app.include_router(personnel_router(store))
     app.include_router(system_description_router(store))
     app.include_router(roadmap_router(store))
+    app.include_router(soc2_router(store))
     app.include_router(resource_router(store))
 
     # SPA static file distribution

@@ -19,6 +19,7 @@ import {
   ShieldAlert,
   Globe,
   Radio,
+  Award,
   History,
   Settings as SettingsIcon,
   Search,
@@ -31,6 +32,7 @@ import { Loading, ErrorState, Toast, Badge } from './components/ui';
 import { CommandPalette } from './components/CommandPalette';
 import { OverviewView } from './views/OverviewView';
 import { RoadmapView } from './views/RoadmapView';
+import { SOC2ReadinessView } from './views/SOC2ReadinessView';
 import { SystemDescriptionView } from './views/SystemDescriptionView';
 import { ContinuousTestsView } from './views/ContinuousTestsView';
 import { ResourceTableView } from './views/ResourceTableView';
@@ -141,6 +143,7 @@ export function App() {
       items: [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'roadmap', label: 'SOC 2 Roadmap', icon: Compass, countKey: null },
+        { id: 'soc2_readiness', label: 'SOC 2 Readiness', icon: Award, countKey: null },
         { id: 'tests', label: 'Continuous Tests', icon: ShieldCheck, countKey: null },
         { id: 'monitoring', label: 'Monitoring Checks', icon: Radio, countKey: null }
       ]
@@ -266,6 +269,10 @@ export function App() {
 
           {activeView === 'roadmap' && (
             <RoadmapView notify={notify} onNavigate={navigate} />
+          )}
+
+          {activeView === 'soc2_readiness' && (
+            <SOC2ReadinessView notify={notify} onNavigate={navigate} />
           )}
 
           {activeView === 'tests' && (

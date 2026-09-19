@@ -8,5 +8,6 @@ __pycache__/
 *.pyc
 .env
 *.log
+.wrangler/
 artifacts/*.zip
 artifacts/browser-state*

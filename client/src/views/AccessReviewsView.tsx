@@ -150,10 +150,6 @@ export function AccessReviewsView({ schema, notify, onNavigate }: { schema: Sche
         </button>
       </PageHeader>
 
-      <Note>
-        <strong>Decisions recorded here:</strong> This tool records access review determinations and maintains an audit trail. It does not communicate with or automatically revoke permissions inside external identity providers.
-      </Note>
-
       <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '20px', alignItems: 'start' }}>
         {/* Left Column: Reviews List */}
         <div className="card" style={{ padding: '0', overflow: 'hidden' }}>

@@ -58,10 +58,6 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
         </button>
       </PageHeader>
 
-      <Note>
-        <strong>Local record checks — no connected cloud telemetry:</strong> All evaluations inspect your private SQLite database for overdue review dates, missing ownership, unencrypted attributes, and expired documents. Missing data is highlighted as unassessed rather than silently passed.
-      </Note>
-
       <div className="grid-3" style={{ marginBottom: '24px' }}>
         <div className="metric">
           <span>Total Checks</span>

@@ -137,10 +137,6 @@ export function PeopleView({ schema, notify, onNavigate }: { schema: Schema; not
         </button>
       </PageHeader>
 
-      <Note>
-        <strong>Auditor Verification:</strong> SOC 2 and ISO 27001 require verified annual security awareness training and signed acceptable use attestations for 100% of in-scope personnel.
-      </Note>
-
       {/* Compliance Scorecard */}
       <div className="grid-3" style={{ marginBottom: '24px' }}>
         <div className="metric">

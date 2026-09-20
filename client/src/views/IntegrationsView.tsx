@@ -28,10 +28,6 @@ export function IntegrationsView({ notify, onNavigate }: { notify: Notify; onNav
         description="Local data sources, file upload capabilities, and planned cloud connector interfaces."
       />
 
-      <Note>
-        <strong>Architectural transparency:</strong> Harbor GRC operates on a local-first single-user boundary. Local CSV import/export and direct evidence uploads are active. Cloud connectors (AWS, Google Workspace, GitHub, Slack) are listed with their planned scope but remain inactive in this local build without deceptive telemetry or mock data.
-      </Note>
-
       <div className="grid-2">
         {items.map(int => {
           const isAvailable = int.status === 'available';

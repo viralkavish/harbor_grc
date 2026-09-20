@@ -1,26 +1,26 @@
 :root {
-  --sidebar-bg: #172b27;
-  --sidebar-hover: #1e3833;
-  --sidebar-active: #147d64;
-  --sidebar-text: #e1e9e5;
-  --sidebar-muted: #8fa39b;
-  --main-bg: #f6f8f7;
+  --sidebar-bg: #090d16;
+  --sidebar-hover: #131926;
+  --sidebar-active: #2563eb;
+  --sidebar-text: #f1f5f9;
+  --sidebar-muted: #64748b;
+  --main-bg: #f8fafc;
   --card-bg: #ffffff;
-  --accent: #147d64;
-  --accent-hover: #106652;
-  --accent-light: #e8f5f1;
-  --ink: #182824;
-  --muted: #62736d;
-  --border: #dfe6e2;
-  --danger: #c53030;
-  --danger-light: #fff5f5;
-  --warning: #b7791f;
-  --warning-light: #fffaf0;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: #eff6ff;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --danger: #ef4444;
+  --danger-light: #fef2f2;
+  --warning: #f59e0b;
+  --warning-light: #fffbeb;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
 }
 
 * {
@@ -72,20 +72,21 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .brand-icon {
   width: 28px;
   height: 28px;
-  background-color: var(--accent);
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
   color: white;
-  border-radius: 6px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 14px;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
 }
 
 .brand-title {
@@ -97,11 +98,13 @@ a:hover {
 
 .brand-badge {
   font-size: 10px;
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--sidebar-muted);
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
   padding: 2px 6px;
   border-radius: 4px;
   margin-left: auto;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .sidebar-nav {
@@ -282,8 +285,8 @@ a:hover {
 .card {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: 10px;
+  padding: 22px;
   box-shadow: var(--shadow-sm);
   margin-bottom: 20px;
 }
@@ -329,18 +332,25 @@ a:hover {
 .metric {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 10px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.metric:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .metric span {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 .metric strong {
@@ -363,7 +373,7 @@ a:hover {
   justify-content: center;
   gap: 6px;
   padding: 7px 14px;
-  border-radius: 6px;
+  border-radius: 7px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -374,7 +384,8 @@ a:hover {
 }
 
 .button:hover {
-  background: #f0f4f2;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 .button:disabled {
@@ -386,20 +397,22 @@ a:hover {
   background: var(--accent);
   color: white;
   border-color: var(--accent);
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
 }
 
 .button-primary:hover {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
 }
 
 .button-danger {
   background: var(--danger-light);
   color: var(--danger);
-  border-color: #feb2b2;
+  border-color: #fecaca;
 }
 .button-danger:hover {
-  background: #fed7d7;
+  background: #fee2e2;
 }
 
 .button-sm {

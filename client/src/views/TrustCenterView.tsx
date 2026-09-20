@@ -113,10 +113,6 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
         </a>
       </PageHeader>
 
-      <Note>
-        <strong>Continuous Trust Management:</strong> This portal showcases your live security posture. Visitors can review compliance badges, read approved policies, inspect test evidence, and review security FAQs.
-      </Note>
-
       {/* Disclosures Configuration Drawer */}
       {showConfig && (
         <div className="card" style={{ background: '#fafcfb', border: '1px solid var(--accent)' }}>

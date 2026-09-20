@@ -63,10 +63,6 @@ export function ContinuousTestsView({ notify, onNavigate }: { notify: Notify; on
         </button>
       </PageHeader>
 
-      <Note>
-        <strong>Automated Control Verification:</strong> Tests combine real local host telemetry (inspecting kernel LUKS full-disk encryption, local host firewall status, and SSH configuration) with continuous compliance database audits.
-      </Note>
-
       {/* Overview Metric Row */}
       <div className="grid-4" style={{ marginBottom: '24px' }}>
         <div className="metric">

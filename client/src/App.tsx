@@ -228,9 +228,6 @@ export function App() {
 
         <div className="sidebar-footer">
           <div>Workspace: <strong>{bootstrap.workspace.name}</strong></div>
-          <div style={{ color: 'var(--sidebar-muted)', fontSize: '10px' }}>
-            Loopback-only · SQLite verified
-          </div>
         </div>
       </aside>
 

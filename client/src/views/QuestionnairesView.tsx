@@ -137,10 +137,6 @@ export function QuestionnairesView({ schema, notify, onNavigate }: { schema: Sch
         </button>
       </PageHeader>
 
-      <Note>
-        <strong>Suggest from policies:</strong> Suggestions are matched deterministically against the content of your <em>published policies only</em>. Unassessed or unstated topics will not produce invented answers.
-      </Note>
-
       <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '20px', alignItems: 'start' }}>
         {/* Left Column: Questionnaires List */}
         <div className="card" style={{ padding: '0', overflow: 'hidden' }}>

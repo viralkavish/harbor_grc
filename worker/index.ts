@@ -121,7 +121,7 @@ async function getOrSeed<T>(kv: KVNamespace, key: string, fallback: T): Promise<
 
 // Generate the Google Login Gateway HTML
 function renderLoginPage(errorMsg?: string): Response {
-  const nonce = "harbor_" + Date.now();
+  const nonce = "auth_" + Date.now();
   const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${encodeURIComponent("https://harbor.vdesai.com/auth/callback")}&response_type=token%20id_token&scope=openid%20email%20profile&nonce=${nonce}`;
 
   const html = `<!doctype html>
@@ -129,46 +129,148 @@ function renderLoginPage(errorMsg?: string): Response {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Harbor GRC — Google Authentication</title>
+  <title>Portal — Sign In</title>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
-      --bg: #172b27;
-      --card: #ffffff;
-      --accent: #147d64;
-      --ink: #182824;
-      --muted: #62736d;
-      --border: #dfe6e2;
+      --bg: #07090e;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.18);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --error-bg: rgba(239, 68, 68, 0.12);
+      --error-border: rgba(239, 68, 68, 0.28);
+      --error-text: #fca5a5;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--ink); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-    .card { background: var(--card); border-radius: 12px; padding: 36px 32px; max-width: 440px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); text-align: center; }
-    .logo { width: 44px; height: 44px; background: var(--accent); color: white; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; margin-bottom: 16px; }
-    h1 { font-size: 20px; font-weight: 700; margin-bottom: 6px; color: var(--ink); }
-    p { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 24px; }
-    .auth-badge { display: inline-block; background: #e8f5f1; color: var(--accent); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; margin-bottom: 20px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif; }
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 50% 10%, rgba(99, 102, 241, 0.16) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 20% 90%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+    .card {
+      position: relative;
+      z-index: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 44px 36px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 60px var(--accent-glow);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 80px rgba(99, 102, 241, 0.22);
+    }
+    .logo-badge {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    }
+    .logo-badge svg {
+      color: #93c5fd;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    p.subtitle {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
     .btn-google {
-      display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
-      background: #ffffff; border: 1px solid #dadce0; border-radius: 6px; padding: 12px 16px;
-      font-size: 14px; font-weight: 500; color: #3c4043; cursor: pointer; transition: all 0.2s;
-      text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #f1f5f9;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
     }
-    .btn-google:hover { background: #f8f9fa; border-color: #c1c3c7; }
-    .divider { display: flex; align-items: center; margin: 16px 0; color: var(--muted); font-size: 12px; }
-    .divider::before, .divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--border); }
-    .divider::before { margin-right: 10px; }
-    .divider::after { margin-left: 10px; }
-    .footer { margin-top: 24px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 16px; }
-    .error { background: #fff5f5; border: 1px solid #feb2b2; color: #c53030; padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 16px; text-align: left; }
-    #statusMsg { font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 10px; }
+    .btn-google:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .footer {
+      margin-top: 28px;
+      font-size: 11px;
+      color: #64748b;
+      letter-spacing: 0.02em;
+    }
+    .error {
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      color: var(--error-text);
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      margin-bottom: 20px;
+      text-align: left;
+      line-height: 1.4;
+    }
+    #statusMsg {
+      font-size: 12px;
+      color: #38bdf8;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="logo">⚓</div>
-    <h1>Harbor GRC</h1>
-    <div class="auth-badge">Google OAuth Policy Enforcement</div>
-    <p>Sign in with your Google Account to access this compliance workspace. Only the designated administrator account (<strong>${ALLOWED_EMAIL}</strong>) is authorized.</p>
+    <div class="logo-badge">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+      </svg>
+    </div>
+    <h1>Sign In</h1>
+    <p class="subtitle">Please authenticate with your account to continue.</p>
 
     ${errorMsg ? `<div class="error">${errorMsg}</div>` : ''}
     <div id="statusMsg"></div>
@@ -187,8 +289,8 @@ function renderLoginPage(errorMsg?: string): Response {
       data-text="sign_in_with"
       data-shape="rectangular"
       data-logo_alignment="left"
-      data-width="376"
-      style="display:flex;justify-content:center;margin-bottom:14px;">
+      data-width="328"
+      style="display:flex;justify-content:center;">
     </div>
 
     <!-- Fallback link in case Google Identity Services script is blocked by browser extension -->
@@ -203,14 +305,13 @@ function renderLoginPage(errorMsg?: string): Response {
     </a>
 
     <div class="footer">
-      Domain: <strong>harbor.vdesai.com</strong> · Google OAuth 2.0 / OpenID Connect<br/>
-      Strict policy: Access allowed exclusively for <strong>${ALLOWED_EMAIL}</strong>
+      Protected by Enterprise Access Control
     </div>
   </div>
 
   <script>
     function handleCredentialResponse(response) {
-      document.getElementById('statusMsg').innerText = 'Verifying Google token with OAuth servers...';
+      document.getElementById('statusMsg').innerText = 'Authenticating…';
       fetch('/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -219,7 +320,7 @@ function renderLoginPage(errorMsg?: string): Response {
         if (data.success) {
           window.location.href = data.redirect || '/';
         } else {
-          alert(data.error || 'Access Denied: Only viralrish@gmail.com is permitted.');
+          alert(data.error || 'Access denied. Account not authorized.');
           window.location.reload();
         }
       }).catch(err => {
@@ -227,7 +328,6 @@ function renderLoginPage(errorMsg?: string): Response {
       });
     }
 
-    // If Google Identity Services iframe is blocked or fails to load, reveal the fallback button
     setTimeout(() => {
       const gsiIframe = document.querySelector('.g_id_signin iframe');
       if (!gsiIframe) {
@@ -250,16 +350,19 @@ function renderCallbackPage(): Response {
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>Verifying Google Authentication...</title>
+  <title>Authenticating...</title>
   <style>
-    body { background: #172b27; color: white; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-    .box { background: white; color: #182824; padding: 32px; border-radius: 8px; text-align: center; max-width: 400px; }
+    body { background: #07090e; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    .box { background: rgba(15, 23, 42, 0.85); color: #f8fafc; border: 1px solid rgba(255, 255, 255, 0.08); padding: 36px 32px; border-radius: 16px; text-align: center; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); backdrop-filter: blur(20px); }
+    h3 { font-size: 18px; margin-bottom: 8px; color: #f8fafc; }
+    p { font-size: 13px; color: #94a3b8; }
+    a { color: #38bdf8; text-decoration: none; font-size: 13px; margin-top: 14px; display: inline-block; }
   </style>
 </head>
 <body>
   <div class="box">
-    <h3>Verifying with Google...</h3>
-    <p style="font-size: 13px; color: #62736d; margin-top: 8px;">Exchanging identity credentials and validating security policy.</p>
+    <h3>Verifying identity…</h3>
+    <p>Please wait while credentials are validated.</p>
   </div>
   <script>
     const hash = window.location.hash.substring(1);
@@ -267,7 +370,7 @@ function renderCallbackPage(): Response {
     const idToken = params.get('id_token') || params.get('credential');
 
     if (!idToken) {
-      document.querySelector('.box').innerHTML = '<h3 style="color: #c53030;">Authentication Failed</h3><p>No identity token received from Google.</p><a href="/auth/login">Return to Login</a>';
+      document.querySelector('.box').innerHTML = '<h3 style="color: #fca5a5;">Authentication Failed</h3><p>No identity token received.</p><a href="/auth/login">Return to Login</a>';
     } else {
       fetch('/auth/google', {
         method: 'POST',
@@ -277,10 +380,10 @@ function renderCallbackPage(): Response {
         if (data.success) {
           window.location.href = data.redirect || '/';
         } else {
-          document.querySelector('.box').innerHTML = '<h3 style="color: #c53030;">Access Denied</h3><p>' + (data.error || 'Account not authorized.') + '</p><a href="/auth/login">Return to Login</a>';
+          document.querySelector('.box').innerHTML = '<h3 style="color: #fca5a5;">Access Denied</h3><p>' + (data.error || 'Account not authorized.') + '</p><a href="/auth/login">Return to Login</a>';
         }
       }).catch(e => {
-        document.querySelector('.box').innerHTML = '<h3 style="color: #c53030;">Verification Error</h3><p>' + e.message + '</p><a href="/auth/login">Return to Login</a>';
+        document.querySelector('.box').innerHTML = '<h3 style="color: #fca5a5;">Verification Error</h3><p>' + e.message + '</p><a href="/auth/login">Return to Login</a>';
       });
     }
   </script>
@@ -297,10 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.1.0",
-        platform: "cloudflare-workers",
-        subdomain: "harbor.vdesai.com",
-        policy: `Allowed user: ${ALLOWED_EMAIL}`
+        version: "0.1.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -341,7 +441,7 @@ export default {
         // Strict Policy Enforcement
         if (googleEmail !== ALLOWED_EMAIL.toLowerCase()) {
           return new Response(JSON.stringify({
-            error: `Access Denied: Google account '${googleEmail}' is not authorized. Only ${ALLOWED_EMAIL} is permitted.`
+            error: "Access denied. Account not authorized."
           }), {
             status: 403,
             headers: { "Content-Type": "application/json" }
@@ -372,7 +472,7 @@ export default {
       const email = String(formData.get("email") || "").trim().toLowerCase();
 
       if (email !== ALLOWED_EMAIL.toLowerCase()) {
-        return renderLoginPage(`Access Denied: Account '${email}' is not authorized to access Harbor GRC. Only ${ALLOWED_EMAIL} is permitted.`);
+        return renderLoginPage("Access denied. Account not authorized.");
       }
 
       // Issue signed session token valid for 7 days
@@ -409,7 +509,7 @@ export default {
       if (!isStaticAsset) {
         if (url.pathname.startsWith("/api/")) {
           return new Response(JSON.stringify({
-            detail: `Authentication required. Only ${ALLOWED_EMAIL} is authorized.`,
+            detail: "Authentication required.",
             login_url: "/auth/login"
           }), {
             status: 401,

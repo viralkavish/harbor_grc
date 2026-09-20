@@ -95,9 +95,7 @@ export function SystemDescriptionView({ notify, onNavigate }: { notify: Notify; 
         </a>
       </PageHeader>
 
-      <Note>
-        <strong>Auditor Core Deliverable:</strong> Section 3 is authored by management to delineate the system boundary, data flows, infrastructure, subservice vendors, and customer user controls (CUECs) tested by your CPA auditor.
-      </Note>
+
 
       <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '20px', alignItems: 'start' }}>
         {/* Sections Navigation */}

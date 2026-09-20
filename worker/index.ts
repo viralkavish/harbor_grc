@@ -173,26 +173,33 @@ function renderLoginPage(errorMsg?: string): Response {
     ${errorMsg ? `<div class="error">${errorMsg}</div>` : ''}
     <div id="statusMsg"></div>
 
-    <!-- Official Google Identity Services Container -->
+    <!-- Official Google Identity Services Sign-In -->
     <div id="g_id_onload"
       data-client_id="${GOOGLE_CLIENT_ID}"
       data-callback="handleCredentialResponse"
-      data-auto_prompt="true"
+      data-auto_prompt="false"
       data-ux_mode="popup">
     </div>
-    <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left" style="display:flex;justify-content:center;margin-bottom:14px;"></div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="outline"
+      data-text="sign_in_with"
+      data-shape="rectangular"
+      data-logo_alignment="left"
+      data-width="376"
+      style="display:flex;justify-content:center;margin-bottom:14px;">
+    </div>
 
-    <div class="divider">or continue via Google OAuth redirect</div>
-
-    <!-- Direct Google OAuth 2.0 Redirect Link -->
-    <a href="${googleOAuthUrl}" class="btn-google">
+    <!-- Fallback link in case Google Identity Services script is blocked by browser extension -->
+    <a id="fallbackAuthLink" href="${googleOAuthUrl}" class="btn-google" style="display: none;">
       <svg width="18" height="18" viewBox="0 0 18 18">
         <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.49h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.92a8.78 8.78 0 0 0 2.68-6.62z"/>
         <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.8.54-1.83.87-3.05.87-2.34 0-4.33-1.58-5.04-3.71H.95v2.33A8.99 8.99 0 0 0 9 18z"/>
         <path fill="#FBBC05" d="M3.96 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.28-1.72V4.95H.95A8.99 8.99 0 0 0 0 9c0 1.45.35 2.82.95 4.05l3.01-2.33z"/>
         <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A8.99 8.99 0 0 0 .95 4.95l3.01 2.33c.71-2.13 2.7-3.7 5.04-3.7z"/>
       </svg>
-      Redirect to Google Login
+      Sign in with Google
     </a>
 
     <div class="footer">
@@ -219,6 +226,15 @@ function renderLoginPage(errorMsg?: string): Response {
         alert('Authentication error: ' + err.message);
       });
     }
+
+    // If Google Identity Services iframe is blocked or fails to load, reveal the fallback button
+    setTimeout(() => {
+      const gsiIframe = document.querySelector('.g_id_signin iframe');
+      if (!gsiIframe) {
+        const fallback = document.getElementById('fallbackAuthLink');
+        if (fallback) fallback.style.display = 'flex';
+      }
+    }, 2500);
   </script>
 </body>
 </html>`;

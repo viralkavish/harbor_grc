@@ -96,11 +96,11 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
   const { workspace, policies, evidence, faqs, badges } = data || { workspace: {}, policies: [], evidence: [], faqs: [], badges: [] };
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="PUBLISH"
-        title="Public Trust Center & Real-Time Assurance"
-        description="Public security disclosures, compliance badges, real-time posture assurance, verified attestations, and NDA-gated document access."
+        title="Trust Center"
+        description="Manage security disclosures, shared policies, evidence, and NDA-gated access."
       >
         <button className="button" onClick={() => setShowConfig(!showConfig)}>
           <Settings size={14} /> {showConfig ? 'Hide Disclosures' : 'Configure Disclosures'}
@@ -115,7 +115,7 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
 
       {/* Disclosures Configuration Drawer */}
       {showConfig && (
-        <div className="card" style={{ background: '#fafcfb', border: '1px solid var(--accent)' }}>
+        <div className="card" style={{ background: 'var(--surface-raised)', border: '1px solid var(--accent)' }}>
           <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px' }}>
             Configure Trust Center Disclosures
           </h3>
@@ -169,7 +169,7 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+          <div className="view-inline" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
             <button className="button button-primary" onClick={handleSaveSelection} disabled={saving}>
               {saving ? 'Saving…' : 'Save Disclosures'}
             </button>
@@ -180,25 +180,25 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
       {/* Modern Vanta-Style Trust Center Canvas */}
       <div className="card" style={{ maxWidth: '860px', margin: '0 auto', padding: '0', overflow: 'hidden', boxShadow: 'var(--shadow-md)' }}>
         {/* Banner Header */}
-        <div style={{ background: 'var(--sidebar-bg)', color: 'white', padding: '36px 40px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8fa39b', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+        <div className="view-trust-section" style={{ background: 'var(--main-bg)', color: 'var(--ink)', paddingBlock: '32px' }}>
+          <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--muted)', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
             <Globe size={14} color="var(--accent)" /> Real-Time Trust Center
           </div>
-          <h1 style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--ink)' }}>
             {workspace.trust_title || 'Security Posture & Compliance Report'}
           </h1>
-          <h3 style={{ fontSize: '16px', fontWeight: 500, color: '#e1e9e5', marginTop: '4px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 500, color: 'var(--ink)', marginTop: '4px' }}>
             {workspace.organization || workspace.name || 'Organization Security Baseline'}
           </h3>
-          <p style={{ fontSize: '14px', color: '#b2dfdb', marginTop: '12px', lineHeight: 1.6, maxWidth: '640px' }}>
+          <p style={{ fontSize: '14px', color: 'var(--muted)', marginTop: '12px', lineHeight: 1.6, maxWidth: '640px' }}>
             {workspace.trust_description || 'Demonstrating real-time compliance controls, policy governance, and continuous security monitoring.'}
           </p>
         </div>
 
         {/* Badges Ribbon */}
-        <div style={{ background: '#f8faf9', borderBottom: '1px solid var(--border)', padding: '16px 40px', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="view-inline view-trust-section" style={{ background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', paddingBlock: '16px', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
           {badges?.map((b: any) => (
-            <div key={b.code} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', border: '1px solid var(--border)', borderRadius: '6px', padding: '6px 12px' }}>
+            <div className="view-inline" key={b.code} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '6px', padding: '6px 12px' }}>
               <Shield size={16} color="var(--accent)" />
               <div>
                 <strong style={{ fontSize: '12px', display: 'block' }}>{b.title}</strong>
@@ -209,7 +209,7 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
         </div>
 
         {/* Tab Navigation */}
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'white', padding: '0 40px' }}>
+        <div className="view-tabs view-trust-section" style={{ display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--card-bg)' }}>
           {[
             { id: 'posture', label: 'Security Posture' },
             { id: 'policies', label: `Policies (${policies.length})` },
@@ -236,31 +236,31 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
         </div>
 
         {/* Tab Content Area */}
-        <div style={{ padding: '32px 40px' }}>
+        <div className="view-trust-section" style={{ paddingBlock: '24px' }}>
           {activeTab === 'posture' && (
             <div>
               <h3 style={{ fontSize: '17px', fontWeight: 700, marginBottom: '16px', color: 'var(--ink)' }}>
                 Continuous Controls Monitoring Highlights
               </h3>
               <div className="grid-3" style={{ marginBottom: '24px' }}>
-                <div style={{ background: '#f8faf9', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>
+                <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>
                     <Lock size={16} /> Data Encryption
                   </div>
                   <p style={{ fontSize: '12px', color: 'var(--muted)' }}>
                     AES-256 enabled on all volumes and databases. TLS 1.2+ mandatory in transit.
                   </p>
                 </div>
-                <div style={{ background: '#f8faf9', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>
+                <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>
                     <Shield size={16} /> Access Control
                   </div>
                   <p style={{ fontSize: '12px', color: 'var(--muted)' }}>
                     MFA enforced across 100% of workforce accounts. Access reviewed quarterly.
                   </p>
                 </div>
-                <div style={{ background: '#f8faf9', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>
+                <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>
                     <CheckCircle2 size={16} /> Incident Response
                   </div>
                   <p style={{ fontSize: '12px', color: 'var(--muted)' }}>
@@ -269,7 +269,7 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
                 </div>
               </div>
 
-              <div style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div className="view-row" style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <strong style={{ fontSize: '14px' }}>Need full audit report access or vendor security review?</strong>
                   <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
@@ -295,8 +295,8 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {policies.map((p: any) => (
-                    <div key={p.id} style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', padding: '14px 16px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div key={p.id} style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '14px 16px' }}>
+                      <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <strong style={{ fontSize: '14px', color: 'var(--ink)' }}>{p.title}</strong>
                         <span className="badge badge-green">v{p.version} Approved</span>
                       </div>
@@ -325,7 +325,7 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {evidence.map((e: any) => (
-                    <div key={e.id} style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="view-row" key={e.id} style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <strong style={{ fontSize: '14px', color: 'var(--ink)' }}>{e.title}</strong>
                         {e.description && <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>{e.description}</p>}
@@ -346,7 +346,7 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {faqs?.map((f: any, idx: number) => (
-                  <div key={idx} style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', padding: '16px' }}>
+                  <div key={idx} style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '16px' }}>
                     <strong style={{ fontSize: '14px', color: 'var(--ink)', display: 'block', marginBottom: '6px' }}>
                       {f.question}
                     </strong>
@@ -381,7 +381,7 @@ export function TrustCenterView({ schema, notify, onNavigate }: { schema: Schema
                 <span>Company / Prospective Customer</span>
                 <input type="text" placeholder="e.g. Cyberdyne Systems" value={reqCompany} onChange={e => setReqCompany(e.target.value)} />
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+              <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
                 <input type="checkbox" id="ndaCheck" checked={reqNda} onChange={e => setReqNda(e.target.checked)} />
                 <label htmlFor="ndaCheck" style={{ fontSize: '12px', cursor: 'pointer' }}>
                   I accept the mutual Non-Disclosure Agreement (NDA) and agree to treat disclosed compliance reports as confidential.

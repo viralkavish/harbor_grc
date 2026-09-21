@@ -154,21 +154,21 @@ export function QuestionnairesView({ schema, notify, onNavigate }: { schema: Sch
   if (error) return <ErrorState message={error} retry={loadQuestionnaires} />;
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="OPERATE"
         title="Security Questionnaires"
-        description="Accelerate customer security assessments by retrieving authoritative answers directly from published organizational policies."
+        description="Draft and review security responses with citations from published policies."
       >
         <button className="button button-primary" onClick={() => setShowQModal(true)}>
           <Plus size={14} /> New Questionnaire
         </button>
       </PageHeader>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '20px', alignItems: 'start' }}>
+      <div className="view-split-grid" style={{ display: 'grid', gap: '20px', alignItems: 'start' }}>
         {/* Left Column: Questionnaires List */}
         <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-          <div style={{ padding: '12px 16px', background: '#fafcfb', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: '13px' }}>
+          <div style={{ padding: '12px 16px', background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: '13px' }}>
             Questionnaires ({questionnaires.length})
           </div>
           <div>
@@ -188,13 +188,13 @@ export function QuestionnairesView({ schema, notify, onNavigate }: { schema: Sch
                       padding: '12px 16px',
                       borderBottom: '1px solid var(--border)',
                       cursor: 'pointer',
-                      background: isSelected ? '#f0f5f3' : 'transparent',
+                      background: isSelected ? 'var(--accent-light)' : 'transparent',
                       borderLeft: isSelected ? '3px solid var(--accent)' : '3px solid transparent'
                     }}
                   >
                     <div style={{ fontWeight: 600, fontSize: '13px' }}>{q.title}</div>
                     <div style={{ fontSize: '12px', color: 'var(--muted)', margin: '2px 0' }}>Customer: {q.customer || 'General'}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                    <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                       <Badge value={q.status} />
                       <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{count} questions</span>
                     </div>
@@ -211,7 +211,7 @@ export function QuestionnairesView({ schema, notify, onNavigate }: { schema: Sch
             <div className="card">
               <div className="card-header">
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <h2 style={{ fontSize: '18px', fontWeight: 700 }}>{selectedQ.title}</h2>
                     <Badge value={selectedQ.status} />
                   </div>
@@ -220,7 +220,7 @@ export function QuestionnairesView({ schema, notify, onNavigate }: { schema: Sch
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="view-inline" style={{ display: 'flex', gap: '8px' }}>
                   <button className="button button-primary" onClick={handleAiAutoFill} disabled={suggesting} title="Auto-fill with citations from published policies">
                     <Sparkles size={14} />
                     {suggesting ? 'Auto-Filling…' : 'AI Policy-Grounded Auto-Fill'}
@@ -234,13 +234,13 @@ export function QuestionnairesView({ schema, notify, onNavigate }: { schema: Sch
               {/* Questions List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
                 {(!selectedQ.questions || selectedQ.questions.length === 0) ? (
-                  <div style={{ padding: '32px', background: '#fafcfb', border: '1px dashed var(--border)', borderRadius: '6px', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
+                  <div style={{ padding: '32px', background: 'var(--surface-raised)', border: '1px dashed var(--border)', borderRadius: '6px', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
                     No questions in this assessment yet. Click "Add Question" to paste an incoming audit prompt.
                   </div>
                 ) : (
                   selectedQ.questions.map((q: any, idx: number) => (
-                    <div key={q.id || idx} style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', background: '#fafcfb' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div key={q.id || idx} style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', background: 'var(--surface-raised)' }}>
+                      <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                         <strong style={{ fontSize: '14px', color: 'var(--ink)' }}>
                           {idx + 1}. {q.question}
                         </strong>
@@ -261,15 +261,15 @@ export function QuestionnairesView({ schema, notify, onNavigate }: { schema: Sch
                         />
                       </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', fontSize: '12px' }}>
+                      <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', fontSize: '12px' }}>
                         <div>
                           {q.citation && (
-                            <span style={{ fontSize: '11px', color: '#2563eb', background: 'rgba(37, 99, 235, 0.08)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(37, 99, 235, 0.2)', marginRight: '8px' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--accent)', background: 'var(--accent-light)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--accent)', marginRight: '8px' }}>
                               Grounding: {q.citation}
                             </span>
                           )}
                           {q.confidence && (
-                            <span style={{ fontSize: '11px', color: '#16a34a', background: 'rgba(34, 197, 94, 0.1)', padding: '2px 6px', borderRadius: '4px', marginRight: '8px' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--success)', background: 'var(--success-light)', padding: '2px 6px', borderRadius: '4px', marginRight: '8px' }}>
                               {q.confidence}% Confidence
                             </span>
                           )}
@@ -284,7 +284,7 @@ export function QuestionnairesView({ schema, notify, onNavigate }: { schema: Sch
                           )}
                         </div>
 
-                        <div style={{ display: 'flex', gap: '6px' }}>
+                        <div className="view-inline" style={{ display: 'flex', gap: '6px' }}>
                           <button
                             type="button"
                             className="button button-sm"

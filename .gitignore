@@ -11,3 +11,4 @@ __pycache__/
 .wrangler/
 artifacts/*.zip
 artifacts/browser-state*
+*.tsbuildinfo

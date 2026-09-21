@@ -190,17 +190,17 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
   if (loading && !workspace) return <Loading label="Loading workspace configuration…" />;
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="CONFIGURE"
-        title="Workspace Settings & Portability"
-        description="Organization profiles, bulk CSV import/export with formula injection defense, and full SQLite system backups."
+        title="Settings"
+        description="Manage your workspace profile, evaluation engine, imports, and backups."
       />
 
       {/* Workspace Profile Form */}
       <div className="card">
         <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px', color: 'var(--ink)' }}>
-          Organization & Workspace Profile
+          Workspace Profile
         </h3>
         <form onSubmit={handleSaveWorkspace} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="field-grid">
@@ -235,7 +235,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
             <textarea rows={2} value={trustDesc} onChange={e => setTrustDesc(e.target.value)} placeholder="Summary shown to prospects and customers reviewing your security portal..." />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="view-inline" style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button type="submit" className="button button-primary" disabled={savingWs}>
               {savingWs ? 'Saving Changes…' : 'Save Workspace'}
             </button>
@@ -246,18 +246,18 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
       {/* JEV AI & Evaluation Engine Configuration */}
       <div className="card">
         <div className="card-header">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div className="view-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <h3 className="card-title" style={{ margin: 0 }}>JEV AI & Evaluation Engine</h3>
+              <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <h3 className="card-title" style={{ margin: 0 }}>JEV Evaluation Engine</h3>
                 <span style={{
                   fontSize: '11px',
                   fontWeight: 600,
                   padding: '2px 8px',
                   borderRadius: '10px',
-                  background: jevStatus?.api_key_configured ? 'rgba(34, 197, 94, 0.1)' : 'rgba(37, 99, 235, 0.1)',
-                  color: jevStatus?.api_key_configured ? '#16a34a' : '#2563eb',
-                  border: '1px solid ' + (jevStatus?.api_key_configured ? 'rgba(34, 197, 94, 0.2)' : 'rgba(37, 99, 235, 0.2)')
+                  background: jevStatus?.api_key_configured ? 'var(--success-light)' : 'var(--accent-light)',
+                  color: jevStatus?.api_key_configured ? 'var(--success)' : 'var(--accent)',
+                  border: '1px solid ' + (jevStatus?.api_key_configured ? 'var(--success)' : 'var(--accent)')
                 }}>
                   {jevStatus?.api_key_configured ? '● API Key Configured' : '● System One Rule Engine Active'}
                 </span>
@@ -266,7 +266,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
                 Configure TypeSafe JEV System One judgment primitives for real-time policy-to-control compatibility scoring.
               </p>
             </div>
-            <Sparkles size={22} color="#2563eb" />
+            <Sparkles size={22} color="var(--accent)" />
           </div>
         </div>
 
@@ -274,7 +274,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
           <div className="field-grid">
             <div className="field">
               <span>JEV API Key</span>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <div className="view-inline" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <input
                   type={showJevKey ? 'text' : 'password'}
                   value={jevApiKey}
@@ -313,29 +313,29 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
           </div>
 
           {/* Engine Status Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', background: '#fafcfb', border: '1px solid var(--border)', padding: '12px', borderRadius: '6px' }}>
+          <div className="view-auto-grid" style={{ display: 'grid', gap: '12px', background: 'var(--surface-raised)', border: '1px solid var(--border)', padding: '12px', borderRadius: '6px' }}>
             <div>
               <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Active Judgment Primitives</div>
               <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>jev_check, jev_ask, jev_rank</strong>
             </div>
             <div>
               <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Compliance Rubrics Loaded</div>
-              <strong style={{ fontSize: '13px', color: '#2563eb' }}>{jevStatus?.rubrics_count || 24} Controls Active</strong>
+              <strong style={{ fontSize: '13px', color: 'var(--accent)' }}>{jevStatus?.rubrics_count || 24} Controls Active</strong>
             </div>
             <div>
               <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Deterministic Speed</div>
-              <strong style={{ fontSize: '13px', color: '#16a34a' }}>&lt; 30 ms (Sub-second)</strong>
+              <strong style={{ fontSize: '13px', color: 'var(--success)' }}>&lt; 30 ms (Sub-second)</strong>
             </div>
           </div>
 
           {/* Test Validation Result Banner */}
           {jevTestResult && (
             <div
-              className="note"
+              className="note view-inline"
               style={{
-                background: jevTestResult.valid ? 'rgba(34, 197, 94, 0.08)' : 'rgba(239, 68, 68, 0.08)',
-                borderColor: jevTestResult.valid ? '#86efac' : '#fca5a5',
-                color: jevTestResult.valid ? '#166534' : '#991b1b',
+                background: jevTestResult.valid ? 'var(--success-light)' : 'var(--danger-light)',
+                borderColor: jevTestResult.valid ? 'var(--success)' : 'var(--danger)',
+                color: jevTestResult.valid ? 'var(--success)' : 'var(--danger)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px'
@@ -353,7 +353,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+          <div className="view-inline" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
             <button
               type="button"
               className="button"
@@ -361,7 +361,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
               disabled={testingJev}
               title="Test JEV connection and run live benchmark"
             >
-              <Sparkles size={14} color="#2563eb" />
+              <Sparkles size={14} color="var(--accent)" />
               {testingJev ? 'Benchmarking JEV…' : 'Test & Validate JEV Key'}
             </button>
             <button
@@ -380,10 +380,10 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
       <div className="card">
         <div className="card-header">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <Shield size={18} color="#2563eb" />
-              <h3 className="card-title" style={{ margin: 0 }}>AI Model Governance Register (ISO 42001 & EU AI Act)</h3>
-              <span style={{ fontSize: '11px', background: 'rgba(37, 99, 235, 0.1)', color: '#2563eb', padding: '2px 8px', borderRadius: '10px' }}>
+            <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <Shield size={18} color="var(--accent)" />
+              <h3 className="card-title" style={{ margin: 0 }}>AI Model Governance</h3>
+              <span style={{ fontSize: '11px', background: 'var(--accent-light)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '10px' }}>
                 Zero Data Retention (ZDR) Enforced
               </span>
             </div>
@@ -393,6 +393,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
           </div>
         </div>
 
+        <div className="view-table-scroll">
         <table className="table" style={{ width: '100%', fontSize: '13px' }}>
           <thead>
             <tr>
@@ -418,12 +419,12 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
                 </td>
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '11px' }}>
-                    <span style={{ color: '#16a34a' }}>✓ Zero Data Retention</span>
-                    <span style={{ color: '#16a34a' }}>✓ Training Opt-Out</span>
+                    <span style={{ color: 'var(--success)' }}>✓ Zero Data Retention</span>
+                    <span style={{ color: 'var(--success)' }}>✓ Training Opt-Out</span>
                   </div>
                 </td>
                 <td>
-                  <span style={{ fontSize: '11px', background: 'rgba(37, 99, 235, 0.1)', color: '#2563eb', padding: '2px 8px', borderRadius: '10px' }}>
+                  <span style={{ fontSize: '11px', background: 'var(--accent-light)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '10px' }}>
                     {m.risk_tier}
                   </span>
                 </td>
@@ -431,6 +432,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* CSV Bulk Import & Export */}
@@ -475,7 +477,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
             />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <input
               type="checkbox"
               id="dryRunToggle"
@@ -488,14 +490,14 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
           </div>
 
           {importError && (
-            <div className="note" style={{ background: 'var(--danger-light)', borderColor: '#feb2b2', color: 'var(--danger)' }}>
+            <div className="note" style={{ background: 'var(--danger-light)', borderColor: 'var(--danger)', color: 'var(--danger)' }}>
               <AlertCircle size={16} />
               <div>{importError}</div>
             </div>
           )}
 
           {importResult && (
-            <div className="note" style={{ background: 'var(--accent-light)', borderColor: '#b2dfdb', color: 'var(--accent)' }}>
+            <div className="note" style={{ background: 'var(--accent-light)', borderColor: 'var(--accent)', color: 'var(--accent)' }}>
               <Check size={16} />
               <div>
                 {dryRun ? (
@@ -511,7 +513,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+          <div className="view-inline" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
             <button
               type="submit"
               className="button button-primary"
@@ -527,7 +529,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
       <div className="card">
         <div className="card-header">
           <div>
-            <h3 className="card-title">Full Workspace Snapshot Backup</h3>
+            <h3 className="card-title">Workspace Backup</h3>
             <p className="card-description">
               Generate a byte-for-byte portable ZIP archive containing your SQLite database, uploaded evidence files, and manifest.
             </p>
@@ -537,12 +539,12 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
           </a>
         </div>
 
-        <div style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', padding: '16px', fontSize: '13px', lineHeight: 1.6 }}>
+        <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '16px', fontSize: '13px', lineHeight: 1.6 }}>
           <strong>Offline Restore Instructions:</strong>
           <p style={{ marginTop: '4px', color: 'var(--muted)' }}>
             To restore your program on this machine or migrate to another server, stop the service and use the verified offline restore utility:
           </p>
-          <pre className="mono" style={{ background: 'white', border: '1px solid var(--border)', padding: '10px', borderRadius: '4px', marginTop: '8px', fontSize: '12px', overflowX: 'auto' }}>
+          <pre className="mono" style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', padding: '10px', borderRadius: '4px', marginTop: '8px', fontSize: '12px', overflowX: 'auto' }}>
             systemctl --user stop harbor-grc{'\n'}
             .venv/bin/python scripts/restore.py /path/to/harbor-backup.zip --target /path/to/restored-data{'\n'}
             HARBOR_DATA_DIR=/path/to/restored-data .venv/bin/python -m server
@@ -556,18 +558,18 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
       {/* System Build Version & Changelog Card */}
       <div className="card">
         <div className="card-header">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div className="view-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <h3 className="card-title" style={{ margin: 0 }}>System Version & Release History</h3>
+              <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <h3 className="card-title" style={{ margin: 0 }}>Version & Release History</h3>
                 <span className="version-pill" style={{
-                  background: 'rgba(37, 99, 235, 0.1)',
-                  color: '#2563eb',
+                  background: 'var(--accent-light)',
+                  color: 'var(--accent)',
                   fontSize: '11px',
                   fontWeight: 600,
                   padding: '2px 8px',
                   borderRadius: '12px',
-                  border: '1px solid rgba(37, 99, 235, 0.2)'
+                  border: '1px solid var(--accent)'
                 }}>
                   v{APP_VERSION}
                 </span>
@@ -582,7 +584,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
               onClick={() => setShowChangelogModal(true)}
               title="View system changelog and release history"
             >
-              <History size={14} color="#2563eb" /> View Changelog
+              <History size={14} color="var(--accent)" /> View Changelog
             </button>
           </div>
         </div>

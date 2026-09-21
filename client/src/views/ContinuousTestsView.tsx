@@ -61,11 +61,11 @@ export function ContinuousTestsView({ notify, onNavigate }: { notify: Notify; on
     : tests.filter((t: any) => t.category === selectedCategory);
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="AUTOMATE"
-        title="Continuous Controls Testing"
-        description="Automated hourly compliance tests evaluating real local host telemetry, endpoint encryption, policy acceptance, and governance currency."
+        title="Continuous Tests"
+        description="Review automated checks for host security, policies, and governance records."
       >
         <button className="button button-primary" onClick={handleRunTests} disabled={running}>
           <Play size={14} />
@@ -101,7 +101,7 @@ export function ContinuousTestsView({ notify, onNavigate }: { notify: Notify; on
       </div>
 
       {/* Category Filter Pills */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+      <div className="view-inline" style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
         {categories.map(cat => (
           <button
             key={cat}
@@ -130,20 +130,20 @@ export function ContinuousTestsView({ notify, onNavigate }: { notify: Notify; on
                 borderLeft: `4px solid ${isPassing ? 'var(--accent)' : isWarning ? 'var(--warning)' : 'var(--danger)'}`
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div className="view-inline view-icon-row" style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                   <div style={{ marginTop: '2px' }}>
                     {isPassing && <CheckCircle2 size={20} color="var(--accent)" />}
                     {isWarning && <AlertTriangle size={20} color="var(--warning)" />}
                     {isFailing && <AlertCircle size={20} color="var(--danger)" />}
                   </div>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                    <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
                       <strong style={{ fontSize: '15px', color: 'var(--ink)' }}>{test.title}</strong>
                       <span className="mono" style={{ fontSize: '11px', background: 'var(--border)', padding: '2px 6px', borderRadius: '4px' }}>
                         {test.control_code}
                       </span>
-                      <span style={{ fontSize: '11px', color: 'var(--muted)', background: '#f0f5f3', padding: '2px 6px', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--accent-light)', padding: '2px 6px', borderRadius: '4px' }}>
                         {test.category}
                       </span>
                     </div>
@@ -153,8 +153,8 @@ export function ContinuousTestsView({ notify, onNavigate }: { notify: Notify; on
                     </p>
 
                     {test.remediation && (
-                      <div style={{ marginTop: '8px', padding: '10px 14px', background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: test.remediation_snippet ? '8px' : 0 }}>
+                      <div style={{ marginTop: '8px', padding: '10px 14px', background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px' }}>
+                        <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: test.remediation_snippet ? '8px' : 0 }}>
                           <div>
                             <span style={{ fontWeight: 600, color: 'var(--muted)' }}>Remediation Guidance: </span>
                             <span style={{ color: 'var(--ink)' }}>{test.remediation}</span>
@@ -166,29 +166,29 @@ export function ContinuousTestsView({ notify, onNavigate }: { notify: Notify; on
                               onClick={() => toggleSnippet(test.id)}
                               style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
                             >
-                              <Code2 size={12} color="#2563eb" />
+                              <Code2 size={12} color="var(--accent)" />
                               {expandedSnippets[test.id] ? 'Hide Fix Snippet' : 'Auto-Fix Snippet'}
                             </button>
                           )}
                         </div>
 
                         {test.remediation_snippet && expandedSnippets[test.id] && (
-                          <div style={{ marginTop: '8px', background: '#090d16', borderRadius: '6px', padding: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px' }}>
-                              <span style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div style={{ marginTop: '8px', background: 'var(--main-bg)', borderRadius: '6px', padding: '12px', border: '1px solid var(--border)' }}>
+                            <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
+                              <span style={{ color: 'var(--accent)', fontSize: '11px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <Terminal size={12} /> {test.remediation_snippet.label}
                               </span>
                               <button
                                 type="button"
                                 className="button button-sm"
                                 onClick={() => copySnippet(test.id, test.remediation_snippet.snippet)}
-                                style={{ fontSize: '11px', padding: '2px 8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none' }}
+                                style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--surface-raised)', color: 'var(--ink)', border: 'none' }}
                               >
-                                {copiedId === test.id ? <Check size={12} color="#4ade80" /> : <Copy size={12} />}
+                                {copiedId === test.id ? <Check size={12} color="var(--success)" /> : <Copy size={12} />}
                                 {copiedId === test.id ? 'Copied!' : 'Copy Code'}
                               </button>
                             </div>
-                            <pre className="mono" style={{ margin: 0, color: '#e2e8f0', fontSize: '11px', lineHeight: 1.5, overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+                            <pre className="mono" style={{ margin: 0, color: 'var(--ink)', fontSize: '11px', lineHeight: 1.5, overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
                               {test.remediation_snippet.snippet}
                             </pre>
                           </div>
@@ -198,7 +198,7 @@ export function ContinuousTestsView({ notify, onNavigate }: { notify: Notify; on
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Badge value={test.status} />
                 </div>
               </div>

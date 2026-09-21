@@ -3,6 +3,9 @@ import { Shield, AlertTriangle, CheckCircle, Clock, FileCheck, ArrowRight, Play,
 import { api } from '../lib/api';
 import { PageHeader, Badge, Loading, ErrorState, formatDate } from '../components/ui';
 import type { Navigate, Notify } from '../lib/types';
+import './overview.css';
+
+const severityRank: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
 
 export function OverviewView({ onNavigate, notify }: { onNavigate: Navigate; notify: Notify }) {
   const [data, setData] = useState<any>(null);
@@ -43,11 +46,11 @@ export function OverviewView({ onNavigate, notify }: { onNavigate: Navigate; not
   const { readiness, framework_readiness, open_risks, high_risks, overdue_tasks, expiring_evidence, upcoming_reviews, attention, risk_matrix } = data;
 
   return (
-    <div>
+    <div className="overview-page">
       <PageHeader
-        eyebrow="MONITOR"
-        title="Compliance & Governance Overview"
-        description="Local program posture, recorded control implementation, open remediation work, and scheduled reviews."
+        eyebrow="OPERATE"
+        title="Overview"
+        description="Recorded gaps, implementation progress, and scheduled reviews."
       >
         <button className="button button-primary" onClick={handleRunChecks} disabled={runningChecks}>
           <Play size={14} />
@@ -58,29 +61,63 @@ export function OverviewView({ onNavigate, notify }: { onNavigate: Navigate; not
         </button>
       </PageHeader>
 
-      {/* Top 4 Metrics */}
-      <div className="grid-4" style={{ marginBottom: '24px' }}>
-        <div className="metric">
-          <span>Control Readiness</span>
-          <strong style={{ color: 'var(--accent)' }}>{readiness.percent}%</strong>
-          <small>{readiness.implemented} of {readiness.total} controls implemented</small>
-        </div>
-        <div className="metric">
-          <span>Active Risks</span>
-          <strong style={{ color: high_risks > 0 ? 'var(--danger)' : 'var(--ink)' }}>{open_risks}</strong>
-          <small>{high_risks} high / critical priority</small>
-        </div>
-        <div className="metric">
-          <span>Overdue Tasks</span>
-          <strong style={{ color: overdue_tasks > 0 ? 'var(--warning)' : 'var(--ink)' }}>{overdue_tasks}</strong>
-          <small>Remediation action items</small>
-        </div>
-        <div className="metric">
-          <span>Expiring Evidence</span>
-          <strong style={{ color: expiring_evidence > 0 ? 'var(--warning)' : 'var(--ink)' }}>{expiring_evidence}</strong>
-          <small>Next 30 days</small>
-        </div>
+      <div className="overview-metrics" role="group" aria-label="Program metrics">
+        <button type="button" className="overview-metric" onClick={() => onNavigate('controls')}>
+          <span className="overview-metric-label">Control readiness <ArrowRight size={14} aria-hidden="true" /></span>
+          <strong className="overview-metric-value overview-tone-accent">{readiness.percent}%</strong>
+          <span className="overview-metric-detail">{readiness.implemented} of {readiness.total} applicable controls implemented</span>
+        </button>
+        <button type="button" className="overview-metric" onClick={() => onNavigate('risks')}>
+          <span className="overview-metric-label">Open risks <ArrowRight size={14} aria-hidden="true" /></span>
+          <strong className={`overview-metric-value ${high_risks > 0 ? 'overview-tone-danger' : ''}`}>{open_risks}</strong>
+          <span className="overview-metric-detail">{high_risks} with score ≥ 12</span>
+        </button>
+        <button type="button" className="overview-metric" onClick={() => onNavigate('tasks')}>
+          <span className="overview-metric-label">Overdue tasks <ArrowRight size={14} aria-hidden="true" /></span>
+          <strong className={`overview-metric-value ${overdue_tasks > 0 ? 'overview-tone-warning' : ''}`}>{overdue_tasks}</strong>
+          <span className="overview-metric-detail">Open tasks past their due date</span>
+        </button>
+        <button type="button" className="overview-metric" onClick={() => onNavigate('evidence')}>
+          <span className="overview-metric-label">Evidence due <ArrowRight size={14} aria-hidden="true" /></span>
+          <strong className={`overview-metric-value ${expiring_evidence > 0 ? 'overview-tone-warning' : ''}`}>{expiring_evidence}</strong>
+          <span className="overview-metric-detail">Within 30 days or past due · not marked expired</span>
+        </button>
       </div>
+
+      <section className="overview-card overview-attention" aria-labelledby="overview-attention-title">
+        <div className="overview-section-header">
+          <div>
+            <h2 id="overview-attention-title">Needs attention</h2>
+            <p>Prioritize gaps in your recorded work.</p>
+          </div>
+          <button type="button" className="overview-link" onClick={() => onNavigate('monitoring')}>View checks <ArrowRight size={14} aria-hidden="true" /></button>
+        </div>
+        {attention.length === 0 ? (
+          <div className="overview-empty"><strong>No attention items returned</strong><p>Run local record checks or review your registers for gaps.</p></div>
+        ) : (
+          <ul className="overview-attention-list">
+            {[...attention].sort((a, b) => (severityRank[b.severity] ?? 0) - (severityRank[a.severity] ?? 0)).slice(0, 6).map((item: any) => (
+              <li key={`${item.resource}-${item.id}`}>
+                <button type="button" className="overview-attention-row" onClick={() => onNavigate(item.resource, item.id)}>
+                  <span className="overview-row-copy">
+                    <span className="overview-resource">{item.resource}</span>
+                    <strong>{item.title}</strong>
+                    <span className="overview-row-reason">{item.reason}</span>
+                  </span>
+                  <Badge value={item.severity || 'unassessed'} />
+                  <ArrowRight size={16} className="overview-row-arrow" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <nav className="overview-shortcuts" aria-label="Continue work">
+          <span>Continue work</span>
+          <button type="button" className="overview-link" onClick={() => onNavigate('roadmap')}>Roadmap</button>
+          <button type="button" className="overview-link" onClick={() => onNavigate('policies')}>Policies</button>
+          <button type="button" className="overview-link" onClick={() => onNavigate('evidence')}>Evidence</button>
+        </nav>
+      </section>
 
       <div className="grid-2">
         {/* Framework Readiness */}
@@ -142,37 +179,6 @@ export function OverviewView({ onNavigate, notify }: { onNavigate: Navigate; not
       </div>
 
       <div className="grid-2">
-        {/* Needs Attention Items */}
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <h3 className="card-title">Needs Attention</h3>
-              <p className="card-description">Discovered gaps, overdue dates & unassigned controls</p>
-            </div>
-            <button className="link-button" onClick={() => onNavigate('monitoring')}>Full checks <ArrowRight size={12} /></button>
-          </div>
-          {attention.length === 0 ? (
-            <p style={{ color: 'var(--muted)', fontSize: '13px' }}>No critical items requiring immediate attention.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {attention.slice(0, 6).map((item: any) => (
-                <div
-                  key={`${item.resource}-${item.id}`}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer' }}
-                  onClick={() => onNavigate(item.resource, item.id)}
-                >
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.title}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{item.reason}</div>
-                  </div>
-                  <Badge value={item.severity === 'high' ? 'critical' : 'medium'} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* Upcoming Reviews */}
         <div className="card">

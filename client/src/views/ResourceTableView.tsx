@@ -1,3 +1,4 @@
+import './view-layouts.css';
 import { useEffect, useState } from 'react';
 import { Plus, Download, Trash2, Edit2, Search, ExternalLink } from 'lucide-react';
 import { api } from '../lib/api';
@@ -128,7 +129,7 @@ export function ResourceTableView({
   };
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow={eyebrow}
         title={title || meta.label}
@@ -145,7 +146,7 @@ export function ResourceTableView({
 
       <div className="table-container">
         <div className="table-toolbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Search size={14} color="var(--muted)" />
             <input
               type="text"

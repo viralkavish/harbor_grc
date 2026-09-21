@@ -38,13 +38,13 @@ export function FrameworksView({ schema, notify, onNavigate }: { schema: Schema 
   const coverage = harmonization?.framework_coverage || {};
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="STANDARDS"
-        title="Compliance Frameworks & Harmonization"
-        description="Multi-framework compliance engine cross-mapping controls across SOC 2 Type II, ISO/IEC 27001:2022, NIST CSF 2.0, HIPAA, and GDPR."
+        title="Frameworks"
+        description="Control mappings across SOC 2, ISO 27001, NIST CSF, HIPAA, and GDPR."
       >
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="view-inline" style={{ display: 'flex', gap: '8px' }}>
           <button
             className={`button ${activeTab === 'matrix' ? 'button-primary' : ''}`}
             onClick={() => setActiveTab('matrix')}
@@ -64,41 +64,41 @@ export function FrameworksView({ schema, notify, onNavigate }: { schema: Schema 
       </PageHeader>
 
       {/* Multi-Framework Overlap Summary Bar */}
-      <div className="card" style={{ background: '#090d16', color: 'white', padding: '24px', marginBottom: '24px', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Sparkles size={22} color="#3b82f6" />
+      <div className="card" style={{ background: 'var(--main-bg)', color: 'var(--ink)', padding: '24px', marginBottom: '24px', border: '1px solid var(--border)' }}>
+        <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div className="view-inline view-icon-row" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Sparkles size={22} color="var(--accent)" />
             <div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'white' }}>
-                Cross-Framework Overlap: "Satisfy Once, Comply Everywhere"
+              <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--ink)' }}>
+                Cross-Framework Coverage
               </h3>
-              <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', margin: '4px 0 0' }}>
-                Implementing SOC 2 Common Criteria controls automatically satisfies equivalent clauses across ISO 27001, NIST CSF, HIPAA, and GDPR.
+              <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '4px 0 0' }}>
+                Compare implemented SOC 2 controls with related requirements across ISO 27001, NIST CSF, HIPAA, and GDPR.
               </p>
             </div>
           </div>
         </div>
 
         {/* Coverage Percentage Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
+        <div className="view-auto-grid" style={{ display: 'grid', gap: '14px' }}>
           {Object.entries(coverage).map(([key, val]: [string, any]) => (
             <div
               key={key}
               style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'var(--surface-raised)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
                 padding: '14px'
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span className="mono" style={{ fontSize: '13px', fontWeight: 700, color: '#60a5fa' }}>{key}</span>
-                <span style={{ fontSize: '15px', fontWeight: 700, color: '#34d399' }}>{val.coverage_pct}%</span>
+              <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <span className="mono" style={{ fontSize: '13px', fontWeight: 700, color: 'var(--accent)' }}>{key}</span>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--success)' }}>{val.coverage_pct}%</span>
               </div>
-              <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                <div style={{ width: `${val.coverage_pct}%`, height: '100%', background: '#10b981', borderRadius: '2px' }} />
+              <div style={{ height: '4px', background: 'var(--surface-raised)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ width: `${val.coverage_pct}%`, height: '100%', background: 'var(--success)', borderRadius: '2px' }} />
               </div>
-              <small style={{ color: 'rgba(255,255,255,0.6)', display: 'block', marginTop: '6px', fontSize: '11px' }}>
+              <small style={{ color: 'var(--muted)', display: 'block', marginTop: '6px', fontSize: '11px' }}>
                 {val.covered} of {val.total_mapped} controls harmonized
               </small>
             </div>
@@ -133,10 +133,10 @@ export function FrameworksView({ schema, notify, onNavigate }: { schema: Schema 
                 {harmonization?.harmonized_controls?.map((item: any) => (
                   <tr key={item.code}>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span className="mono" style={{ fontWeight: 600, color: 'var(--ink)' }}>{item.code}</span>
                         {item.implemented && (
-                          <span style={{ fontSize: '10px', background: 'rgba(34, 197, 94, 0.15)', color: '#16a34a', padding: '1px 6px', borderRadius: '8px' }}>
+                          <span style={{ fontSize: '10px', background: 'var(--success-light)', color: 'var(--success)', padding: '1px 6px', borderRadius: '8px' }}>
                             ✓ Active
                           </span>
                         )}
@@ -144,22 +144,22 @@ export function FrameworksView({ schema, notify, onNavigate }: { schema: Schema 
                       <small style={{ color: 'var(--muted)', display: 'block', marginTop: '2px' }}>{item.title}</small>
                     </td>
                     <td>
-                      <span className="mono" style={{ fontSize: '12px', color: '#2563eb' }}>
+                      <span className="mono" style={{ fontSize: '12px', color: 'var(--accent)' }}>
                         {item.mappings.ISO27001}
                       </span>
                     </td>
                     <td>
-                      <span className="mono" style={{ fontSize: '12px', color: '#059669' }}>
+                      <span className="mono" style={{ fontSize: '12px', color: 'var(--success)' }}>
                         {item.mappings['NIST-CSF']}
                       </span>
                     </td>
                     <td>
-                      <span className="mono" style={{ fontSize: '12px', color: '#d97706' }}>
+                      <span className="mono" style={{ fontSize: '12px', color: 'var(--warning)' }}>
                         {item.mappings.HIPAA}
                       </span>
                     </td>
                     <td>
-                      <span className="mono" style={{ fontSize: '12px', color: '#7c3aed' }}>
+                      <span className="mono" style={{ fontSize: '12px', color: 'var(--accent)' }}>
                         {item.mappings.GDPR}
                       </span>
                     </td>
@@ -171,13 +171,13 @@ export function FrameworksView({ schema, notify, onNavigate }: { schema: Schema 
         </div>
       ) : (
         /* Frameworks List */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+        <div className="view-card-grid" style={{ display: 'grid', gap: '16px' }}>
           {frameworks.map((fw: any) => (
             <div key={fw.id} className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0, color: 'var(--ink)' }}>{fw.title}</h3>
-                  <span className="mono" style={{ fontSize: '11px', background: 'var(--panel-bg)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                  <span className="mono" style={{ fontSize: '11px', background: 'var(--surface-raised)', padding: '2px 8px', borderRadius: '6px', border: '1px solid var(--border)' }}>
                     {fw.code || fw.version || 'v2.0'}
                   </span>
                 </div>
@@ -186,7 +186,7 @@ export function FrameworksView({ schema, notify, onNavigate }: { schema: Schema 
                 </p>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
+              <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>
                 <Badge value={fw.status || 'in_progress'} />
                 <button
                   className="button button-sm button-primary"

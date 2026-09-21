@@ -21,10 +21,10 @@ export function IntegrationsView({ notify, onNavigate }: { notify: Notify; onNav
   if (error) return <ErrorState message={error} />;
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="CONNECT"
-        title="Integrations & Data Connectors"
+        title="Integrations"
         description="Local data sources, file upload capabilities, and planned cloud connector interfaces."
       />
 
@@ -34,8 +34,8 @@ export function IntegrationsView({ notify, onNavigate }: { notify: Notify; onNav
           return (
             <div key={int.id} className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {isAvailable ? <HardDrive size={18} color="var(--accent)" /> : <CloudOff size={18} color="var(--muted)" />}
                     <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink)' }}>{int.title}</h3>
                   </div>
@@ -46,14 +46,14 @@ export function IntegrationsView({ notify, onNavigate }: { notify: Notify; onNav
                   {int.description}
                 </p>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                <div className="view-inline" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {int.capabilities?.map((cap: string, idx: number) => (
                     <span
                       key={idx}
                       className="mono"
                       style={{
                         fontSize: '11px',
-                        background: isAvailable ? 'var(--accent-light)' : '#edf2ef',
+                        background: isAvailable ? 'var(--accent-light)' : 'var(--surface-raised)',
                         color: isAvailable ? 'var(--accent)' : 'var(--muted)',
                         padding: '2px 6px',
                         borderRadius: '4px'
@@ -65,7 +65,7 @@ export function IntegrationsView({ notify, onNavigate }: { notify: Notify; onNav
                 </div>
               </div>
 
-              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
+              <div className="view-inline" style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
                 {isAvailable ? (
                   <button className="button button-sm button-primary" onClick={() => onNavigate('settings')}>
                     Manage in Settings

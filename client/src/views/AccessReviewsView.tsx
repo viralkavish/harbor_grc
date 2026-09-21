@@ -160,14 +160,14 @@ export function AccessReviewsView({ schema, notify, onNavigate }: { schema: Sche
   if (error) return <ErrorState message={error} retry={loadReviews} />;
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="OPERATE"
-        title="User Access Reviews"
-        description="Conduct periodic entitlement certifications, record keep/revoke determinations, and satisfy quarterly SOC 2 CC6.4 access review controls."
+        title="Access Reviews"
+        description="Review user entitlements and record keep or revoke decisions."
       >
         <button className="button" onClick={handleLaunchCampaign} title="Launch automated quarterly access certification campaign">
-          <Sparkles size={14} color="#2563eb" /> Launch Quarterly UAR Campaign
+          <Sparkles size={14} color="var(--accent)" /> Launch Quarterly UAR Campaign
         </button>
         <button className="button button-primary" onClick={() => setShowModal(true)}>
           <Plus size={14} /> New Manual Review
@@ -176,32 +176,32 @@ export function AccessReviewsView({ schema, notify, onNavigate }: { schema: Sche
 
       {/* Latest Certified UAR Campaign Banner */}
       {latestCampaign && (
-        <div className="card" style={{ background: '#090d16', color: 'white', padding: '16px 20px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="card view-row" style={{ background: 'var(--main-bg)', color: 'var(--ink)', padding: '16px 20px', marginBottom: '20px', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShieldCheck size={18} color="#10b981" />
-              <strong style={{ fontSize: '15px', color: 'white' }}>{latestCampaign.name}</strong>
-              <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '2px 8px', borderRadius: '10px' }}>
+            <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldCheck size={18} color="var(--success)" />
+              <strong style={{ fontSize: '15px', color: 'var(--ink)' }}>{latestCampaign.name}</strong>
+              <span style={{ fontSize: '11px', background: 'var(--success-light)', color: 'var(--success)', padding: '2px 8px', borderRadius: '10px' }}>
                 ● Certified Active
               </span>
             </div>
-            <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
+            <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--muted)' }}>
               Reviewer: <strong>{latestCampaign.reviewer}</strong> · Scope: {latestCampaign.scope} · Users Certified: {latestCampaign.total_users_reviewed}
             </p>
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <span className="mono" style={{ fontSize: '11px', color: '#60a5fa', background: 'rgba(37, 99, 235, 0.15)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(37, 99, 235, 0.3)' }}>
+            <span className="mono" style={{ fontSize: '11px', color: 'var(--accent)', background: 'var(--accent-light)', padding: '3px 8px', borderRadius: '4px', border: '1px solid var(--accent)' }}>
               Audit Hash: {latestCampaign.certification_hash}
             </span>
           </div>
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '20px', alignItems: 'start' }}>
+      <div className="view-split-grid" style={{ display: 'grid', gap: '20px', alignItems: 'start' }}>
         {/* Left Column: Reviews List */}
         <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-          <div style={{ padding: '12px 16px', background: '#fafcfb', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: '13px' }}>
+          <div style={{ padding: '12px 16px', background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: '13px' }}>
             Review Campaigns ({reviews.length})
           </div>
           <div>
@@ -221,13 +221,13 @@ export function AccessReviewsView({ schema, notify, onNavigate }: { schema: Sche
                       padding: '12px 16px',
                       borderBottom: '1px solid var(--border)',
                       cursor: 'pointer',
-                      background: isSelected ? '#f0f5f3' : 'transparent',
+                      background: isSelected ? 'var(--accent-light)' : 'transparent',
                       borderLeft: isSelected ? '3px solid var(--accent)' : '3px solid transparent'
                     }}
                   >
                     <div style={{ fontWeight: 600, fontSize: '13px' }}>{r.title}</div>
                     <div style={{ fontSize: '12px', color: 'var(--muted)', margin: '2px 0' }}>System: {r.system || 'General'}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                    <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                       <Badge value={r.status} />
                       <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{entriesCount} users</span>
                     </div>
@@ -244,7 +244,7 @@ export function AccessReviewsView({ schema, notify, onNavigate }: { schema: Sche
             <div className="card">
               <div className="card-header">
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <h2 style={{ fontSize: '18px', fontWeight: 700 }}>{selectedReview.title}</h2>
                     <Badge value={selectedReview.status} />
                   </div>
@@ -253,7 +253,7 @@ export function AccessReviewsView({ schema, notify, onNavigate }: { schema: Sche
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="view-inline" style={{ display: 'flex', gap: '8px' }}>
                   {selectedReview.status !== 'completed' && (
                     <button className="button button-primary" onClick={handleCompleteReview}>
                       <Check size={14} /> Complete Review
@@ -272,10 +272,11 @@ export function AccessReviewsView({ schema, notify, onNavigate }: { schema: Sche
                 </h4>
 
                 {(!selectedReview.entries || selectedReview.entries.length === 0) ? (
-                  <div style={{ padding: '32px', background: '#fafcfb', border: '1px dashed var(--border)', borderRadius: '6px', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
+                  <div style={{ padding: '32px', background: 'var(--surface-raised)', border: '1px dashed var(--border)', borderRadius: '6px', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
                     No users added to this review yet. Click "Add User" to record accounts.
                   </div>
                 ) : (
+                  <div className="view-table-scroll">
                   <table className="table">
                     <thead>
                       <tr>
@@ -319,6 +320,7 @@ export function AccessReviewsView({ schema, notify, onNavigate }: { schema: Sche
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 )}
               </div>
             </div>

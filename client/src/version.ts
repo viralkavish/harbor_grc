@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.5.0';
+export const APP_VERSION = '0.6.0';
 export const RELEASE_DATE = '2026-09-21';
 
 export interface ChangelogEntry {
@@ -11,9 +11,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.5.0',
+    version: '0.6.0',
     date: '2026-09-21',
     badge: 'Latest',
+    title: "Astra Dark Theme UI/UX Redesign & AppShell Architecture",
+    highlights: [
+      "Astra Dark Theme System: Unified dark-mode aesthetic across all 23 views with semantic CSS tokens, high-contrast typography, and dark cards.",
+      "AppShell & Accessible Navigation: Built responsive AppShell with sectioned sidebar, mobile drawer with focus trap, and breadcrumb header.",
+      "Command Palette Overhaul: Fast instant page-jump matching combined with debounced backend record search and full ARIA combobox accessibility.",
+      "Action-Oriented Overview: Re-engineered operational dashboard with priority gap queue, interactive metrics, and calibrated risk matrix.",
+      "Deployment Template Hardening: Isolated service environment credentials into private secrets file, verified by automated test gate."
+    ]
+  },
+  {
+    version: '0.5.0',
+    date: '2026-09-21',
+    badge: 'Stable',
     title: "Live TypeSafe JEV System One Integration & Engine Upgrade",
     highlights: [
       "Live TypeSafe Cloud Integration: Connected live TypeSafe JEV System One (jev-1.13.0) API key via https://api.typesafe.ai/v1/systemone.",

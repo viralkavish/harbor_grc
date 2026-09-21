@@ -82,10 +82,10 @@ export function EvidenceView({ schema, notify, onNavigate }: { schema: Schema; n
   };
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="OPERATE"
-        title="Compliance Evidence Repository"
+        title="Evidence"
         description="Attach audit screenshots, configuration exports, policy attestations, and third-party reports with SHA-256 integrity hashing."
       >
         <button className="button button-primary" onClick={() => setShowUploadModal(true)}>
@@ -128,14 +128,14 @@ export function EvidenceView({ schema, notify, onNavigate }: { schema: Schema; n
                   <td>
                     <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{item.title}</div>
                     {item.filename && (
-                      <div style={{ fontSize: '11px', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div className="view-inline" style={{ fontSize: '11px', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <span className="mono">{item.filename}</span>
                         {item.file_size && <span>({(item.file_size / 1024).toFixed(1)} KB)</span>}
                       </div>
                     )}
                   </td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Badge value={item.status} />
                       {item.status !== 'approved' && (
                         <button
@@ -151,14 +151,14 @@ export function EvidenceView({ schema, notify, onNavigate }: { schema: Schema; n
                   </td>
                   <td>
                     {item.sha256 ? (
-                      <span className="mono" style={{ fontSize: '11px', color: 'var(--muted)', background: '#fafcfb', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)' }} title={item.sha256}>
+                      <span className="mono" style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--surface-raised)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)' }} title={item.sha256}>
                         {item.sha256.slice(0, 12)}…
                       </span>
                     ) : '—'}
                   </td>
                   <td>
                     {item.control_ids && item.control_ids.length > 0 ? (
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                      <div className="view-inline" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                         {item.control_ids.map((cid: string) => (
                           <button
                             key={cid}

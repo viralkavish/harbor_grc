@@ -1,0 +1,189 @@
+/* Layouts for the existing Harbor views. Colors come from the app theme. */
+.harbor-view,
+.harbor-view-modal {
+  min-width: 0;
+  max-width: 100%;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+:is(.harbor-view, .harbor-view-modal) :where(.card, .field, .field-grid, .grid-2, .grid-3, .grid-4, .table-container, .kanban-col, .kanban-card) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:is(.harbor-view, .harbor-view-modal) :where(input, select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:is(.harbor-view, .harbor-view-modal) .button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+:is(.harbor-view, .harbor-view-modal) :where(.button, .icon-button) > svg {
+  flex-shrink: 0;
+}
+
+:is(.harbor-view, .harbor-view-modal) pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.view-split-grid,
+.view-auto-grid,
+.view-card-grid,
+.view-grid-two,
+.view-grid-three,
+.view-grid-four,
+.view-phase-grid {
+  display: grid;
+  min-width: 0;
+}
+
+.view-split-grid {
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+}
+
+.view-auto-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+}
+
+.view-card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.view-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.view-grid-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.view-grid-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.view-phase-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+:is(.view-split-grid, .view-auto-grid, .view-card-grid, .view-grid-two, .view-grid-three, .view-grid-four, .view-phase-grid) > * {
+  min-width: 0;
+}
+
+.view-row,
+.view-inline {
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  column-gap: 12px;
+  row-gap: 8px;
+}
+
+:is(.view-row, .view-inline) > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:is(.view-row, .view-inline) > svg {
+  flex-shrink: 0;
+}
+
+/* Keep checkboxes and leading icons attached to their descriptive text. */
+.view-inline:has(> input[type="checkbox"]),
+.view-icon-row {
+  flex-wrap: nowrap;
+}
+
+.view-icon-row > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.view-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.view-table-scroll > .table {
+  min-width: 640px;
+}
+
+.view-tabs {
+  max-width: 100%;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  overscroll-behavior-inline: contain;
+}
+
+.view-tabs > button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.view-trust-section {
+  padding-inline: clamp(16px, 4vw, 40px);
+}
+
+.jev-policy-modal {
+  overflow: hidden;
+}
+
+.jev-policy-modal > :not(.jev-policy-body) {
+  flex-shrink: 0;
+}
+
+.jev-policy-body {
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .view-split-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .view-grid-four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .view-phase-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .harbor-view .kanban-board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  :is(.view-grid-two, .view-grid-three, .view-grid-four) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .view-phase-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  :is(.harbor-view, .harbor-view-modal) .field-grid,
+  .harbor-view .kanban-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .view-stack-mobile {
+    flex-direction: column;
+  }
+
+  .view-stack-mobile > * {
+    align-self: flex-start;
+  }
+
+  .view-stack-mobile > div {
+    width: 100%;
+  }
+}

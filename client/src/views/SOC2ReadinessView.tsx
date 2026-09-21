@@ -63,11 +63,11 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
   if (error) return <ErrorState message={error} retry={loadSOC2Data} />;
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="ATTESTATION"
-        title="SOC 2 Type 1 & Type 2 Audit Readiness"
-        description="Comprehensive readiness scorecard, control gap analysis, auditor PBC request staging, and population sampling engine."
+        title="SOC 2 Readiness"
+        description="Review Type I and Type II gaps, evidence requests, and audit samples."
       >
         <button className="button" onClick={loadSOC2Data} title="Refresh audit scorecard">
           <RefreshCw size={14} /> Refresh
@@ -77,7 +77,7 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
       {/* Type 1 vs Type 2 Comparative Banner */}
       <div className="grid-2" style={{ marginBottom: '24px' }}>
         <div className="card" style={{ borderLeft: `4px solid ${gapData.type1_ready ? 'var(--accent)' : 'var(--warning)'}` }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <span className="eyebrow" style={{ color: 'var(--muted)' }}>Point-in-Time Design</span>
               <h3 style={{ fontSize: '18px', fontWeight: 700, marginTop: '2px' }}>SOC 2 Type I Readiness</h3>
@@ -99,7 +99,7 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
         </div>
 
         <div className="card" style={{ borderLeft: `4px solid ${gapData.type2_ready ? 'var(--accent)' : 'var(--warning)'}` }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <span className="eyebrow" style={{ color: 'var(--muted)' }}>Period-of-Time Operating Effectiveness</span>
               <h3 style={{ fontSize: '18px', fontWeight: 700, marginTop: '2px' }}>SOC 2 Type II Readiness</h3>
@@ -122,11 +122,11 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
       </div>
 
       {/* Subtab Bar */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '20px', background: 'white', borderRadius: '8px 8px 0 0', padding: '0 16px' }}>
+      <div className="view-tabs" style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '20px', background: 'var(--card-bg)', borderRadius: '8px 8px 0 0', padding: '0 16px' }}>
         {[
-          { id: 'scorecard', label: 'Readiness & Gap Analysis' },
-          { id: 'pbc', label: `Auditor PBC Request List (${pbcData?.staged_count || 0}/${pbcData?.total || 0} Staged)` },
-          { id: 'sampling', label: 'Population Sampling Engine' },
+          { id: 'scorecard', label: 'Readiness & Gaps' },
+          { id: 'pbc', label: `PBC Requests (${pbcData?.staged_count || 0}/${pbcData?.total || 0} Staged)` },
+          { id: 'sampling', label: 'Audit Sampling' },
           { id: 'cuecs', label: 'CUEC & CSOC Registers' }
         ].map(tab => (
           <button
@@ -160,9 +160,9 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
               {gapData.type1_items.map((item: any, idx: number) => {
                 const isPass = item.status === 'pass';
                 return (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                  <div className="view-row" key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px' }}>
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {isPass ? <CheckCircle2 size={16} color="var(--accent)" /> : <AlertCircle size={16} color="var(--danger)" />}
                         <strong style={{ fontSize: '13px' }}>{item.title}</strong>
                       </div>
@@ -186,9 +186,9 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
               {gapData.type2_items.map((item: any, idx: number) => {
                 const isPass = item.status === 'pass';
                 return (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                  <div className="view-row" key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px' }}>
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {isPass ? <CheckCircle2 size={16} color="var(--accent)" /> : <AlertTriangle size={16} color="var(--warning)" />}
                         <strong style={{ fontSize: '13px' }}>{item.title}</strong>
                       </div>
@@ -208,7 +208,7 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
       {/* Tab 2: Auditor PBC Request List */}
       {activeTab === 'pbc' && (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', background: '#fafcfb', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="view-row" style={{ padding: '16px 20px', background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h3 style={{ fontSize: '15px', fontWeight: 700 }}>Prepared By Client (PBC) Evidence Deliverables</h3>
               <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
@@ -220,6 +220,7 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
             </span>
           </div>
 
+          <div className="view-table-scroll">
           <table className="table">
             <thead>
               <tr>
@@ -263,6 +264,7 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -278,7 +280,7 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', background: '#fafcfb', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '20px' }}>
+          <div className="view-grid-three" style={{ display: 'grid', gap: '16px', background: 'var(--surface-raised)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '20px' }}>
             <div className="field">
               <span>Select Audit Population</span>
               <select value={samplePopType} onChange={e => setSamplePopType(e.target.value)}>
@@ -309,7 +311,7 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
           {/* Sample Results Table */}
           {sampleResults && (
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <strong style={{ fontSize: '14px' }}>
                   Sampled {sampleResults.sample_size} records from population of {sampleResults.population_total}
                 </strong>
@@ -318,7 +320,7 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
                 </span>
               </div>
 
-              <div style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
+              <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
                 <pre style={{ padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', maxHeight: '300px', overflowY: 'auto' }}>
                   {JSON.stringify(sampleResults.samples, null, 2)}
                 </pre>
@@ -341,8 +343,8 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {cuecData?.cuecs?.map((c: any) => (
-                <div key={c.id} style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <div key={c.id} style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 14px' }}>
+                  <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <strong style={{ fontSize: '13px' }}>{c.title}</strong>
                     <span className="mono" style={{ fontSize: '11px', background: 'var(--border)', padding: '2px 6px', borderRadius: '4px' }}>{c.criterion}</span>
                   </div>
@@ -362,8 +364,8 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {cuecData?.csocs?.map((c: any) => (
-                <div key={c.id} style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <div key={c.id} style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 14px' }}>
+                  <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <strong style={{ fontSize: '13px' }}>{c.title}</strong>
                     <span className="mono" style={{ fontSize: '11px', color: 'var(--accent)', fontWeight: 600 }}>{c.vendor}</span>
                   </div>

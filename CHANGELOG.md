@@ -24,6 +24,18 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.6.0] - 2026-09-21
+
+### Added
+- **Astra Dark Theme UI/UX Redesign & AppShell Architecture**
+- Astra Dark Theme System: Unified dark-mode aesthetic across all 23 views with semantic CSS tokens, high-contrast typography, and dark cards.
+- AppShell & Accessible Navigation: Built responsive AppShell with sectioned sidebar, mobile drawer with focus trap, and breadcrumb header.
+- Command Palette Overhaul: Fast instant page-jump matching combined with debounced backend record search and full ARIA combobox accessibility.
+- Action-Oriented Overview: Re-engineered operational dashboard with priority gap queue, interactive metrics, and calibrated risk matrix.
+- Deployment Template Hardening: Isolated service environment credentials into private secrets file, verified by automated test gate.
+
+---
+
 ## [0.5.0] - 2026-09-21
 
 ### Added

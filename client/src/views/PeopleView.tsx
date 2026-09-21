@@ -126,10 +126,10 @@ export function PeopleView({ schema, notify, onNavigate }: { schema: Schema; not
   const employees = compliance?.employees || [];
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="OPERATE"
-        title="Personnel & Workforce Compliance"
+        title="People"
         description="Track employee onboarding security tasks, annual security awareness training completion, and signed policy acceptances."
       >
         <button className="button button-primary" onClick={handleOpenCreate}>
@@ -198,7 +198,7 @@ export function PeopleView({ schema, notify, onNavigate }: { schema: Schema; not
                     {p.training_completed ? (
                       <span className="badge badge-green"><Check size={12} /> Completed</span>
                     ) : (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span className="badge badge-amber">Pending</span>
                         <button
                           className="button button-sm"
@@ -211,7 +211,7 @@ export function PeopleView({ schema, notify, onNavigate }: { schema: Schema; not
                     )}
                   </td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span className="mono" style={{ fontSize: '12px', fontWeight: 600 }}>
                         {p.policies_accepted}/{p.total_policies}
                       </span>

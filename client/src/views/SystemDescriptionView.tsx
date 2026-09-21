@@ -81,11 +81,11 @@ export function SystemDescriptionView({ notify, onNavigate }: { notify: Notify; 
   const currentSection = sections.find((s: any) => s.id === activeSectionId) || sections[0];
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="GOVERNANCE"
-        title="AICPA SOC 2 System Description (Section 3)"
-        description="Management's narrative description of the system, components, operational boundaries, and Complementary User Entity Controls (CUECs) required for all SOC 2 audits."
+        title="System Description"
+        description="Document system components, boundaries, and user responsibilities for SOC 2 Section 3."
       >
         <button className="button" onClick={handleAutoPopulate} disabled={populating}>
           <Sparkles size={14} /> {populating ? 'Populating…' : 'Auto-Populate Inventory'}
@@ -97,10 +97,10 @@ export function SystemDescriptionView({ notify, onNavigate }: { notify: Notify; 
 
 
 
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '20px', alignItems: 'start' }}>
+      <div className="view-split-grid" style={{ display: 'grid', gap: '20px', alignItems: 'start' }}>
         {/* Sections Navigation */}
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '12px 16px', background: '#fafcfb', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: '13px' }}>
+          <div style={{ padding: '12px 16px', background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: '13px' }}>
             System Description Sections ({sections.length})
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -114,7 +114,7 @@ export function SystemDescriptionView({ notify, onNavigate }: { notify: Notify; 
                     padding: '12px 16px',
                     borderBottom: '1px solid var(--border)',
                     cursor: 'pointer',
-                    background: isSelected ? '#f0f5f3' : 'transparent',
+                    background: isSelected ? 'var(--accent-light)' : 'transparent',
                     borderLeft: isSelected ? '3px solid var(--accent)' : '3px solid transparent'
                   }}
                 >
@@ -139,7 +139,7 @@ export function SystemDescriptionView({ notify, onNavigate }: { notify: Notify; 
                   Edit Section
                 </button>
               ) : (
-                <div style={{ display: 'flex', gap: '6px' }}>
+                <div className="view-inline" style={{ display: 'flex', gap: '6px' }}>
                   <button className="button button-sm" onClick={() => { setEditContent(currentSection?.content); setIsEditing(false); }}>
                     Cancel
                   </button>

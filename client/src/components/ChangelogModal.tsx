@@ -13,12 +13,12 @@ export function ChangelogModal({ isOpen, onClose }: ChangelogModalProps) {
 
   return (
     <Dialog onClose={onClose} title="System Version & Changelog" wide>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="harbor-view-modal" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {/* Header Summary */}
-        <div
+        <div className="view-row"
           style={{
-            background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(15, 23, 42, 0.05) 100%)',
-            border: '1px solid rgba(37, 99, 235, 0.2)',
+            background: 'linear-gradient(135deg, var(--accent-light) 0%, var(--surface-raised) 100%)',
+            border: '1px solid var(--accent)',
             borderRadius: '8px',
             padding: '16px 20px',
             display: 'flex',
@@ -27,28 +27,28 @@ export function ChangelogModal({ isOpen, onClose }: ChangelogModalProps) {
           }}
         >
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--ink)' }}>
                 Harbor GRC v{APP_VERSION}
               </span>
               <span
                 style={{
-                  background: '#2563eb',
-                  color: 'white',
+                  background: 'var(--accent-light)',
+                  color: 'var(--accent)',
                   fontSize: '11px',
                   fontWeight: 600,
                   padding: '2px 8px',
                   borderRadius: '12px'
                 }}
               >
-                Production Active
+                Current Build
               </span>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--muted)' }}>
-              Released on {RELEASE_DATE} • Build verified against SOC 2, ISO 27001 & AICPA standards
+              Released on {RELEASE_DATE}
             </p>
           </div>
-          <Sparkles size={28} color="#2563eb" style={{ opacity: 0.8 }} />
+          <Sparkles size={28} color="var(--accent)" style={{ opacity: 0.8 }} />
         </div>
 
         {/* Changelog Entries Timeline */}
@@ -59,7 +59,7 @@ export function ChangelogModal({ isOpen, onClose }: ChangelogModalProps) {
               style={{
                 position: 'relative',
                 paddingLeft: '24px',
-                borderLeft: idx === 0 ? '2px solid #2563eb' : '2px solid var(--border)'
+                borderLeft: idx === 0 ? '2px solid var(--accent)' : '2px solid var(--border)'
               }}
             >
               {/* Timeline Bullet */}
@@ -71,13 +71,13 @@ export function ChangelogModal({ isOpen, onClose }: ChangelogModalProps) {
                   width: '12px',
                   height: '12px',
                   borderRadius: '50%',
-                  background: idx === 0 ? '#2563eb' : 'var(--muted)',
-                  border: '2px solid white'
+                  background: idx === 0 ? 'var(--accent)' : 'var(--muted)',
+                  border: '2px solid var(--card-bg)'
                 }}
               />
 
               {/* Version & Date Bar */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
                 <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--ink)' }}>
                   v{entry.version}
                 </span>
@@ -87,9 +87,9 @@ export function ChangelogModal({ isOpen, onClose }: ChangelogModalProps) {
                     fontWeight: 600,
                     padding: '2px 8px',
                     borderRadius: '10px',
-                    background: idx === 0 ? 'rgba(37, 99, 235, 0.1)' : 'var(--panel-bg)',
-                    color: idx === 0 ? '#2563eb' : 'var(--muted)',
-                    border: '1px solid ' + (idx === 0 ? 'rgba(37, 99, 235, 0.2)' : 'var(--border)')
+                    background: idx === 0 ? 'var(--accent-light)' : 'var(--surface-raised)',
+                    color: idx === 0 ? 'var(--accent)' : 'var(--muted)',
+                    border: '1px solid ' + (idx === 0 ? 'var(--accent)' : 'var(--border)')
                   }}
                 >
                   {entry.badge}

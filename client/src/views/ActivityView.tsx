@@ -31,10 +31,10 @@ export function ActivityView({ notify, onNavigate }: { notify: Notify; onNavigat
   );
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="AUDIT"
-        title="Workspace Activity & Audit Trail"
+        title="Activity"
         description="Append-only immutable record of all creations, updates, deletions, policy publications, and local checks."
       >
         <button className="button" onClick={loadActivity} title="Refresh activity stream">
@@ -44,7 +44,7 @@ export function ActivityView({ notify, onNavigate }: { notify: Notify; onNavigat
 
       <div className="table-container">
         <div className="table-toolbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Search size={14} color="var(--muted)" />
             <input
               type="text"

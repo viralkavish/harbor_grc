@@ -179,18 +179,18 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
   const auditRequests = selectedAudit ? requests.filter(r => r.audit_id === selectedAudit.id) : [];
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="AUDIT"
-        title="Audits & Auditor Autopilot Hub"
-        description="AICPA auditor collaboration workspace, 21 pre-staged PBC deliverables, and formal audit campaign management."
+        title="Audits"
+        description="Manage audit engagements, evidence requests, and auditor reviews."
       >
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div className="view-inline" style={{ display: 'flex', gap: '8px' }}>
           <button
             className={`button ${activeViewTab === 'auditor_hub' ? 'button-primary' : ''}`}
             onClick={() => setActiveViewTab('auditor_hub')}
           >
-            <Sparkles size={14} /> Auditor Autopilot Hub (21 PBCs)
+            <Sparkles size={14} /> Auditor Hub (21 PBCs)
           </button>
           <button
             className={`button ${activeViewTab === 'engagements' ? 'button-primary' : ''}`}
@@ -210,31 +210,31 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
         /* Auditor Autopilot Hub Workspace */
         <div>
           {/* Progress Banner */}
-          <div className="card" style={{ background: '#090d16', color: 'white', padding: '24px', marginBottom: '24px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div className="card" style={{ background: 'var(--main-bg)', color: 'var(--ink)', padding: '24px', marginBottom: '24px', border: '1px solid var(--border)' }}>
+            <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Sparkles size={20} color="#3b82f6" />
-                  <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'white' }}>
-                    AICPA Provided By Client (PBC) Auditor Collaboration Hub
+                <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={20} color="var(--accent)" />
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--ink)' }}>
+                    Auditor Evidence Requests
                   </h3>
                 </div>
-                <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
+                <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--muted)' }}>
                   Pre-staged evidence checklist required for SOC 2 Type 1 and Type 2 auditor fieldwork.
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <strong style={{ fontSize: '26px', color: '#34d399' }}>
+                <strong style={{ fontSize: '26px', color: 'var(--success)' }}>
                   {pbcData?.readiness_percent || 0}%
                 </strong>
-                <span style={{ fontSize: '12px', display: 'block', color: 'rgba(255,255,255,0.7)' }}>
+                <span style={{ fontSize: '12px', display: 'block', color: 'var(--muted)' }}>
                   Auditor Accepted ({pbcData?.accepted_count || 0}/{pbcData?.total_items || 21})
                 </span>
               </div>
             </div>
 
             {/* Filter Pills */}
-            <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '14px' }}>
+            <div className="view-inline" style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--border)', paddingTop: '14px' }}>
               <button
                 className={`button button-sm ${pbcFilter === 'all' ? 'button-primary' : ''}`}
                 onClick={() => setPbcFilter('all')}
@@ -281,18 +281,18 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
                     className="card"
                     style={{
                       marginBottom: 0,
-                      borderLeft: `4px solid ${isAccepted ? '#10b981' : isReview ? '#3b82f6' : '#f59e0b'}`,
+                      borderLeft: `4px solid ${isAccepted ? 'var(--success)' : isReview ? 'var(--accent)' : 'var(--warning)'}`,
                       padding: '16px 20px'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
+                    <div className="view-row view-stack-mobile" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <span className="mono" style={{ fontSize: '12px', fontWeight: 700, background: 'rgba(37, 99, 235, 0.1)', color: '#2563eb', padding: '2px 8px', borderRadius: '4px' }}>
+                        <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span className="mono" style={{ fontSize: '12px', fontWeight: 700, background: 'var(--accent-light)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '4px' }}>
                             {item.code}
                           </span>
                           <strong style={{ fontSize: '15px', color: 'var(--ink)' }}>{item.title}</strong>
-                          <span style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--panel-bg)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--surface-raised)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)' }}>
                             {item.category}
                           </span>
                           <span className="mono" style={{ fontSize: '11px', color: 'var(--muted)' }}>
@@ -309,16 +309,16 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
                       </div>
 
                       {/* Auditor Status Actions */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                      <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                         <span
                           style={{
                             fontSize: '11px',
                             fontWeight: 600,
                             padding: '3px 10px',
                             borderRadius: '12px',
-                            background: isAccepted ? 'rgba(16, 185, 129, 0.1)' : isReview ? 'rgba(59, 130, 246, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                            color: isAccepted ? '#059669' : isReview ? '#2563eb' : '#d97706',
-                            border: `1px solid ${isAccepted ? 'rgba(16, 185, 129, 0.2)' : isReview ? 'rgba(59, 130, 246, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
+                            background: isAccepted ? 'var(--success-light)' : isReview ? 'var(--accent-light)' : 'var(--warning-light)',
+                            color: isAccepted ? 'var(--success)' : isReview ? 'var(--accent)' : 'var(--warning)',
+                            border: `1px solid ${isAccepted ? 'var(--success)' : isReview ? 'var(--accent)' : 'var(--warning)'}`,
                             textTransform: 'capitalize'
                           }}
                         >
@@ -341,10 +341,10 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
           </div>
         </div>
       ) : (
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '20px', alignItems: 'start' }}>
+      <div className="view-split-grid" style={{ display: 'grid', gap: '20px', alignItems: 'start' }}>
         {/* Left Column: Audits List */}
         <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-          <div style={{ padding: '12px 16px', background: '#fafcfb', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: '13px' }}>
+          <div style={{ padding: '12px 16px', background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: '13px' }}>
             Audit Engagements ({audits.length})
           </div>
           <div>
@@ -364,12 +364,12 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
                       padding: '12px 16px',
                       borderBottom: '1px solid var(--border)',
                       cursor: 'pointer',
-                      background: isSelected ? '#f0f5f3' : 'transparent',
+                      background: isSelected ? 'var(--accent-light)' : 'transparent',
                       borderLeft: isSelected ? '3px solid var(--accent)' : '3px solid transparent'
                     }}
                   >
                     <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '2px' }}>{a.title}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                    <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                       <Badge value={a.status} />
                       <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{reqCount} request(s)</span>
                     </div>
@@ -386,7 +386,7 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
             <div className="card">
               <div className="card-header">
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <h2 style={{ fontSize: '18px', fontWeight: 700 }}>{selectedAudit.title}</h2>
                     <Badge value={selectedAudit.status} />
                   </div>
@@ -395,7 +395,7 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="view-inline" style={{ display: 'flex', gap: '8px' }}>
                   <a href={`/api/audits/${selectedAudit.id}/export`} className="button button-primary" download title="Export scoped audit package">
                     <Download size={14} /> Export Audit Package
                   </a>
@@ -415,10 +415,11 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
                 </h4>
 
                 {auditRequests.length === 0 ? (
-                  <div style={{ padding: '24px', background: '#fafcfb', border: '1px dashed var(--border)', borderRadius: '6px', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
+                  <div style={{ padding: '24px', background: 'var(--surface-raised)', border: '1px dashed var(--border)', borderRadius: '6px', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
                     No evidence requests logged under this audit yet.
                   </div>
                 ) : (
+                  <div className="view-table-scroll">
                   <table className="table">
                     <thead>
                       <tr>
@@ -474,6 +475,7 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 )}
               </div>
             </div>

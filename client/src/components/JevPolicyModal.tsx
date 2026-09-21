@@ -138,20 +138,20 @@ export function JevPolicyModal({
   return (
     <div className="dialog-overlay" onClick={onClose}>
       <div
-        className="dialog-content card"
+        className="dialog-content card harbor-view-modal jev-policy-modal"
         onClick={e => e.stopPropagation()}
         style={{ maxWidth: '920px', width: '95%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: 0 }}
       >
         {/* Modal Header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafcfb' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '32px', height: '32px', background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+        <div className="view-row" style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-raised)' }}>
+          <div className="view-inline view-icon-row" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className="view-inline" style={{ width: '32px', height: '32px', background: 'var(--accent-strong)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink)' }}>
               <Sparkles size={16} />
             </div>
             <div>
-              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--ink)' }}>JEV Policy-to-Control Compatibility Matcher</h2>
+              <h2 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--ink)' }}>JEV Policy Control Matcher</h2>
               <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
-                System One deterministic evaluation measuring policy text compliance against your controls register.
+                Compare policy text with controls and review supporting clauses or gaps.
               </p>
             </div>
           </div>
@@ -159,7 +159,7 @@ export function JevPolicyModal({
         </div>
 
         {/* Source Tabs */}
-        <div style={{ display: 'flex', gap: '8px', padding: '12px 24px', background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+        <div className="view-inline" style={{ display: 'flex', gap: '8px', padding: '12px 24px', background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)' }}>
           {policy && (
             <button
               className={`button button-sm ${activeTab === 'current' ? 'button-primary' : ''}`}
@@ -186,14 +186,14 @@ export function JevPolicyModal({
         </div>
 
         {/* Body content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div className="jev-policy-body" style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
           {/* Upload Input view */}
           {activeTab === 'upload' && !evaluation && (
-            <div style={{ border: '2px dashed var(--border)', borderRadius: '12px', padding: '40px 20px', textAlign: 'center', background: '#fafcfb' }}>
+            <div style={{ border: '2px dashed var(--border)', borderRadius: '12px', padding: '40px 20px', textAlign: 'center', background: 'var(--surface-raised)' }}>
               <Upload size={32} style={{ margin: '0 auto 12px', color: 'var(--accent)' }} />
               <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--ink)', marginBottom: '6px' }}>Upload Policy to Match Controls</h3>
               <p style={{ fontSize: '13px', color: 'var(--muted)', maxWidth: '420px', margin: '0 auto 20px' }}>
-                Select a Markdown (.md) or Text (.txt) policy document. JEV will evaluate all 24 compliance controls in milliseconds.
+                Select a Markdown (.md) or Text (.txt) policy document to compare with your controls.
               </p>
               <label className="button button-primary" style={{ cursor: 'pointer', display: 'inline-flex' }}>
                 <input type="file" accept=".md,.txt,.json" onChange={handleFileUpload} style={{ display: 'none' }} />
@@ -235,41 +235,41 @@ export function JevPolicyModal({
           {evaluation && !evaluating && (
             <div>
               {/* Top Score & Metric Banner */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr repeat(3, 1fr)', gap: '14px', marginBottom: '20px' }}>
-                <div className="card" style={{ padding: '16px', margin: 0, background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: 'white' }}>
-                  <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+              <div className="view-grid-four" style={{ display: 'grid', gap: '14px', marginBottom: '20px' }}>
+                <div className="card" style={{ padding: '16px', margin: 0, background: 'linear-gradient(135deg, var(--main-bg) 0%, var(--surface-raised) 100%)', color: 'var(--ink)' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
                     JEV Compatibility Score
                   </span>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '4px' }}>
-                    <strong style={{ fontSize: '32px', color: '#38bdf8' }}>{evaluation.summary.overall_score}%</strong>
-                    <span style={{ fontSize: '12px', color: '#cbd5e1' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '4px' }}>
+                    <strong style={{ fontSize: '32px', color: 'var(--accent)' }}>{evaluation.summary.overall_score}%</strong>
+                    <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
                       ({evaluation.summary.compatible_count} of {evaluation.total_relevant} relevant)
                     </span>
                   </div>
-                  <div style={{ height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
-                    <div style={{ width: `${evaluation.summary.overall_score}%`, height: '100%', background: '#38bdf8' }} />
+                  <div style={{ height: '4px', background: 'var(--surface-raised)', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
+                    <div style={{ width: `${evaluation.summary.overall_score}%`, height: '100%', background: 'var(--accent)' }} />
                   </div>
                 </div>
 
-                <div className="card" style={{ padding: '16px', margin: 0, borderLeft: '4px solid #10b981' }}>
+                <div className="card" style={{ padding: '16px', margin: 0, borderLeft: '4px solid var(--success)' }}>
                   <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600 }}>Compatible</span>
-                  <strong style={{ display: 'block', fontSize: '24px', color: '#10b981', marginTop: '4px' }}>
+                  <strong style={{ display: 'block', fontSize: '24px', color: 'var(--success)', marginTop: '4px' }}>
                     {evaluation.summary.compatible_count}
                   </strong>
                   <small style={{ color: 'var(--muted)', fontSize: '11px' }}>Full control coverage</small>
                 </div>
 
-                <div className="card" style={{ padding: '16px', margin: 0, borderLeft: '4px solid #f59e0b' }}>
+                <div className="card" style={{ padding: '16px', margin: 0, borderLeft: '4px solid var(--warning)' }}>
                   <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600 }}>Gaps Detected</span>
-                  <strong style={{ display: 'block', fontSize: '24px', color: '#f59e0b', marginTop: '4px' }}>
+                  <strong style={{ display: 'block', fontSize: '24px', color: 'var(--warning)', marginTop: '4px' }}>
                     {evaluation.summary.gap_count}
                   </strong>
                   <small style={{ color: 'var(--muted)', fontSize: '11px' }}>Missing requirements</small>
                 </div>
 
-                <div className="card" style={{ padding: '16px', margin: 0, borderLeft: '4px solid #ef4444' }}>
+                <div className="card" style={{ padding: '16px', margin: 0, borderLeft: '4px solid var(--danger)' }}>
                   <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600 }}>Conflicts</span>
-                  <strong style={{ display: 'block', fontSize: '24px', color: '#ef4444', marginTop: '4px' }}>
+                  <strong style={{ display: 'block', fontSize: '24px', color: 'var(--danger)', marginTop: '4px' }}>
                     {evaluation.summary.conflict_count}
                   </strong>
                   <small style={{ color: 'var(--muted)', fontSize: '11px' }}>Violating statements</small>
@@ -277,8 +277,8 @@ export function JevPolicyModal({
               </div>
 
               {/* Filter and Search Bar */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', gap: '6px' }}>
+              <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px', flexWrap: 'wrap' }}>
+                <div className="view-inline" style={{ display: 'flex', gap: '6px' }}>
                   <button
                     className={`button button-sm ${activeFilter === 'all' ? 'button-primary' : ''}`}
                     onClick={() => setActiveFilter('all')}
@@ -289,25 +289,25 @@ export function JevPolicyModal({
                     className={`button button-sm ${activeFilter === 'compatible' ? 'button-primary' : ''}`}
                     onClick={() => setActiveFilter('compatible')}
                   >
-                    <CheckCircle2 size={12} color="#10b981" /> Compatible ({evaluation.summary.compatible_count})
+                    <CheckCircle2 size={12} color="var(--success)" /> Compatible ({evaluation.summary.compatible_count})
                   </button>
                   <button
                     className={`button button-sm ${activeFilter === 'gap' ? 'button-primary' : ''}`}
                     onClick={() => setActiveFilter('gap')}
                   >
-                    <AlertTriangle size={12} color="#f59e0b" /> Gaps ({evaluation.summary.gap_count})
+                    <AlertTriangle size={12} color="var(--warning)" /> Gaps ({evaluation.summary.gap_count})
                   </button>
                   {evaluation.summary.conflict_count > 0 && (
                     <button
                       className={`button button-sm ${activeFilter === 'conflict' ? 'button-primary' : ''}`}
                       onClick={() => setActiveFilter('conflict')}
                     >
-                      <XCircle size={12} color="#ef4444" /> Conflicts ({evaluation.summary.conflict_count})
+                      <XCircle size={12} color="var(--danger)" /> Conflicts ({evaluation.summary.conflict_count})
                     </button>
                   )}
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div className="view-inline" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <input
                     type="text"
                     placeholder="Filter controls…"
@@ -342,8 +342,8 @@ export function JevPolicyModal({
                   const isConflict = r.verdict === 'conflict';
                   const isNA = r.verdict === 'not_applicable';
 
-                  const badgeColor = isComp ? '#10b981' : isGap ? '#f59e0b' : isConflict ? '#ef4444' : '#94a3b8';
-                  const badgeBg = isComp ? '#ecfdf5' : isGap ? '#fffbeb' : isConflict ? '#fef2f2' : '#f8fafc';
+                  const badgeColor = isComp ? 'var(--success)' : isGap ? 'var(--warning)' : isConflict ? 'var(--danger)' : 'var(--muted)';
+                  const badgeBg = isComp ? 'var(--success-light)' : isGap ? 'var(--warning-light)' : isConflict ? 'var(--danger-light)' : 'var(--surface-raised)';
                   const label = isComp ? `Compatible (${Math.round(r.score * 100)}%)` : isGap ? `Partial Gap (${Math.round(r.score * 100)}%)` : isConflict ? 'Conflicting Policy' : 'Out of Scope';
 
                   return (
@@ -353,16 +353,16 @@ export function JevPolicyModal({
                         padding: '16px 20px',
                         border: '1px solid var(--border)',
                         borderRadius: '10px',
-                        background: 'white',
+                        background: 'var(--card-bg)',
                         borderLeft: `4px solid ${badgeColor}`
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                         <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                          <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
                             <span className="mono" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink)' }}>{r.control_code}</span>
                             <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink)' }}>{r.control_title}</span>
-                            <span style={{ fontSize: '11px', color: 'var(--muted)', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>
+                            <span style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--surface-raised)', padding: '2px 6px', borderRadius: '4px' }}>
                               {r.category}
                             </span>
                           </div>
@@ -376,7 +376,7 @@ export function JevPolicyModal({
                             borderRadius: '12px',
                             color: badgeColor,
                             background: badgeBg,
-                            border: `1px solid ${badgeColor}33`,
+                            border: `1px solid ${badgeColor}`,
                             whiteSpace: 'nowrap'
                           }}
                         >
@@ -386,12 +386,12 @@ export function JevPolicyModal({
 
                       {/* Supporting Clauses Quote Box */}
                       {r.matched_excerpts && r.matched_excerpts.length > 0 && (
-                        <div style={{ marginTop: '10px', background: '#f8fafc', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px' }}>
-                          <span style={{ fontWeight: 600, color: '#334155', display: 'block', marginBottom: '4px' }}>
+                        <div style={{ marginTop: '10px', background: 'var(--surface-raised)', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--ink)', display: 'block', marginBottom: '4px' }}>
                             {isConflict ? 'Contradicting Clause Detected:' : 'Verified Policy Evidence:'}
                           </span>
                           {r.matched_excerpts.map((snip: string, i: number) => (
-                            <blockquote key={i} style={{ color: '#475569', fontStyle: 'italic', borderLeft: `2px solid ${badgeColor}`, paddingLeft: '8px', margin: '4px 0' }}>
+                            <blockquote key={i} style={{ color: 'var(--muted)', fontStyle: 'italic', borderLeft: `2px solid ${badgeColor}`, paddingLeft: '8px', margin: '4px 0' }}>
                               "{snip}"
                             </blockquote>
                           ))}
@@ -400,7 +400,7 @@ export function JevPolicyModal({
 
                       {/* Gaps and Remediation */}
                       {r.recommendations && r.recommendations.length > 0 && (
-                        <div style={{ marginTop: '10px', fontSize: '12px', color: '#b45309', background: '#fffbeb', padding: '8px 12px', borderRadius: '6px', border: '1px solid #fde68a' }}>
+                        <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--warning)', background: 'var(--warning-light)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--warning)' }}>
                           <strong>Recommended Policy Remediation:</strong> {r.recommendations[0]}
                         </div>
                       )}
@@ -413,7 +413,7 @@ export function JevPolicyModal({
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '14px 24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafcfb' }}>
+        <div className="view-row" style={{ padding: '14px 24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-raised)' }}>
           <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
             JEV Engine · Deterministic System One policy assurance
           </span>

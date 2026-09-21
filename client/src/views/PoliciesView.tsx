@@ -254,17 +254,17 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
   if (error) return <ErrorState message={error} retry={loadPolicies} />;
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="OPERATE"
-        title="Security & Compliance Policies"
-        description="Formal organizational governance policies, Vanta-aligned template library, immutable version tracking, and employee acceptance attestation."
+        title="Policies"
+        description="Manage policy drafts, published versions, control mappings, and employee acceptance."
       >
         <a href="/api/policies/packet" className="button" download title="Download consolidated policy packet">
           <Download size={14} /> Download Policy Packet (.zip)
         </a>
         <button className="button" onClick={() => setShowJevModal(true)} title="Upload or evaluate policy compatibility against controls using JEV">
-          <Sparkles size={14} color="#2563eb" /> JEV Control Matcher
+          <Sparkles size={14} color="var(--accent)" /> JEV Control Matcher
         </button>
         <button className="button" onClick={handleOpenTemplates}>
           <BookOpen size={14} /> Policy Library
@@ -274,10 +274,10 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
         </button>
       </PageHeader>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '20px', alignItems: 'start' }}>
+      <div className="view-split-grid" style={{ display: 'grid', gap: '20px', alignItems: 'start' }}>
         {/* Left Column: Policies List */}
         <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-          <div style={{ padding: '12px 16px', background: '#fafcfb', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="view-row" style={{ padding: '12px 16px', background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: 600, fontSize: '13px' }}>Policies Library ({policies.length})</span>
             <button className="link-button" onClick={handleOpenTemplates} style={{ fontSize: '12px' }}>
               + Templates
@@ -295,15 +295,15 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
                     padding: '12px 16px',
                     borderBottom: '1px solid var(--border)',
                     cursor: 'pointer',
-                    background: isSelected ? '#f0f5f3' : 'transparent',
+                    background: isSelected ? 'var(--accent-light)' : 'transparent',
                     borderLeft: isSelected ? '3px solid var(--accent)' : '3px solid transparent'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <div className="view-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--ink)' }}>{p.title}</span>
                     <span className="mono" style={{ fontSize: '11px', color: 'var(--muted)' }}>v{p.version || 1}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div className="view-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Badge value={isExpired ? 'expired' : p.status} />
                     <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
                       {p.control_ids?.length || 0} controls
@@ -321,7 +321,7 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
             <div className="card">
               <div className="card-header" style={{ alignItems: 'flex-start' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px', flexWrap: 'wrap' }}>
                     <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--ink)' }}>{selectedPolicy.title}</h2>
                     <Badge value={selectedPolicy.status} />
                     <span className="mono" style={{ fontSize: '12px', background: 'var(--border)', padding: '2px 6px', borderRadius: '4px' }}>
@@ -331,9 +331,9 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
                   <p style={{ color: 'var(--muted)', fontSize: '13px' }}>{selectedPolicy.description}</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <div className="view-inline" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <button className="button button-sm" onClick={() => setShowJevModal(true)} title="Check policy compatibility against controls with JEV">
-                    <Sparkles size={13} color="#2563eb" /> JEV Match
+                    <Sparkles size={13} color="var(--accent)" /> JEV Match
                   </button>
                   <a href={`/api/policies/${selectedPolicy.id}/export`} className="button button-sm" download title="Export markdown">
                     <Download size={13} /> Export MD
@@ -359,7 +359,7 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
               </div>
 
               {/* Policy Metadata & Acceptance Progress Bar */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 16px', marginBottom: '16px', fontSize: '12px' }}>
+              <div className="view-grid-four" style={{ display: 'grid', gap: '12px', background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 16px', marginBottom: '16px', fontSize: '12px' }}>
                 <div>
                   <span style={{ color: 'var(--muted)', display: 'block' }}>Policy Owner</span>
                   <strong>{selectedPolicy.owner || 'Unassigned'}</strong>
@@ -382,8 +382,8 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
 
               {/* Workforce Policy Acceptance Scorecard */}
               {acceptStats && (
-                <div style={{ background: '#f8faf9', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 16px', marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 16px', marginBottom: '20px' }}>
+                  <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                     <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ink)' }}>
                       Workforce Acceptance Compliance ({acceptStats.compliant_employees} / {acceptStats.total_employees} Personnel)
                     </span>
@@ -473,7 +473,7 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
                   />
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <div className="view-inline" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   <button type="button" className="button" onClick={() => { setIsEditing(false); setIsCreating(false); }}>
                     Cancel
                   </button>
@@ -489,9 +489,9 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
 
       {/* Policy Library / Templates Modal */}
       {showTemplateModal && (
-        <Dialog title="Vanta-Aligned Policy Templates Library" wide onClose={() => setShowTemplateModal(false)}>
+        <Dialog title="Policy Templates" wide onClose={() => setShowTemplateModal(false)}>
           <div className="dialog-body">
-            <div style={{ marginBottom: '16px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', background: '#fafcfb', padding: '12px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+            <div className="view-grid-two" style={{ marginBottom: '16px', display: 'grid', gap: '12px', background: 'var(--surface-raised)', padding: '12px', borderRadius: '6px', border: '1px solid var(--border)' }}>
               <div className="field">
                 <span>Organization Name (Substituted)</span>
                 <input type="text" value={subOrgName} onChange={e => setSubOrgName(e.target.value)} />
@@ -506,15 +506,15 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
               {templates.map(tpl => {
                 const alreadyAdopted = policies.some(p => p.title.toLowerCase() === tpl.title.toLowerCase());
                 return (
-                  <div key={tpl.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'white', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                  <div className="view-row" key={tpl.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '6px' }}>
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <strong style={{ fontSize: '14px' }}>{tpl.title}</strong>
                         <span style={{ fontSize: '11px', background: 'var(--border)', padding: '2px 6px', borderRadius: '4px' }}>{tpl.category}</span>
                         {alreadyAdopted && <span className="badge badge-green">In Library</span>}
                       </div>
                       <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>{tpl.description}</p>
-                      <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                      <div className="view-inline" style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
                         {tpl.frameworks?.map((fw: string) => (
                           <span key={fw} className="mono" style={{ fontSize: '10px', color: 'var(--accent)', background: 'var(--accent-light)', padding: '1px 5px', borderRadius: '3px' }}>
                             {fw}
@@ -608,11 +608,11 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {versions.map((v: any) => (
                   <div key={v.version} style={{ border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <strong>Version {v.version}</strong>
                       <span className="mono" style={{ fontSize: '12px', color: 'var(--muted)' }}>{formatDate(v.created_at)}</span>
                     </div>
-                    <pre style={{ maxHeight: '140px', overflowY: 'auto', background: '#fafcfb', padding: '8px', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
+                    <pre style={{ maxHeight: '140px', overflowY: 'auto', background: 'var(--surface-raised)', padding: '8px', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
                       {v.content}
                     </pre>
                   </div>

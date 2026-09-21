@@ -51,10 +51,10 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
   const failingCount = checks.filter((c: any) => c.status === 'fail').length;
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="MONITOR"
-        title="Automated Record Monitoring"
+        title="Monitoring"
         description="Continuous evaluation of completeness, currency, and consistency across your local compliance records."
       >
         <button className="button button-primary" onClick={handleRunChecks} disabled={running}>
@@ -82,7 +82,7 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
       </div>
 
       <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-        <div style={{ padding: '12px 20px', background: '#fafcfb', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="view-row" style={{ padding: '12px 20px', background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontWeight: 600, fontSize: '13px' }}>Monitoring Checks ({checks.length})</span>
           {data?.last_run && (
             <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
@@ -97,7 +97,7 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
             const isPassing = c.status === 'pass';
             return (
               <div key={c.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                <div
+                <div className="view-row"
                   onClick={() => setExpandedCheck(isExpanded ? null : c.id)}
                   style={{
                     padding: '16px 20px',
@@ -105,11 +105,11 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     cursor: 'pointer',
-                    background: isExpanded ? '#fafcfb' : 'white',
+                    background: isExpanded ? 'var(--surface-raised)' : 'var(--card-bg)',
                     transition: 'background 0.1s'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     {isPassing ? (
                       <CheckCircle2 size={18} color="var(--accent)" />
                     ) : (
@@ -125,7 +125,7 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <Badge value={c.status} />
                     {c.finding_count > 0 && (
                       <span className="mono" style={{ fontSize: '12px', color: 'var(--danger)', fontWeight: 600 }}>
@@ -138,7 +138,7 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
 
                 {/* Expanded findings drawer */}
                 {isExpanded && (
-                  <div style={{ padding: '16px 20px 20px 48px', background: '#f8faf9', borderTop: '1px solid var(--border)' }}>
+                  <div style={{ padding: '16px 20px 20px 48px', background: 'var(--surface-raised)', borderTop: '1px solid var(--border)' }}>
                     {c.findings.length === 0 ? (
                       <p style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: 500 }}>
                         ✓ No findings. All records meet this check's criteria.
@@ -149,13 +149,13 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
                           Discovered Findings ({c.findings.length})
                         </div>
                         {c.findings.map((f: any, idx: number) => (
-                          <div
+                          <div className="view-row"
                             key={idx}
                             style={{
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              background: 'white',
+                              background: 'var(--card-bg)',
                               border: '1px solid var(--border)',
                               borderRadius: '6px',
                               padding: '10px 14px'
@@ -190,10 +190,10 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
         <div className="card" style={{ marginTop: '24px' }}>
           <div className="card-header">
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <Bug size={18} color="#2563eb" />
-                <h3 className="card-title" style={{ margin: 0 }}>Vulnerability Management & Patch SLA Tracker</h3>
-                <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '2px 8px', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <Bug size={18} color="var(--accent)" />
+                <h3 className="card-title" style={{ margin: 0 }}>Vulnerabilities & Patch SLAs</h3>
+                <span style={{ fontSize: '11px', background: 'var(--success-light)', color: 'var(--success)', padding: '2px 8px', borderRadius: '10px', border: '1px solid var(--success)' }}>
                   100% SLA Compliant
                 </span>
               </div>
@@ -203,27 +203,28 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-            <div style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px' }}>
+          <div className="view-auto-grid" style={{ display: 'grid', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px' }}>
               <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Tracked CVEs</div>
               <strong style={{ fontSize: '16px', color: 'var(--ink)' }}>{vulnData.total}</strong>
             </div>
-            <div style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px' }}>
+            <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px' }}>
               <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Remediated within SLA</div>
-              <strong style={{ fontSize: '16px', color: '#16a34a' }}>{vulnData.remediated_count} (100%)</strong>
+              <strong style={{ fontSize: '16px', color: 'var(--success)' }}>{vulnData.remediated_count} (100%)</strong>
             </div>
-            <div style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px' }}>
+            <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px' }}>
               <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Open Overdue Findings</div>
-              <strong style={{ fontSize: '16px', color: vulnData.open_count > 0 ? 'var(--danger)' : '#16a34a' }}>
+              <strong style={{ fontSize: '16px', color: vulnData.open_count > 0 ? 'var(--danger)' : 'var(--success)' }}>
                 {vulnData.open_count}
               </strong>
             </div>
-            <div style={{ background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px' }}>
+            <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px' }}>
               <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Auditor SLA Rules</div>
-              <strong style={{ fontSize: '12px', color: '#2563eb' }}>Critical 7d · High 30d</strong>
+              <strong style={{ fontSize: '12px', color: 'var(--accent)' }}>Critical 7d · High 30d</strong>
             </div>
           </div>
 
+          <div className="view-table-scroll">
           <table className="table" style={{ width: '100%', fontSize: '13px' }}>
             <thead>
               <tr>
@@ -238,22 +239,22 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
               {(vulnData.vulnerabilities || []).map((v: any) => (
                 <tr key={v.id}>
                   <td>
-                    <span className="mono" style={{ fontWeight: 600, color: '#2563eb' }}>{v.cve_id}</span>
+                    <span className="mono" style={{ fontWeight: 600, color: 'var(--accent)' }}>{v.cve_id}</span>
                     <small style={{ color: 'var(--ink)', display: 'block', marginTop: '2px' }}>{v.title}</small>
                   </td>
                   <td>
                     <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{v.component}</span>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{
                         fontSize: '11px',
                         fontWeight: 600,
                         textTransform: 'uppercase',
                         padding: '1px 6px',
                         borderRadius: '4px',
-                        background: v.severity === 'critical' ? '#fee2e2' : v.severity === 'high' ? '#ffedd5' : '#fef9c3',
-                        color: v.severity === 'critical' ? '#991b1b' : v.severity === 'high' ? '#9a3412' : '#854d0e'
+                        background: v.severity === 'critical' ? 'var(--danger-light)' : v.severity === 'high' ? 'var(--warning-light)' : 'var(--warning-light)',
+                        color: v.severity === 'critical' ? 'var(--danger)' : v.severity === 'high' ? 'var(--warning)' : 'var(--warning)'
                       }}>
                         {v.severity} ({v.cvss})
                       </span>
@@ -267,7 +268,7 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
                   </td>
                   <td>
                     <div>
-                      <span style={{ fontSize: '11px', background: 'rgba(34, 197, 94, 0.15)', color: '#16a34a', padding: '2px 8px', borderRadius: '10px' }}>
+                      <span style={{ fontSize: '11px', background: 'var(--success-light)', color: 'var(--success)', padding: '2px 8px', borderRadius: '10px' }}>
                         ✓ {v.status}
                       </span>
                       {v.remediation_ref && (
@@ -281,6 +282,7 @@ export function MonitoringView({ notify, onNavigate }: { notify: Notify; onNavig
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

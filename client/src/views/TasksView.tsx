@@ -134,23 +134,23 @@ export function TasksView({ schema, notify, onNavigate }: { schema: Schema; noti
   if (error) return <ErrorState message={error} retry={loadTasks} />;
 
   return (
-    <div>
+    <div className="harbor-view">
       <PageHeader
         eyebrow="OPERATE"
-        title="Remediation Tasks & Work Queues"
+        title="Tasks"
         description="Track action items, control remediation, policy reviews, and audit deliverables across your team."
       >
-        <div style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
+        <div className="view-inline" style={{ display: 'flex', border: '1px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
           <button
             className="button"
-            style={{ borderRadius: 0, border: 'none', background: viewMode === 'board' ? '#fafcfb' : 'white', fontWeight: viewMode === 'board' ? 600 : 400 }}
+            style={{ borderRadius: 0, border: 'none', background: viewMode === 'board' ? 'var(--surface-raised)' : 'var(--card-bg)', fontWeight: viewMode === 'board' ? 600 : 400 }}
             onClick={() => setViewMode('board')}
           >
             <LayoutGrid size={14} /> Board
           </button>
           <button
             className="button"
-            style={{ borderRadius: 0, border: 'none', background: viewMode === 'list' ? '#fafcfb' : 'white', fontWeight: viewMode === 'list' ? 600 : 400 }}
+            style={{ borderRadius: 0, border: 'none', background: viewMode === 'list' ? 'var(--surface-raised)' : 'var(--card-bg)', fontWeight: viewMode === 'list' ? 600 : 400 }}
             onClick={() => setViewMode('list')}
           >
             <List size={14} /> List
@@ -179,7 +179,7 @@ export function TasksView({ schema, notify, onNavigate }: { schema: Schema; noti
                     const checkDone = t.checklist?.filter((c: any) => c.done).length || 0;
                     return (
                       <div key={t.id} className="kanban-card" onClick={() => handleOpenEdit(t)}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--ink)' }}>{t.title}</span>
                           <Badge value={t.priority || 'medium'} />
                         </div>
@@ -191,12 +191,12 @@ export function TasksView({ schema, notify, onNavigate }: { schema: Schema; noti
                         )}
 
                         {checkTotal > 0 && (
-                          <div style={{ fontSize: '11px', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <div className="view-inline" style={{ fontSize: '11px', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <Check size={12} /> {checkDone}/{checkTotal} subtasks
                           </div>
                         )}
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', fontSize: '11px', color: 'var(--muted)' }}>
+                        <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', fontSize: '11px', color: 'var(--muted)' }}>
                           <span>{t.owner || 'Unassigned'}</span>
                           {t.due_date && (
                             <span style={{ color: new Date(t.due_date) < new Date() && t.status !== 'done' ? 'var(--danger)' : 'var(--muted)' }}>
@@ -324,7 +324,7 @@ export function TasksView({ schema, notify, onNavigate }: { schema: Schema; noti
                 </span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '10px' }}>
                   {checklist.map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="view-inline" key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <input
                         type="checkbox"
                         checked={item.done}
@@ -349,7 +349,7 @@ export function TasksView({ schema, notify, onNavigate }: { schema: Schema; noti
                   ))}
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="view-inline" style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="text"
                     placeholder="Add checklist item…"

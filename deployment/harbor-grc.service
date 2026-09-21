@@ -9,8 +9,8 @@ ExecStart=/home/viral/projects/harbor-grc/.venv/bin/python -m server
 Environment=PORT=8765
 Environment=HARBOR_DATA_DIR=/home/viral/projects/harbor-grc/data
 Environment=PYTHONDONTWRITEBYTECODE=1
-Environment=TYPESAFE_API_KEY=apikey_21687f1db331a3247ff919571dabd392e28_e774f95a30b77687cd3f5392c0de5e414ba4a21ed879aeb1c894f68689f265c4
-Environment=JEV_API_KEY=apikey_21687f1db331a3247ff919571dabd392e28_e774f95a30b77687cd3f5392c0de5e414ba4a21ed879aeb1c894f68689f265c4
+# Keep provider keys out of this tracked template. Use a local file with mode 0600.
+EnvironmentFile=-%h/.config/harbor-grc/secrets.env
 Restart=on-failure
 RestartSec=3
 TimeoutStopSec=20

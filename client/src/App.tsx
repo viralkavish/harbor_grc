@@ -31,6 +31,7 @@ import {
 import { api } from './lib/api';
 import { Loading, ErrorState, Toast, Badge } from './components/ui';
 import { CommandPalette } from './components/CommandPalette';
+import { AppShell } from './components/AppShell';
 import { OverviewView } from './views/OverviewView';
 import { RoadmapView } from './views/RoadmapView';
 import { SOC2ReadinessView } from './views/SOC2ReadinessView';
@@ -72,7 +73,6 @@ export function App() {
   const [showChangelogModal, setShowChangelogModal] = useState(false);
   const [analyzingVendor, setAnalyzingVendor] = useState<any | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const notify = useCallback((message: string, kind: 'success' | 'error' = 'success') => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -85,7 +85,6 @@ export function App() {
   const navigate = useCallback((view: string, id?: string) => {
     setActiveView(view);
     setSelectedId(id);
-    setMobileMenuOpen(false);
     window.location.hash = id ? `${view}/${id}` : view;
     window.scrollTo(0, 0);
   }, []);
@@ -186,120 +185,8 @@ export function App() {
   ];
 
   return (
-    <div className="app-container">
-      {/* Left Sidebar */}
-      <aside className={`sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-        <div className="sidebar-brand">
-          <div className="brand-icon">
-            <Shield size={16} />
-          </div>
-          <div>
-            <div className="brand-title">Harbor GRC</div>
-          </div>
-          <span className="brand-badge">Local</span>
-        </div>
-
-        <div style={{ padding: '8px' }}>
-          <button className="search-trigger" onClick={() => setCommandPaletteOpen(true)}>
-            <Search size={14} />
-            <span>Search workspace…</span>
-            <span className="kbd-shortcut">⌘K</span>
-          </button>
-        </div>
-
-        <nav className="sidebar-nav">
-          {NAV_SECTIONS.map((sec, sIdx) => (
-            <div key={sIdx}>
-              <div className="nav-section-title">{sec.title}</div>
-              {sec.items.map(it => {
-                const Icon = it.icon;
-                const isActive = activeView === it.id;
-                const count = it.countKey ? counts[it.countKey] : undefined;
-                return (
-                  <button
-                    key={it.id}
-                    className={`nav-item ${isActive ? 'active' : ''}`}
-                    onClick={() => navigate(it.id)}
-                  >
-                    <Icon size={16} />
-                    <span>{it.label}</span>
-                    {count !== undefined && count > 0 && (
-                      <span className="nav-count">{count}</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </nav>
-
-        <div className="sidebar-footer" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div>Workspace: <strong>{bootstrap.workspace.name}</strong></div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: 'var(--muted)' }}>
-            <span
-              style={{
-                background: 'rgba(255,255,255,0.08)',
-                color: 'var(--sidebar-fg)',
-                padding: '2px 8px',
-                borderRadius: '10px',
-                border: '1px solid rgba(255,255,255,0.12)',
-                fontFamily: 'monospace'
-              }}
-            >
-              v{APP_VERSION}
-            </span>
-            <button
-              onClick={() => setShowChangelogModal(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#60a5fa',
-                cursor: 'pointer',
-                padding: 0,
-                fontSize: '11px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              <History size={11} /> Changelog
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Surface Area */}
-      <div className="main-wrapper">
-        <header className="topbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button
-              className="icon-button mobile-toggle"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{ display: 'none' }}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-            <div className="workspace-label">
-              <span style={{ color: 'var(--muted)' }}>Organization:</span>
-              <span>{bootstrap.workspace.organization || bootstrap.workspace.name}</span>
-            </div>
-          </div>
-
-          <div className="topbar-actions">
-            <button className="button button-sm" onClick={() => setShowChangelogModal(true)} title="View system changelog">
-              <History size={12} color="#2563eb" /> v{APP_VERSION}
-            </button>
-            <button className="button button-sm" onClick={() => setCommandPaletteOpen(true)}>
-              <Search size={12} /> Search
-            </button>
-            <button className="button button-sm" onClick={() => navigate('settings')}>
-              <SettingsIcon size={12} /> Settings
-            </button>
-          </div>
-        </header>
-
-        <main className="content-area">
+    <>
+      <AppShell workspace={bootstrap.workspace} sections={NAV_SECTIONS} activeView={activeView} onNavigate={navigate} onSearch={() => setCommandPaletteOpen(true)} onChangelog={() => setShowChangelogModal(true)}>
           {activeView === 'overview' && (
             <OverviewView onNavigate={navigate} notify={notify} />
           )}
@@ -482,8 +369,7 @@ export function App() {
               )}
             />
           )}
-        </main>
-      </div>
+      </AppShell>
 
       {/* Command Palette */}
       <CommandPalette
@@ -517,6 +403,6 @@ export function App() {
           />
         ))}
       </div>
-    </div>
+    </>
   );
 }

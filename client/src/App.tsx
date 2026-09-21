@@ -48,6 +48,8 @@ import { TrustCenterView } from './views/TrustCenterView';
 import { IntegrationsView } from './views/IntegrationsView';
 import { ActivityView } from './views/ActivityView';
 import { SettingsView } from './views/SettingsView';
+import { ChangelogModal } from './components/ChangelogModal';
+import { APP_VERSION } from './version';
 import type { Schema, Bootstrap } from './lib/types';
 
 interface ToastItem {
@@ -64,6 +66,7 @@ export function App() {
   const [activeView, setActiveView] = useState('overview');
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [showChangelogModal, setShowChangelogModal] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -226,8 +229,38 @@ export function App() {
           ))}
         </nav>
 
-        <div className="sidebar-footer">
+        <div className="sidebar-footer" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div>Workspace: <strong>{bootstrap.workspace.name}</strong></div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: 'var(--muted)' }}>
+            <span
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                color: 'var(--sidebar-fg)',
+                padding: '2px 8px',
+                borderRadius: '10px',
+                border: '1px solid rgba(255,255,255,0.12)',
+                fontFamily: 'monospace'
+              }}
+            >
+              v{APP_VERSION}
+            </span>
+            <button
+              onClick={() => setShowChangelogModal(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#60a5fa',
+                cursor: 'pointer',
+                padding: 0,
+                fontSize: '11px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <History size={11} /> Changelog
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -250,6 +283,9 @@ export function App() {
           </div>
 
           <div className="topbar-actions">
+            <button className="button button-sm" onClick={() => setShowChangelogModal(true)} title="View system changelog">
+              <History size={12} color="#2563eb" /> v{APP_VERSION}
+            </button>
             <button className="button button-sm" onClick={() => setCommandPaletteOpen(true)}>
               <Search size={12} /> Search
             </button>
@@ -450,6 +486,12 @@ export function App() {
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
         onNavigate={navigate}
+      />
+
+      {/* Changelog Modal */}
+      <ChangelogModal
+        isOpen={showChangelogModal}
+        onClose={() => setShowChangelogModal(false)}
       />
 
       {/* Floating Toast Notifications */}

@@ -114,3 +114,25 @@ def test_jev_link_compatible_controls(client: TestClient):
     link_data = link_res.json()
     assert 'ctl-01' in link_data['linked_control_ids']
     assert 'ctl-04' in link_data['linked_control_ids']
+
+
+def test_jev_status_and_test_key(client: TestClient):
+    # Test status endpoint
+    status_res = client.get('/api/jev/status')
+    assert status_res.status_code == 200
+    status = status_res.json()
+    assert status['status'] == 'operational'
+    assert status['provider'] == 'TypeSafe JEV System One'
+    assert status['rubrics_count'] >= 7
+
+    # Test key validation endpoint
+    test_res = client.post(
+        '/api/jev/test_key',
+        json={'api_key': 'jev_live_sec_test_token_12345', 'endpoint': 'https://api.typesafe.ai/v1'}
+    )
+    assert test_res.status_code == 200
+    res_data = test_res.json()
+    assert res_data['valid'] is True
+    assert res_data['status'] == 'active'
+    assert res_data['rubrics_count'] >= 7
+    assert 'latency_ms' in res_data

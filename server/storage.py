@@ -8,7 +8,8 @@ from threading import RLock
 
 WORKSPACE = dict(name='Your workspace', organization='', owner='', description='',
                  trust_title='Security at our organization', trust_description='',
-                 trust_policy_ids=[], trust_evidence_ids=[])
+                 trust_policy_ids=[], trust_evidence_ids=[],
+                 jev_api_key='', jev_endpoint='https://api.typesafe.ai/v1')
 
 
 def now():

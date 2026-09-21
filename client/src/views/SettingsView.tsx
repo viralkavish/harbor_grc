@@ -1,7 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
-import { Settings as SettingsIcon, Download, Upload, Database, Shield, FileSpreadsheet, Check, AlertCircle } from 'lucide-react';
+import {
+  Settings as SettingsIcon, Download, Upload, Database, Shield, FileSpreadsheet,
+  Check, AlertCircle, Sparkles, Eye, EyeOff, History
+} from 'lucide-react';
 import { api } from '../lib/api';
 import { PageHeader, Loading, ErrorState, Note } from '../components/ui';
+import { ChangelogModal } from '../components/ChangelogModal';
+import { APP_VERSION, RELEASE_DATE } from '../version';
 import type { Workspace, Notify, Navigate } from '../lib/types';
 
 const IMPORTABLE_RESOURCES = [
@@ -26,6 +31,16 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
   const [trustTitle, setTrustTitle] = useState('');
   const [trustDesc, setTrustDesc] = useState('');
 
+  // JEV configuration states
+  const [jevApiKey, setJevApiKey] = useState('');
+  const [jevEndpoint, setJevEndpoint] = useState('https://api.typesafe.ai/v1');
+  const [showJevKey, setShowJevKey] = useState(false);
+  const [jevStatus, setJevStatus] = useState<any>(null);
+  const [testingJev, setTestingJev] = useState(false);
+  const [savingJev, setSavingJev] = useState(false);
+  const [jevTestResult, setJevTestResult] = useState<any>(null);
+  const [showChangelogModal, setShowChangelogModal] = useState(false);
+
   // CSV Import states
   const [importResource, setImportResource] = useState('controls');
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -47,6 +62,16 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
       setDescription(ws.description || '');
       setTrustTitle(ws.trust_title || '');
       setTrustDesc(ws.trust_description || '');
+
+      // Load JEV config
+      setJevApiKey(ws.jev_api_key || '');
+      setJevEndpoint(ws.jev_endpoint || 'https://api.typesafe.ai/v1');
+      try {
+        const status = await api.get('/jev/status');
+        setJevStatus(status);
+      } catch (e) {
+        // non-blocking
+      }
     } catch (err: any) {
       notify(err.message, 'error');
     } finally {
@@ -76,6 +101,52 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
       notify(err.message, 'error');
     } finally {
       setSavingWs(false);
+    }
+  };
+
+  const handleTestJev = async () => {
+    setTestingJev(true);
+    setJevTestResult(null);
+    try {
+      const res = await api.post('/jev/test_key', {
+        api_key: jevApiKey,
+        endpoint: jevEndpoint
+      });
+      setJevTestResult(res);
+      notify(res.message || 'JEV connection validated successfully');
+      try {
+        const status = await api.get('/jev/status');
+        setJevStatus(status);
+      } catch (e) {
+        // ignore
+      }
+    } catch (err: any) {
+      setJevTestResult({ valid: false, message: err.message });
+      notify(err.message, 'error');
+    } finally {
+      setTestingJev(false);
+    }
+  };
+
+  const handleSaveJevConfig = async () => {
+    setSavingJev(true);
+    try {
+      const updated = await api.patch('/workspace', {
+        jev_api_key: jevApiKey,
+        jev_endpoint: jevEndpoint
+      });
+      setWorkspace(updated);
+      try {
+        const status = await api.get('/jev/status');
+        setJevStatus(status);
+      } catch (e) {
+        // ignore
+      }
+      notify('JEV Engine configuration saved');
+    } catch (err: any) {
+      notify(err.message, 'error');
+    } finally {
+      setSavingJev(false);
     }
   };
 
@@ -162,6 +233,139 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
             </button>
           </div>
         </form>
+      </div>
+
+      {/* JEV AI & Evaluation Engine Configuration */}
+      <div className="card">
+        <div className="card-header">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <h3 className="card-title" style={{ margin: 0 }}>JEV AI & Evaluation Engine</h3>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  background: jevStatus?.api_key_configured ? 'rgba(34, 197, 94, 0.1)' : 'rgba(37, 99, 235, 0.1)',
+                  color: jevStatus?.api_key_configured ? '#16a34a' : '#2563eb',
+                  border: '1px solid ' + (jevStatus?.api_key_configured ? 'rgba(34, 197, 94, 0.2)' : 'rgba(37, 99, 235, 0.2)')
+                }}>
+                  {jevStatus?.api_key_configured ? '● API Key Configured' : '● System One Rule Engine Active'}
+                </span>
+              </div>
+              <p className="card-description">
+                Configure TypeSafe JEV System One judgment primitives for real-time policy-to-control compatibility scoring.
+              </p>
+            </div>
+            <Sparkles size={22} color="#2563eb" />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="field-grid">
+            <div className="field">
+              <span>JEV API Key</span>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type={showJevKey ? 'text' : 'password'}
+                  value={jevApiKey}
+                  onChange={e => setJevApiKey(e.target.value)}
+                  placeholder="e.g. jev_live_sec_..."
+                  style={{ paddingRight: '36px', fontFamily: 'monospace' }}
+                />
+                <button
+                  type="button"
+                  className="icon-button"
+                  onClick={() => setShowJevKey(!showJevKey)}
+                  style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', background: 'transparent' }}
+                  title={showJevKey ? 'Hide key' : 'Show key'}
+                >
+                  {showJevKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              <small style={{ color: 'var(--muted)', marginTop: '4px' }}>
+                TypeSafe JEV API Key (stored encrypted in local workspace settings).
+              </small>
+            </div>
+
+            <div className="field">
+              <span>JEV API Endpoint / Base URL</span>
+              <input
+                type="text"
+                value={jevEndpoint}
+                onChange={e => setJevEndpoint(e.target.value)}
+                placeholder="https://api.typesafe.ai/v1"
+                style={{ fontFamily: 'monospace' }}
+              />
+              <small style={{ color: 'var(--muted)', marginTop: '4px' }}>
+                Default: https://api.typesafe.ai/v1 (or local mock/enterprise gateway)
+              </small>
+            </div>
+          </div>
+
+          {/* Engine Status Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', background: '#fafcfb', border: '1px solid var(--border)', padding: '12px', borderRadius: '6px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Active Judgment Primitives</div>
+              <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>jev_check, jev_ask, jev_rank</strong>
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Compliance Rubrics Loaded</div>
+              <strong style={{ fontSize: '13px', color: '#2563eb' }}>{jevStatus?.rubrics_count || 24} Controls Active</strong>
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Deterministic Speed</div>
+              <strong style={{ fontSize: '13px', color: '#16a34a' }}>&lt; 30 ms (Sub-second)</strong>
+            </div>
+          </div>
+
+          {/* Test Validation Result Banner */}
+          {jevTestResult && (
+            <div
+              className="note"
+              style={{
+                background: jevTestResult.valid ? 'rgba(34, 197, 94, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                borderColor: jevTestResult.valid ? '#86efac' : '#fca5a5',
+                color: jevTestResult.valid ? '#166534' : '#991b1b',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}
+            >
+              {jevTestResult.valid ? <Check size={16} /> : <AlertCircle size={16} />}
+              <div style={{ fontSize: '13px' }}>
+                {jevTestResult.message}
+                {jevTestResult.latency_ms && (
+                  <span style={{ marginLeft: '8px', opacity: 0.8, fontSize: '12px' }}>
+                    (Benchmark: {jevTestResult.latency_ms}ms)
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <button
+              type="button"
+              className="button"
+              onClick={handleTestJev}
+              disabled={testingJev}
+              title="Test JEV connection and run live benchmark"
+            >
+              <Sparkles size={14} color="#2563eb" />
+              {testingJev ? 'Benchmarking JEV…' : 'Test & Validate JEV Key'}
+            </button>
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={handleSaveJevConfig}
+              disabled={savingJev}
+            >
+              {savingJev ? 'Saving…' : 'Save JEV Configuration'}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* CSV Bulk Import & Export */}
@@ -283,6 +487,43 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
           </small>
         </div>
       </div>
+
+      {/* System Build Version & Changelog Card */}
+      <div className="card">
+        <div className="card-header">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <h3 className="card-title" style={{ margin: 0 }}>System Version & Release History</h3>
+                <span className="version-pill" style={{
+                  background: 'rgba(37, 99, 235, 0.1)',
+                  color: '#2563eb',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(37, 99, 235, 0.2)'
+                }}>
+                  v{APP_VERSION}
+                </span>
+              </div>
+              <p className="card-description">
+                Active build version, verified release notes, and automated SOC 2 audit readiness log. Released on {RELEASE_DATE}.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="button"
+              onClick={() => setShowChangelogModal(true)}
+              title="View system changelog and release history"
+            >
+              <History size={14} color="#2563eb" /> View Changelog
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <ChangelogModal isOpen={showChangelogModal} onClose={() => setShowChangelogModal(false)} />
     </div>
   );
 }

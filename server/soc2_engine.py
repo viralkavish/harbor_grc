@@ -140,6 +140,7 @@ def soc2_router(store):
             }
 
     @router.get('/pbc_list')
+    @router.get('/pbc_requests')
     def get_pbc_list():
         """Returns standard AICPA auditor Provided By Client request items linked to live evidence."""
         with store.transaction() as db:
@@ -168,7 +169,11 @@ def soc2_router(store):
             }
 
     @router.post('/sample_generator')
-    def generate_population_sample(payload: dict):
+    @router.post('/sampling')
+    @router.get('/sampling')
+    def generate_population_sample(payload: dict | None = None):
+        if payload is None:
+            payload = {}
         """Auditor Population Sampling Tool.
 
         Generates statistically sound random samples across audit populations:
@@ -237,7 +242,8 @@ def soc2_router(store):
                 "population_total": pop_total,
                 "sample_size": len(sample_records),
                 "generated_at": now(),
-                "samples": sample_records
+                "samples": sample_records,
+                "items": sample_records
             }
 
     @router.get('/cuecs_and_csocs')

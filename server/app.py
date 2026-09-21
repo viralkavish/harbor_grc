@@ -69,7 +69,15 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
             }
             return dict(workspace=ws, csrf_token=token, counts=counts, frameworks=frameworks, capabilities=capabilities)
 
+    @app.get('/api/workspace')
+    @app.get('/api/settings')
+    def get_settings():
+        with store.transaction() as db:
+            ws = store.workspace(db)
+            return {'workspace': ws, 'settings': ws}
+
     @app.patch('/api/workspace')
+    @app.patch('/api/settings')
     def update_workspace(payload: dict):
         with store.transaction() as db:
             workspace = store.workspace(db)

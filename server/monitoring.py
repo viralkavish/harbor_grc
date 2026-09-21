@@ -194,6 +194,7 @@ def monitoring_router(store):
     router = APIRouter(prefix='/api/monitoring')
 
     @router.get('')
+    @router.get('/checks')
     def get_monitoring():
         with store.transaction() as db:
             last_run_row = db.execute(

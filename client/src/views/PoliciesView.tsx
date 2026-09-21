@@ -8,6 +8,7 @@ import { api } from '../lib/api';
 import { PageHeader, Badge, Loading, ErrorState, EmptyState, formatDate, Note } from '../components/ui';
 import { Dialog } from '../components/Dialog';
 import { LinkedSelect } from '../components/Fields';
+import { JevPolicyModal } from '../components/JevPolicyModal';
 import type { DataRecord, Schema, Notify, Navigate } from '../lib/types';
 
 export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schema: Schema; notify: Notify; onNavigate: Navigate; selectedId?: string }) {
@@ -44,6 +45,9 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
   const [acceptName, setAcceptName] = useState('');
   const [acceptEmail, setAcceptEmail] = useState('');
   const [acceptStats, setAcceptStats] = useState<any | null>(null);
+
+  // JEV Policy-to-Control Modal
+  const [showJevModal, setShowJevModal] = useState(false);
 
   const [saving, setSaving] = useState(false);
 
@@ -259,6 +263,9 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
         <a href="/api/policies/packet" className="button" download title="Download consolidated policy packet">
           <Download size={14} /> Download Policy Packet (.zip)
         </a>
+        <button className="button" onClick={() => setShowJevModal(true)} title="Upload or evaluate policy compatibility against controls using JEV">
+          <Sparkles size={14} color="#2563eb" /> JEV Control Matcher
+        </button>
         <button className="button" onClick={handleOpenTemplates}>
           <BookOpen size={14} /> Policy Library
         </button>
@@ -325,6 +332,9 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
                 </div>
 
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <button className="button button-sm" onClick={() => setShowJevModal(true)} title="Check policy compatibility against controls with JEV">
+                    <Sparkles size={13} color="#2563eb" /> JEV Match
+                  </button>
                   <a href={`/api/policies/${selectedPolicy.id}/export`} className="button button-sm" download title="Export markdown">
                     <Download size={13} /> Export MD
                   </a>
@@ -615,6 +625,16 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
           </div>
         </Dialog>
       )}
+
+      {/* JEV Policy-to-Control Compatibility Matcher */}
+      <JevPolicyModal
+        isOpen={showJevModal}
+        onClose={() => setShowJevModal(false)}
+        policy={selectedPolicy}
+        onPolicyUpdated={loadPolicies}
+        notify={notify}
+        onNavigate={onNavigate}
+      />
     </div>
   );
 }

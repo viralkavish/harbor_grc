@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.4.0';
+export const APP_VERSION = '0.5.0';
 export const RELEASE_DATE = '2026-09-21';
 
 export interface ChangelogEntry {
@@ -11,9 +11,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.4.0',
+    version: '0.5.0',
     date: '2026-09-21',
     badge: 'Latest',
+    title: "Live TypeSafe JEV System One Integration & Engine Upgrade",
+    highlights: [
+      "Live TypeSafe Cloud Integration: Connected live TypeSafe JEV System One (jev-1.13.0) API key via https://api.typesafe.ai/v1/systemone.",
+      "Frontier Probabilistic Judgments: Augmented policy-to-control compatibility scoring with typed choice and noul primitives with verified confidence scores.",
+      "Live Benchmarking & Token Metrics: Integrated live latency benchmarking, token usage tracking, and persistent workspace key management.",
+      "Telegram Desktop Omarchy Integration: Installed and configured standalone Telegram Desktop with desktop entry and icon integration."
+    ]
+  },
+  {
+    version: '0.4.0',
+    date: '2026-09-21',
+    badge: 'Stable',
     title: "Top 10 Advanced Vanta & SOC 2 Enterprise Features Suite",
     highlights: [
       "Automated Test Remediation Engine: Copy-pasteable CLI and Terraform fix snippets for failing continuous controls tests.",

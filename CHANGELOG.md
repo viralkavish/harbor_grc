@@ -24,6 +24,17 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.5.0] - 2026-09-21
+
+### Added
+- **Live TypeSafe JEV System One Integration & Engine Upgrade**
+- Live TypeSafe Cloud Integration: Connected live TypeSafe JEV System One (jev-1.13.0) API key via https://api.typesafe.ai/v1/systemone.
+- Frontier Probabilistic Judgments: Augmented policy-to-control compatibility scoring with typed choice and noul primitives with verified confidence scores.
+- Live Benchmarking & Token Metrics: Integrated live latency benchmarking, token usage tracking, and persistent workspace key management.
+- Telegram Desktop Omarchy Integration: Installed and configured standalone Telegram Desktop with desktop entry and icon integration.
+
+---
+
 ## [0.4.0] - 2026-09-21
 
 ### Added

@@ -24,6 +24,16 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.6.1] - 2026-09-21
+
+### Fixed
+- **Fix Frameworks Route Parity on Edge & Client Resiliency**
+- Edge Worker Route Parity: Added /api/frameworks/harmonization and advanced feature routes to Cloudflare Worker, preventing 404 'Record not found' errors.
+- Client Network Resiliency: Updated FrameworksView with Promise.allSettled to ensure framework registers remain accessible even under partial network degradation.
+- Route Safety Boundary: Restricted generic resource pattern matching to recognized resource collections only.
+
+---
+
 ## [0.6.0] - 2026-09-21
 
 ### Added

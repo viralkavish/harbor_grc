@@ -15,12 +15,18 @@ export function FrameworksView({ schema, notify, onNavigate }: { schema: Schema 
     setLoading(true);
     setError('');
     try {
-      const [fRes, hRes] = await Promise.all([
+      const [fRes, hRes] = await Promise.allSettled([
         api.get('/frameworks'),
         api.get('/frameworks/harmonization')
       ]);
-      setFrameworks(fRes.items || []);
-      setHarmonization(hRes);
+      if (fRes.status === 'fulfilled') {
+        setFrameworks(fRes.value.items || []);
+      }
+      if (hRes.status === 'fulfilled') {
+        setHarmonization(hRes.value);
+      } else if (fRes.status === 'rejected') {
+        setError(fRes.reason?.message || 'Failed to load frameworks');
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

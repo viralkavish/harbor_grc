@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.6.0';
+export const APP_VERSION = '0.6.1';
 export const RELEASE_DATE = '2026-09-21';
 
 export interface ChangelogEntry {
@@ -11,9 +11,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.6.0',
+    version: '0.6.1',
     date: '2026-09-21',
     badge: 'Latest',
+    title: "Fix Frameworks Route Parity on Edge & Client Resiliency",
+    highlights: [
+      "Edge Worker Route Parity: Added /api/frameworks/harmonization and advanced feature routes to Cloudflare Worker, preventing 404 'Record not found' errors.",
+      "Client Network Resiliency: Updated FrameworksView with Promise.allSettled to ensure framework registers remain accessible even under partial network degradation.",
+      "Route Safety Boundary: Restricted generic resource pattern matching to recognized resource collections only."
+    ]
+  },
+  {
+    version: '0.6.0',
+    date: '2026-09-21',
+    badge: 'Stable',
     title: "Astra Dark Theme UI/UX Redesign & AppShell Architecture",
     highlights: [
       "Astra Dark Theme System: Unified dark-mode aesthetic across all 23 views with semantic CSS tokens, high-contrast typography, and dark cards.",

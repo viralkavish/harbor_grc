@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.2.0';
+export const APP_VERSION = '0.3.0';
 export const RELEASE_DATE = '2026-09-21';
 
 export interface ChangelogEntry {
@@ -11,9 +11,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.2.0',
+    version: '0.3.0',
     date: '2026-09-21',
     badge: 'Latest',
+    title: "Production SOC 2 Roadmap & Live Trajectory Verification Engine",
+    highlights: [
+      "Automated Live Posture Verification: Evaluates real database evidence against 18 strategic SOC 2 milestones.",
+      "Comprehensive 6-Phase Startup Trajectory: Enriched with AICPA Trust Services Criteria, auditor PBC deliverables, and recommended startup tooling.",
+      "SOC 2 Type II Observation Window Tracker: Monitors active observation windows (3/6/12 months) and drift-free days.",
+      "Audit Roadmap Export: One-click exportable executive audit plan and PBC checklist."
+    ]
+  },
+  {
+    version: '0.2.0',
+    date: '2026-09-21',
+    badge: 'Stable',
     title: 'JEV Semantic Engine, Astra Cosmic Redesign & Security Hardening',
     highlights: [
       'JEV Policy-to-Control Matcher: Instant semantic judgment for policy uploads with clause extraction and gap analysis across 24 compliance controls (SOC 2, ISO 27001, HIPAA, NIST CSF).',

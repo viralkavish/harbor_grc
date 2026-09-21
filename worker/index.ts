@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.2.0"
+        version: "0.3.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });

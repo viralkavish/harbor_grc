@@ -105,6 +105,21 @@ def test_system_description_and_roadmap(client):
     assert toggle_res.status_code == 200
     assert toggle_res.json()['completed'] is True
 
+    # Live verification
+    verify_res = client.post('/api/roadmap/verify_live')
+    assert verify_res.status_code == 200
+    assert 'automated_score' in verify_res.json()
+
+    # Observation window
+    obs_res = client.patch('/api/roadmap/observation_window', json={'window_months': 6, 'status': 'in_observation'})
+    assert obs_res.status_code == 200
+    assert obs_res.json()['window_months'] == 6
+
+    # Roadmap export
+    export_res = client.get('/api/roadmap/export')
+    assert export_res.status_code == 200
+    assert 'SOC 2 Type II Readiness Trajectory' in export_res.text
+
 
 def test_trust_center_access_requests(client):
     req_res = client.post('/api/trust/request_access', json={

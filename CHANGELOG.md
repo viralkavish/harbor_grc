@@ -24,6 +24,17 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.3.0] - 2026-09-21
+
+### Added
+- **Production SOC 2 Roadmap & Live Trajectory Verification Engine**
+- Automated Live Posture Verification: Evaluates real database evidence against 18 strategic SOC 2 milestones.
+- Comprehensive 6-Phase Startup Trajectory: Enriched with AICPA Trust Services Criteria, auditor PBC deliverables, and recommended startup tooling.
+- SOC 2 Type II Observation Window Tracker: Monitors active observation windows (3/6/12 months) and drift-free days.
+- Audit Roadmap Export: One-click exportable executive audit plan and PBC checklist.
+
+---
+
 ## [0.2.0] - 2026-09-21
 
 ### Added

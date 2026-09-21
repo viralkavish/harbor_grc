@@ -27,6 +27,7 @@ from .system_description_ops import system_description_router
 from .roadmap_ops import roadmap_router
 from .soc2_engine import soc2_router
 from .jev_evaluator import jev_router
+from .vanta_features_suite import top10_features_router
 from .resource_routes import resource_router
 
 
@@ -36,7 +37,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
     if auto_seed:
         seed_starter_data(store)
 
-    app = FastAPI(title='Harbor GRC', version='0.3.0', docs_url=None, redoc_url=None)
+    app = FastAPI(title='Harbor GRC', version='0.4.0', docs_url=None, redoc_url=None)
     app.state.store = store
     install_security(app, store)
 
@@ -46,7 +47,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
 
     @app.get('/api/health')
     def health():
-        return {'status': 'ok', 'version': '0.3.0', 'storage': 'sqlite'}
+        return {'status': 'ok', 'version': '0.4.0', 'storage': 'sqlite'}
 
     @app.get('/api/bootstrap')
     def bootstrap(request: Request, response: Response):
@@ -118,6 +119,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
     app.include_router(roadmap_router(store))
     app.include_router(soc2_router(store))
     app.include_router(jev_router(store))
+    app.include_router(top10_features_router(store))
     app.include_router(resource_router(store))
 
     # SPA static file distribution

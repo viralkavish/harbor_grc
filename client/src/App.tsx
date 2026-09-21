@@ -25,7 +25,8 @@ import {
   Search,
   CheckCircle2,
   Menu,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 import { api } from './lib/api';
 import { Loading, ErrorState, Toast, Badge } from './components/ui';
@@ -48,7 +49,9 @@ import { TrustCenterView } from './views/TrustCenterView';
 import { IntegrationsView } from './views/IntegrationsView';
 import { ActivityView } from './views/ActivityView';
 import { SettingsView } from './views/SettingsView';
+import { FrameworksView } from './views/FrameworksView';
 import { ChangelogModal } from './components/ChangelogModal';
+import { VendorSoc2Modal } from './components/VendorSoc2Modal';
 import { APP_VERSION } from './version';
 import type { Schema, Bootstrap } from './lib/types';
 
@@ -67,6 +70,7 @@ export function App() {
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [showChangelogModal, setShowChangelogModal] = useState(false);
+  const [analyzingVendor, setAnalyzingVendor] = useState<any | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -364,21 +368,12 @@ export function App() {
             <SettingsView notify={notify} onNavigate={navigate} />
           )}
 
-          {/* Standard Resource Tables */}
+          {/* Compliance Frameworks & Harmonization */}
           {activeView === 'frameworks' && (
-            <ResourceTableView
-              resource="frameworks"
+            <FrameworksView
               schema={schema}
-              title="Compliance Frameworks"
-              description="Reference shells and target standards. Readiness starts at zero until controls are implemented."
               notify={notify}
               onNavigate={navigate}
-              selectedId={selectedId}
-              customColumns={(r) => (
-                <span className="mono" style={{ fontSize: '11px', color: 'var(--muted)' }}>
-                  {r.version || '—'}
-                </span>
-              )}
             />
           )}
 
@@ -410,8 +405,17 @@ export function App() {
               onNavigate={navigate}
               selectedId={selectedId}
               customColumns={(r) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Badge value={r.tier || 'medium'} />
+                  <button
+                    type="button"
+                    className="button button-sm"
+                    onClick={(e) => { e.stopPropagation(); setAnalyzingVendor(r); }}
+                    style={{ fontSize: '11px', padding: '2px 8px' }}
+                    title="Run AI SOC 2 Examination Review and Extract CUECs"
+                  >
+                    <Sparkles size={11} color="#2563eb" /> AI SOC 2
+                  </button>
                   {r.website && (
                     <a href={r.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px' }}>
                       Web
@@ -492,6 +496,14 @@ export function App() {
       <ChangelogModal
         isOpen={showChangelogModal}
         onClose={() => setShowChangelogModal(false)}
+      />
+
+      {/* Vendor AI SOC 2 Review Modal */}
+      <VendorSoc2Modal
+        isOpen={!!analyzingVendor}
+        onClose={() => setAnalyzingVendor(null)}
+        vendor={analyzingVendor}
+        notify={notify}
       />
 
       {/* Floating Toast Notifications */}

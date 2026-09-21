@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ShieldCheck, Play, AlertCircle, CheckCircle2, AlertTriangle, Terminal, RefreshCw, Layers } from 'lucide-react';
+import { ShieldCheck, Play, AlertCircle, CheckCircle2, AlertTriangle, Terminal, RefreshCw, Layers, Code2, Copy, Check } from 'lucide-react';
 import { api } from '../lib/api';
 import { PageHeader, Badge, Loading, ErrorState, Note } from '../components/ui';
 import type { Notify, Navigate } from '../lib/types';
@@ -10,6 +10,19 @@ export function ContinuousTestsView({ notify, onNavigate }: { notify: Notify; on
   const [error, setError] = useState('');
   const [running, setRunning] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [expandedSnippets, setExpandedSnippets] = useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const toggleSnippet = (id: string) => {
+    setExpandedSnippets(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const copySnippet = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    notify('Remediation snippet copied to clipboard');
+    setTimeout(() => setCopiedId(null), 2500);
+  };
 
   const loadTests = () => {
     setLoading(true);
@@ -139,10 +152,47 @@ export function ContinuousTestsView({ notify, onNavigate }: { notify: Notify; on
                       {test.summary}
                     </p>
 
-                    {test.remediation && (test.status !== 'pass') && (
-                      <div style={{ marginTop: '8px', padding: '8px 12px', background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px' }}>
-                        <span style={{ fontWeight: 600, color: 'var(--muted)' }}>Remediation Guidance: </span>
-                        <span>{test.remediation}</span>
+                    {test.remediation && (
+                      <div style={{ marginTop: '8px', padding: '10px 14px', background: '#fafcfb', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: test.remediation_snippet ? '8px' : 0 }}>
+                          <div>
+                            <span style={{ fontWeight: 600, color: 'var(--muted)' }}>Remediation Guidance: </span>
+                            <span style={{ color: 'var(--ink)' }}>{test.remediation}</span>
+                          </div>
+                          {test.remediation_snippet && (
+                            <button
+                              type="button"
+                              className="button button-sm"
+                              onClick={() => toggleSnippet(test.id)}
+                              style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            >
+                              <Code2 size={12} color="#2563eb" />
+                              {expandedSnippets[test.id] ? 'Hide Fix Snippet' : 'Auto-Fix Snippet'}
+                            </button>
+                          )}
+                        </div>
+
+                        {test.remediation_snippet && expandedSnippets[test.id] && (
+                          <div style={{ marginTop: '8px', background: '#090d16', borderRadius: '6px', padding: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px' }}>
+                              <span style={{ color: '#60a5fa', fontSize: '11px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Terminal size={12} /> {test.remediation_snippet.label}
+                              </span>
+                              <button
+                                type="button"
+                                className="button button-sm"
+                                onClick={() => copySnippet(test.id, test.remediation_snippet.snippet)}
+                                style={{ fontSize: '11px', padding: '2px 8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none' }}
+                              >
+                                {copiedId === test.id ? <Check size={12} color="#4ade80" /> : <Copy size={12} />}
+                                {copiedId === test.id ? 'Copied!' : 'Copy Code'}
+                              </button>
+                            </div>
+                            <pre className="mono" style={{ margin: 0, color: '#e2e8f0', fontSize: '11px', lineHeight: 1.5, overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+                              {test.remediation_snippet.snippet}
+                            </pre>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

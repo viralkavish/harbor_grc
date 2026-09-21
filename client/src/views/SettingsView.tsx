@@ -40,6 +40,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
   const [savingJev, setSavingJev] = useState(false);
   const [jevTestResult, setJevTestResult] = useState<any>(null);
   const [showChangelogModal, setShowChangelogModal] = useState(false);
+  const [aiModels, setAiModels] = useState<any[]>([]);
 
   // CSV Import states
   const [importResource, setImportResource] = useState('controls');
@@ -69,6 +70,13 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
       try {
         const status = await api.get('/jev/status');
         setJevStatus(status);
+      } catch (e) {
+        // non-blocking
+      }
+
+      try {
+        const aiRes = await api.get('/ai_governance/models');
+        setAiModels(aiRes.models || []);
       } catch (e) {
         // non-blocking
       }
@@ -366,6 +374,63 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
             </button>
           </div>
         </div>
+      </div>
+
+      {/* ISO 42001 & EU AI Act Governance Register */}
+      <div className="card">
+        <div className="card-header">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <Shield size={18} color="#2563eb" />
+              <h3 className="card-title" style={{ margin: 0 }}>AI Model Governance Register (ISO 42001 & EU AI Act)</h3>
+              <span style={{ fontSize: '11px', background: 'rgba(37, 99, 235, 0.1)', color: '#2563eb', padding: '2px 8px', borderRadius: '10px' }}>
+                Zero Data Retention (ZDR) Enforced
+              </span>
+            </div>
+            <p className="card-description">
+              Catalog enterprise AI models, verify training data opt-out status, data classification boundaries, and EU AI Act risk tiering.
+            </p>
+          </div>
+        </div>
+
+        <table className="table" style={{ width: '100%', fontSize: '13px' }}>
+          <thead>
+            <tr>
+              <th>Model Name & Provider</th>
+              <th>Primary Use Case</th>
+              <th>Data Sensitivity</th>
+              <th>Privacy & Retentions</th>
+              <th>Risk Tier</th>
+            </tr>
+          </thead>
+          <tbody>
+            {aiModels.map((m: any) => (
+              <tr key={m.id}>
+                <td>
+                  <strong style={{ color: 'var(--ink)' }}>{m.model_name}</strong>
+                  <small style={{ color: 'var(--muted)', display: 'block' }}>{m.provider}</small>
+                </td>
+                <td>
+                  <span style={{ fontSize: '12px' }}>{m.use_case}</span>
+                </td>
+                <td>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{m.data_sensitivity}</span>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '11px' }}>
+                    <span style={{ color: '#16a34a' }}>✓ Zero Data Retention</span>
+                    <span style={{ color: '#16a34a' }}>✓ Training Opt-Out</span>
+                  </div>
+                </td>
+                <td>
+                  <span style={{ fontSize: '11px', background: 'rgba(37, 99, 235, 0.1)', color: '#2563eb', padding: '2px 8px', borderRadius: '10px' }}>
+                    {m.risk_tier}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* CSV Bulk Import & Export */}

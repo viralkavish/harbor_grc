@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Briefcase, Download, Plus, Trash2, Edit2, CheckCircle2, ChevronRight, ChevronDown } from 'lucide-react';
+import {
+  Briefcase, Download, Plus, Trash2, Edit2, CheckCircle2, ChevronRight,
+  ChevronDown, Sparkles, Check, AlertCircle, Clock, FileText, Filter
+} from 'lucide-react';
 import { api } from '../lib/api';
 import { PageHeader, Badge, Loading, ErrorState, EmptyState, formatDate } from '../components/ui';
 import { Dialog } from '../components/Dialog';
@@ -12,6 +15,11 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedAudit, setSelectedAudit] = useState<DataRecord | null>(null);
+
+  // Auditor Autopilot Workspace State
+  const [activeViewTab, setActiveViewTab] = useState<'engagements' | 'auditor_hub'>('engagements');
+  const [pbcData, setPbcData] = useState<any | null>(null);
+  const [pbcFilter, setPbcFilter] = useState<'all' | 'accepted' | 'in_review' | 'needs_clarification'>('all');
 
   // New Audit Modal
   const [showAuditModal, setShowAuditModal] = useState(false);
@@ -48,8 +56,38 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
     }
   };
 
+  const loadPbcHub = async () => {
+    try {
+      const res = await api.get('/auditor_hub');
+      setPbcData(res);
+    } catch (err: any) {
+      notify(err.message, 'error');
+    }
+  };
+
+  const handleUpdatePbcStatus = async (pbcId: string, status: string, notes?: string) => {
+    try {
+      const res = await api.patch(`/auditor_hub/items/${pbcId}`, { status, ...(notes ? { notes } : {}) });
+      setPbcData((prev: any) => {
+        if (!prev) return prev;
+        const updatedItems = prev.items.map((i: any) => i.id === pbcId ? res : i);
+        const accepted = updatedItems.filter((i: any) => i.status === 'accepted').length;
+        return {
+          ...prev,
+          items: updatedItems,
+          accepted_count: accepted,
+          readiness_percent: Math.round((accepted / updatedItems.length) * 100)
+        };
+      });
+      notify(`PBC deliverable set to ${status}`);
+    } catch (err: any) {
+      notify(err.message, 'error');
+    }
+  };
+
   useEffect(() => {
     loadAuditsAndRequests();
+    loadPbcHub();
   }, []);
 
   const handleCreateAudit = async (e: React.FormEvent) => {
@@ -143,15 +181,166 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
   return (
     <div>
       <PageHeader
-        eyebrow="OPERATE"
-        title="Audits & Evidence Requests"
-        description="Organize third-party audit campaigns, track auditor requests, and export scoped compliance packages."
+        eyebrow="AUDIT"
+        title="Audits & Auditor Autopilot Hub"
+        description="AICPA auditor collaboration workspace, 21 pre-staged PBC deliverables, and formal audit campaign management."
       >
-        <button className="button button-primary" onClick={() => setShowAuditModal(true)}>
-          <Plus size={14} /> New Audit
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            className={`button ${activeViewTab === 'auditor_hub' ? 'button-primary' : ''}`}
+            onClick={() => setActiveViewTab('auditor_hub')}
+          >
+            <Sparkles size={14} /> Auditor Autopilot Hub (21 PBCs)
+          </button>
+          <button
+            className={`button ${activeViewTab === 'engagements' ? 'button-primary' : ''}`}
+            onClick={() => setActiveViewTab('engagements')}
+          >
+            <Briefcase size={14} /> Audit Engagements ({audits.length})
+          </button>
+          {activeViewTab === 'engagements' && (
+            <button className="button button-primary" onClick={() => setShowAuditModal(true)}>
+              <Plus size={14} /> New Audit
+            </button>
+          )}
+        </div>
       </PageHeader>
 
+      {activeViewTab === 'auditor_hub' ? (
+        /* Auditor Autopilot Hub Workspace */
+        <div>
+          {/* Progress Banner */}
+          <div className="card" style={{ background: '#090d16', color: 'white', padding: '24px', marginBottom: '24px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={20} color="#3b82f6" />
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'white' }}>
+                    AICPA Provided By Client (PBC) Auditor Collaboration Hub
+                  </h3>
+                </div>
+                <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
+                  Pre-staged evidence checklist required for SOC 2 Type 1 and Type 2 auditor fieldwork.
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <strong style={{ fontSize: '26px', color: '#34d399' }}>
+                  {pbcData?.readiness_percent || 0}%
+                </strong>
+                <span style={{ fontSize: '12px', display: 'block', color: 'rgba(255,255,255,0.7)' }}>
+                  Auditor Accepted ({pbcData?.accepted_count || 0}/{pbcData?.total_items || 21})
+                </span>
+              </div>
+            </div>
+
+            {/* Filter Pills */}
+            <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '14px' }}>
+              <button
+                className={`button button-sm ${pbcFilter === 'all' ? 'button-primary' : ''}`}
+                onClick={() => setPbcFilter('all')}
+                style={{ fontSize: '11px' }}
+              >
+                All Deliverables ({pbcData?.total_items || 21})
+              </button>
+              <button
+                className={`button button-sm ${pbcFilter === 'accepted' ? 'button-primary' : ''}`}
+                onClick={() => setPbcFilter('accepted')}
+                style={{ fontSize: '11px' }}
+              >
+                Accepted ({pbcData?.accepted_count || 0})
+              </button>
+              <button
+                className={`button button-sm ${pbcFilter === 'in_review' ? 'button-primary' : ''}`}
+                onClick={() => setPbcFilter('in_review')}
+                style={{ fontSize: '11px' }}
+              >
+                In Review ({pbcData?.in_review_count || 0})
+              </button>
+              <button
+                className={`button button-sm ${pbcFilter === 'needs_clarification' ? 'button-primary' : ''}`}
+                onClick={() => setPbcFilter('needs_clarification')}
+                style={{ fontSize: '11px' }}
+              >
+                Needs Clarification ({pbcData?.clarification_count || 0})
+              </button>
+            </div>
+          </div>
+
+          {/* PBC Items List */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {(pbcData?.items || [])
+              .filter((item: any) => pbcFilter === 'all' || item.status === pbcFilter)
+              .map((item: any) => {
+                const isAccepted = item.status === 'accepted';
+                const isReview = item.status === 'in_review';
+                const isClarify = item.status === 'needs_clarification';
+
+                return (
+                  <div
+                    key={item.id}
+                    className="card"
+                    style={{
+                      marginBottom: 0,
+                      borderLeft: `4px solid ${isAccepted ? '#10b981' : isReview ? '#3b82f6' : '#f59e0b'}`,
+                      padding: '16px 20px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span className="mono" style={{ fontSize: '12px', fontWeight: 700, background: 'rgba(37, 99, 235, 0.1)', color: '#2563eb', padding: '2px 8px', borderRadius: '4px' }}>
+                            {item.code}
+                          </span>
+                          <strong style={{ fontSize: '15px', color: 'var(--ink)' }}>{item.title}</strong>
+                          <span style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--panel-bg)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                            {item.category}
+                          </span>
+                          <span className="mono" style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                            Control: {item.control_code}
+                          </span>
+                        </div>
+
+                        {item.notes && (
+                          <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                            <span style={{ fontWeight: 600, color: 'var(--ink)' }}>Auditor Review Note: </span>
+                            {item.notes}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Auditor Status Actions */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            padding: '3px 10px',
+                            borderRadius: '12px',
+                            background: isAccepted ? 'rgba(16, 185, 129, 0.1)' : isReview ? 'rgba(59, 130, 246, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                            color: isAccepted ? '#059669' : isReview ? '#2563eb' : '#d97706',
+                            border: `1px solid ${isAccepted ? 'rgba(16, 185, 129, 0.2)' : isReview ? 'rgba(59, 130, 246, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`,
+                            textTransform: 'capitalize'
+                          }}
+                        >
+                          {item.status?.replace('_', ' ')}
+                        </span>
+
+                        <button
+                          type="button"
+                          className="button button-sm"
+                          onClick={() => handleUpdatePbcStatus(item.id, isAccepted ? 'in_review' : 'accepted')}
+                          title="Toggle auditor acceptance status"
+                        >
+                          {isAccepted ? 'Mark In Review' : 'Accept Deliverable'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      ) : (
       <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '20px', alignItems: 'start' }}>
         {/* Left Column: Audits List */}
         <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -291,6 +480,7 @@ export function AuditsView({ schema, notify, onNavigate }: { schema: Schema; not
           )}
         </div>
       </div>
+      )}
 
       {/* New Audit Modal */}
       {showAuditModal && (

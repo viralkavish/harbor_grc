@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { UserCheck, Plus, Check, X, ShieldAlert, Trash2 } from 'lucide-react';
+import { UserCheck, Plus, Check, X, ShieldAlert, Trash2, Sparkles, ShieldCheck, FileCheck } from 'lucide-react';
 import { api } from '../lib/api';
 import { PageHeader, Badge, Loading, ErrorState, EmptyState, formatDate, Note } from '../components/ui';
 import { Dialog } from '../components/Dialog';
@@ -7,6 +7,7 @@ import type { DataRecord, Schema, Notify, Navigate } from '../lib/types';
 
 export function AccessReviewsView({ schema, notify, onNavigate }: { schema: Schema; notify: Notify; onNavigate: Navigate }) {
   const [reviews, setReviews] = useState<DataRecord[]>([]);
+  const [latestCampaign, setLatestCampaign] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedReview, setSelectedReview] = useState<DataRecord | null>(null);
@@ -37,6 +38,26 @@ export function AccessReviewsView({ schema, notify, onNavigate }: { schema: Sche
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
+
+    api.get('/access_reviews/campaign/latest')
+      .then(setLatestCampaign)
+      .catch(() => {});
+  };
+
+  const handleLaunchCampaign = async () => {
+    try {
+      const qNum = Math.floor(new Date().getMonth() / 3) + 1;
+      const res = await api.post('/access_reviews/campaign', {
+        name: `Q${qNum} 2026 Production & Cloud Access Certification`,
+        reviewer: 'CISO Alex',
+        scope: 'AWS Production, GitHub & Google Workspace'
+      });
+      setLatestCampaign(res);
+      notify(`UAR Campaign certified: ${res.total_users_reviewed} users reviewed. Audit Hash: ${res.certification_hash}`);
+      loadReviews();
+    } catch (err: any) {
+      notify(err.message, 'error');
+    }
   };
 
   useEffect(() => {
@@ -145,10 +166,37 @@ export function AccessReviewsView({ schema, notify, onNavigate }: { schema: Sche
         title="User Access Reviews"
         description="Conduct periodic entitlement certifications, record keep/revoke determinations, and satisfy quarterly SOC 2 CC6.4 access review controls."
       >
+        <button className="button" onClick={handleLaunchCampaign} title="Launch automated quarterly access certification campaign">
+          <Sparkles size={14} color="#2563eb" /> Launch Quarterly UAR Campaign
+        </button>
         <button className="button button-primary" onClick={() => setShowModal(true)}>
-          <Plus size={14} /> New Access Review
+          <Plus size={14} /> New Manual Review
         </button>
       </PageHeader>
+
+      {/* Latest Certified UAR Campaign Banner */}
+      {latestCampaign && (
+        <div className="card" style={{ background: '#090d16', color: 'white', padding: '16px 20px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldCheck size={18} color="#10b981" />
+              <strong style={{ fontSize: '15px', color: 'white' }}>{latestCampaign.name}</strong>
+              <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', padding: '2px 8px', borderRadius: '10px' }}>
+                ● Certified Active
+              </span>
+            </div>
+            <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
+              Reviewer: <strong>{latestCampaign.reviewer}</strong> · Scope: {latestCampaign.scope} · Users Certified: {latestCampaign.total_users_reviewed}
+            </p>
+          </div>
+
+          <div style={{ textAlign: 'right' }}>
+            <span className="mono" style={{ fontSize: '11px', color: '#60a5fa', background: 'rgba(37, 99, 235, 0.15)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(37, 99, 235, 0.3)' }}>
+              Audit Hash: {latestCampaign.certification_hash}
+            </span>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '20px', alignItems: 'start' }}>
         {/* Left Column: Reviews List */}

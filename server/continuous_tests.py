@@ -359,6 +359,13 @@ def evaluate_continuous_tests(db) -> list[dict]:
         "evidence_data": {"system_description_initialized": has_desc}
     })
 
+    # Attach copy-pasteable remediation snippets (Vanta/Drata-style fix scripts)
+    from .vanta_features_suite import REMEDIATION_SNIPPETS
+    for t in tests:
+        tid = t.get('id')
+        if tid in REMEDIATION_SNIPPETS:
+            t['remediation_snippet'] = REMEDIATION_SNIPPETS[tid]
+
     return tests
 
 
@@ -375,6 +382,12 @@ def continuous_tests_router(store):
             else:
                 tests = evaluate_continuous_tests(db)
                 last_run = None
+
+            from .vanta_features_suite import REMEDIATION_SNIPPETS
+            for t in tests:
+                tid = t.get('id')
+                if tid in REMEDIATION_SNIPPETS:
+                    t['remediation_snippet'] = REMEDIATION_SNIPPETS[tid]
 
             passing = sum(1 for t in tests if t['status'] == 'pass')
             failing = sum(1 for t in tests if t['status'] == 'fail')

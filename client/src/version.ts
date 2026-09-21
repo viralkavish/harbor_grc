@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.3.0';
+export const APP_VERSION = '0.4.0';
 export const RELEASE_DATE = '2026-09-21';
 
 export interface ChangelogEntry {
@@ -11,9 +11,27 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.3.0',
+    version: '0.4.0',
     date: '2026-09-21',
     badge: 'Latest',
+    title: "Top 10 Advanced Vanta & SOC 2 Enterprise Features Suite",
+    highlights: [
+      "Automated Test Remediation Engine: Copy-pasteable CLI and Terraform fix snippets for failing continuous controls tests.",
+      "AI Vendor SOC 2 & CUEC Extractor: Automated examination analysis extracting Complementary User Entity Controls (CUECs) and supply chain risk tiering.",
+      "Auditor Autopilot Workspace: Pre-staged 21-item AICPA PBC checklist with in-line review, status toggles, and auditor notes.",
+      "Cross-Framework Harmonization Matrix: Multi-framework overlap engine mapping SOC 2 across ISO 27001, NIST CSF 2.0, HIPAA, and GDPR.",
+      "Policy-Grounded Security Questionnaire AI Auto-Fill: Instant prospect assessment answering with verified policy citations and 95%+ confidence.",
+      "Quarterly User Access Review (UAR) Campaign Engine: Automated certification campaigns with keep/revoke tracking and digital audit hashes.",
+      "Vulnerability Management & CVSS Patch SLA Tracker: Real-time countdown timers for Critical (7d), High (30d), and Medium (60d) CVEs.",
+      "ISO 42001 & EU AI Act Governance Register: Enterprise AI model catalog tracking Zero Data Retention (ZDR) and risk classifications.",
+      "Workforce Compliance Posture: Direct verification of device full-disk encryption and automated training certificate generation.",
+      "Real-Time Trust Center Telemetry: Live continuous testing metrics and verified compliance badges for public customer assurance."
+    ]
+  },
+  {
+    version: '0.3.0',
+    date: '2026-09-21',
+    badge: 'Stable',
     title: "Production SOC 2 Roadmap & Live Trajectory Verification Engine",
     highlights: [
       "Automated Live Posture Verification: Evaluates real database evidence against 18 strategic SOC 2 milestones.",

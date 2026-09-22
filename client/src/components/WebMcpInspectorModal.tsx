@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Bot, Check, Play, Copy, RefreshCw, Terminal, Sparkles, Activity, Shield } from 'lucide-react';
 import { Dialog } from './Dialog';
-import { getModelContext } from '../lib/webmcp/polyfill';
+import { getModelContext, isWebMcpEnabled, setWebMcpEnabled } from '../lib/webmcp/polyfill';
 import type { WebMcpTool, WebMcpToolCallLog } from '../lib/webmcp/types';
 import type { Notify } from '../lib/types';
 
@@ -21,11 +21,20 @@ export function WebMcpInspectorModal({ isOpen, onClose, notify }: WebMcpInspecto
   const [execError, setExecError] = useState<string>('');
   const [logs, setLogs] = useState<WebMcpToolCallLog[]>([]);
   const [copied, setCopied] = useState(false);
+  const [enabled, setEnabled] = useState(() => isWebMcpEnabled());
 
   const loadTools = async () => {
     const mc = getModelContext();
     const loaded = await mc.getTools();
     setTools(loaded);
+  };
+
+  const handleToggleEnabled = () => {
+    const next = !enabled;
+    setEnabled(next);
+    setWebMcpEnabled(next);
+    loadTools();
+    notify(next ? 'Agent tools (WebMCP) activated' : 'Agent tools (WebMCP) disabled', next ? 'success' : 'error');
   };
 
   useEffect(() => {
@@ -153,14 +162,41 @@ export function WebMcpInspectorModal({ isOpen, onClose, notify }: WebMcpInspecto
               <Bot size={20} />
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <strong style={{ fontSize: '15px', color: 'var(--ink)' }}>WebMCP Standard Active</strong>
-                <span style={{ fontSize: '11px', background: 'var(--success-light)', color: 'var(--success)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
-                  ● Live Context Ready
-                </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <strong style={{ fontSize: '15px', color: 'var(--ink)' }}>WebMCP Standard</strong>
+                <button
+                  type="button"
+                  onClick={handleToggleEnabled}
+                  style={{
+                    fontSize: '11px',
+                    background: enabled ? 'var(--success-light)' : 'var(--danger-light)',
+                    color: enabled ? 'var(--success)' : 'var(--danger)',
+                    border: `1px solid ${enabled ? 'rgba(115, 217, 177, 0.4)' : 'rgba(255, 156, 170, 0.4)'}`,
+                    padding: '3px 10px',
+                    borderRadius: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                  title="Click to toggle Agent tools active or disabled"
+                >
+                  <span
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: enabled ? 'var(--success)' : 'var(--danger)',
+                      boxShadow: enabled ? '0 0 6px var(--success)' : 'none'
+                    }}
+                  />
+                  <span>Agent tools: {enabled ? 'Active' : 'Disabled'}</span>
+                  <span style={{ fontSize: '10px', opacity: 0.8 }}>(click to toggle)</span>
+                </button>
               </div>
-              <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
-                Target: <code className="mono">document.modelContext</code> &nbsp;·&nbsp; {tools.length} Tools Registered &nbsp;·&nbsp; JSON-RPC <code className="mono">/api/mcp</code>
+              <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
+                Target: <code className="mono">document.modelContext</code> &nbsp;·&nbsp; {tools.length} Tools Available &nbsp;·&nbsp; JSON-RPC <code className="mono">/api/mcp</code>
               </div>
             </div>
           </div>

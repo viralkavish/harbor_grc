@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { ChevronRight, History, Menu, Search, Settings, Shield, X, Bot } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Navigate, Workspace } from '../lib/types';
+import { isWebMcpEnabled } from '../lib/webmcp/polyfill';
 import { APP_VERSION } from '../version';
 
 type Section = { title: string; items: { id: string; label: string; icon: LucideIcon }[] };
@@ -22,6 +23,7 @@ export function AppShell({ workspace, sections, activeView, onNavigate, onSearch
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 900px)').matches);
   const [isAgentActuating, setIsAgentActuating] = useState(false);
+  const [isAgentToolsActive, setIsAgentToolsActive] = useState(() => isWebMcpEnabled());
   const menuButton = useRef<HTMLButtonElement>(null);
   const sidebar = useRef<HTMLElement>(null);
   const main = useRef<HTMLElement>(null);
@@ -33,13 +35,16 @@ export function AppShell({ workspace, sections, activeView, onNavigate, onSearch
   useEffect(() => {
     const handleStart = () => setIsAgentActuating(true);
     const handleEnd = () => setTimeout(() => setIsAgentActuating(false), 1200);
+    const handleStatus = (ev: any) => setIsAgentToolsActive(Boolean(ev.detail?.enabled));
 
     if (typeof window !== 'undefined') {
       window.addEventListener('webmcp:tool-calling', handleStart);
       window.addEventListener('webmcp:tool-executed', handleEnd);
+      window.addEventListener('webmcp:status-changed', handleStatus);
       return () => {
         window.removeEventListener('webmcp:tool-calling', handleStart);
         window.removeEventListener('webmcp:tool-executed', handleEnd);
+        window.removeEventListener('webmcp:status-changed', handleStatus);
       };
     }
   }, []);
@@ -119,7 +124,24 @@ export function AppShell({ workspace, sections, activeView, onNavigate, onSearch
         <footer className="sidebar-footer">
           <div className="workspace-identity"><span className="workspace-avatar" aria-hidden="true">{(workspace.organization || workspace.name || 'H').slice(0, 1).toUpperCase()}</span><span><strong>{workspace.organization || workspace.name}</strong><small>{workspace.name}</small></span></div>
           <button type="button" className="release-link" onClick={() => { setMenuOpen(false); onChangelog(); }}><span className="mono">v{APP_VERSION}</span><span>What’s new <History size={13} aria-hidden="true" /></span></button>
-          <button type="button" className="release-link" onClick={() => { setMenuOpen(false); onOpenWebMcp?.(); }}><span className="mono" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent)' }}><Bot size={12} /> WebMCP</span><span>Agent tools</span></button>
+          <button type="button" className="release-link" onClick={() => { setMenuOpen(false); onOpenWebMcp?.(); }}>
+            <span className="mono" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Bot size={12} color={isAgentToolsActive ? 'var(--accent)' : 'var(--muted)'} />
+              <span
+                style={{
+                  width: '5px',
+                  height: '5px',
+                  borderRadius: '50%',
+                  background: isAgentToolsActive ? 'var(--success)' : '#718096',
+                  display: 'inline-block'
+                }}
+              />
+              <span>Agent tools</span>
+            </span>
+            <span style={{ color: isAgentToolsActive ? 'var(--success)' : 'var(--muted)', fontSize: '10px', textTransform: 'capitalize' }}>
+              {isAgentToolsActive ? 'Active' : 'Disabled'}
+            </span>
+          </button>
         </footer>
       </aside>
       <div className="main-wrapper" inert={drawerOpen}>
@@ -133,12 +155,31 @@ export function AppShell({ workspace, sections, activeView, onNavigate, onSearch
               type="button"
               className="topbar-release"
               onClick={onOpenWebMcp}
-              aria-label="Open WebMCP agent control and inspector"
-              title="WebMCP Agent Tools Active"
-              style={{ display: 'flex', alignItems: 'center', gap: '5px', borderColor: isAgentActuating ? 'var(--accent)' : undefined }}
+              aria-label={`Agent tools: ${isAgentToolsActive ? 'Active' : 'Disabled'}`}
+              title={`Agent tools are ${isAgentToolsActive ? 'Active' : 'Disabled'} (Click to inspect or toggle)`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                borderColor: isAgentToolsActive ? 'var(--border)' : 'rgba(255, 255, 255, 0.12)',
+                background: isAgentToolsActive ? 'var(--surface-raised)' : 'transparent',
+                color: isAgentToolsActive ? 'var(--ink)' : 'var(--muted)'
+              }}
             >
-              <Bot size={13} color="var(--accent)" />
-              <span style={{ fontWeight: 600 }}>{isAgentActuating ? 'Actuating…' : 'WebMCP'}</span>
+              <Bot size={13} color={isAgentToolsActive ? 'var(--accent)' : 'var(--muted)'} />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 550 }}>
+                <span
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: isAgentActuating ? 'var(--accent)' : (isAgentToolsActive ? 'var(--success)' : '#718096'),
+                    boxShadow: isAgentToolsActive ? '0 0 6px var(--success)' : 'none',
+                    display: 'inline-block'
+                  }}
+                />
+                <span>{isAgentActuating ? 'Actuating…' : `Agent tools: ${isAgentToolsActive ? 'Active' : 'Disabled'}`}</span>
+              </span>
             </button>
             <button type="button" className="topbar-release" onClick={onChangelog} aria-label={`Version ${APP_VERSION}, view changelog`}>v{APP_VERSION}</button>
             <span className="topbar-divider" aria-hidden="true" />

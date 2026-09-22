@@ -3,6 +3,21 @@ import type { WebMcpTool, WebMcpContext } from './types';
 class BrowserModelContext implements WebMcpContext {
   private toolMap: Map<string, WebMcpTool> = new Map();
   private listeners: Map<string, Set<(ev: any) => void>> = new Map();
+  private enabled: boolean = typeof localStorage !== 'undefined'
+    ? localStorage.getItem('harbor_webmcp_enabled') !== 'false'
+    : true;
+
+  isEnabled(): boolean {
+    return this.enabled;
+  }
+
+  setEnabled(val: boolean): void {
+    this.enabled = val;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('harbor_webmcp_enabled', String(val));
+    }
+    this.dispatchEvent('webmcp:status-changed', { enabled: val });
+  }
 
   registerTool(tool: WebMcpTool, options?: { signal?: AbortSignal }): void {
     if (!tool || !tool.name) {
@@ -26,10 +41,16 @@ class BrowserModelContext implements WebMcpContext {
   }
 
   async getTools(): Promise<WebMcpTool[]> {
+    if (!this.enabled) {
+      return [];
+    }
     return Array.from(this.toolMap.values());
   }
 
   async executeTool(toolOrName: string | WebMcpTool, args: any): Promise<any> {
+    if (!this.enabled) {
+      throw new Error('WebMCP Agent tools are currently disabled by the user.');
+    }
     const name = typeof toolOrName === 'string' ? toolOrName : toolOrName.name;
     const tool = this.toolMap.get(name);
     if (!tool) {
@@ -124,4 +145,12 @@ export function getModelContext(): WebMcpContext {
     return initWebMcpPolyfill();
   }
   return activeContext;
+}
+
+export function isWebMcpEnabled(): boolean {
+  return getModelContext().isEnabled();
+}
+
+export function setWebMcpEnabled(enabled: boolean): void {
+  getModelContext().setEnabled(enabled);
 }

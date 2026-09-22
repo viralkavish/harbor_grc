@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.7.0';
+export const APP_VERSION = '0.7.1';
 export const RELEASE_DATE = '2026-09-22';
 
 export interface ChangelogEntry {
@@ -11,9 +11,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.7.0',
+    version: '0.7.1',
     date: '2026-09-22',
     badge: 'Latest',
+    title: "Visual Agent Tools Symbol, Status Indicator, and Master Toggle",
+    highlights: [
+      "Visual Agent Tools Status Symbol: Added dedicated topbar and sidebar badge displaying active/disabled symbol with luminous green/gray indicators.",
+      "Master Control Toggle: Integrated in-page master toggle allowing operators to instantly enable or disable WebMCP agent actuation.",
+      "Real-Time Actuation Signals: Connected pulse indicators that animate when an AI agent is actively executing actions on the page."
+    ]
+  },
+  {
+    version: '0.7.0',
+    date: '2026-09-22',
+    badge: 'Stable',
     title: "WebMCP Standard Agent Control Suite & In-Page Inspector",
     highlights: [
       "WebMCP W3C/Chrome Standard Runtime: Integrated document.modelContext and window.modelContext registering 11 full-capability tools for AI agents.",

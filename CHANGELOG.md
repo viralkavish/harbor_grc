@@ -24,6 +24,16 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.7.1] - 2026-09-22
+
+### Fixed
+- **Visual Agent Tools Symbol, Status Indicator, and Master Toggle**
+- Visual Agent Tools Status Symbol: Added dedicated topbar and sidebar badge displaying active/disabled symbol with luminous green/gray indicators.
+- Master Control Toggle: Integrated in-page master toggle allowing operators to instantly enable or disable WebMCP agent actuation.
+- Real-Time Actuation Signals: Connected pulse indicators that animate when an AI agent is actively executing actions on the page.
+
+---
+
 ## [0.7.0] - 2026-09-22
 
 ### Added

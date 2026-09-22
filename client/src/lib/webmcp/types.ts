@@ -19,6 +19,8 @@ export interface WebMcpContext {
   getTools: () => Promise<WebMcpTool[]>;
   executeTool: (toolOrName: string | WebMcpTool, args: any) => Promise<any>;
   provideContext: (options: { tools: WebMcpTool[] }) => void;
+  isEnabled: () => boolean;
+  setEnabled: (enabled: boolean) => void;
   addEventListener?: (type: string, listener: (ev: any) => void) => void;
   removeEventListener?: (type: string, listener: (ev: any) => void) => void;
 }

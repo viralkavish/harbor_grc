@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.7.1';
+export const APP_VERSION = '0.8.0';
 export const RELEASE_DATE = '2026-09-22';
 
 export interface ChangelogEntry {
@@ -11,9 +11,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.7.1',
+    version: '0.8.0',
     date: '2026-09-22',
     badge: 'Latest',
+    title: "Complete 24 WebMCP Agent Tools & Edge Security Isolation",
+    highlights: [
+      "Comprehensive 24-Tool WebMCP Suite: Registered full control tools covering navigation, CRUD, continuous checks, roadmap, SOC 2 readiness, sampling, auditor hub, and JEV.",
+      "Strict Edge Security Isolation: Enforced session authentication on all /api/* tool execution endpoints preventing unauthenticated access or mutation.",
+      "Path Traversal & Resource Guard: Restricted collection names to allowlisted resources and blocked path traversal characters.",
+      "Automated Credential Redaction: Integrated recursive secret masking on all agent responses to prevent accidental token or credential exposure."
+    ]
+  },
+  {
+    version: '0.7.1',
+    date: '2026-09-22',
+    badge: 'Stable',
     title: "Visual Agent Tools Symbol, Status Indicator, and Master Toggle",
     highlights: [
       "Visual Agent Tools Status Symbol: Added dedicated topbar and sidebar badge displaying active/disabled symbol with luminous green/gray indicators.",

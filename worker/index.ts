@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.7.1"
+        version: "0.8.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -521,6 +521,33 @@ export default {
     }
 
     // 4.5 Standard WebMCP Discovery Endpoints
+    const ALL_WEBMCP_TOOLS = [
+      { name: "navigate_view", description: "Navigate the live Harbor GRC web application to any of the 23 views.", inputSchema: { type: "object", properties: { view: { type: "string" }, record_id: { type: "string" } }, required: ["view"] }, annotations: { readOnlyHint: false } },
+      { name: "get_workspace_overview", description: "Retrieve current workspace compliance readiness metrics.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: true } },
+      { name: "search_workspace", description: "Execute fast full-text search across all controls, policies, vendors, evidence, risks, and tasks.", inputSchema: { type: "object", properties: { query: { type: "string" } }, required: ["query"] }, annotations: { readOnlyHint: true } },
+      { name: "list_records", description: "Query and list compliance records from any collection.", inputSchema: { type: "object", properties: { resource: { type: "string" }, q: { type: "string" }, status: { type: "string" } }, required: ["resource"] }, annotations: { readOnlyHint: true } },
+      { name: "get_record", description: "Retrieve complete details for a specific compliance record by resource name and ID.", inputSchema: { type: "object", properties: { resource: { type: "string" }, id: { type: "string" } }, required: ["resource", "id"] }, annotations: { readOnlyHint: true } },
+      { name: "create_record", description: "Create a new record in a compliance resource collection.", inputSchema: { type: "object", properties: { resource: { type: "string" }, payload: { type: "object" } }, required: ["resource", "payload"] }, annotations: { readOnlyHint: false } },
+      { name: "update_record", description: "Update fields on an existing compliance record.", inputSchema: { type: "object", properties: { resource: { type: "string" }, id: { type: "string" }, payload: { type: "object" } }, required: ["resource", "id", "payload"] }, annotations: { readOnlyHint: false } },
+      { name: "delete_record", description: "Delete a compliance record safely by resource name and ID.", inputSchema: { type: "object", properties: { resource: { type: "string" }, id: { type: "string" } }, required: ["resource", "id"] }, annotations: { readOnlyHint: false } },
+      { name: "run_continuous_checks", description: "Execute automated continuous control checks.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: false } },
+      { name: "get_framework_harmonization", description: "Calculate cross-framework compliance coverage percentages.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: true } },
+      { name: "get_roadmap", description: "Retrieve the 6-phase startup SOC 2 roadmap and milestone tasks.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: true } },
+      { name: "update_roadmap_task", description: "Update completion status on a roadmap milestone task.", inputSchema: { type: "object", properties: { task_id: { type: "string" }, completed: { type: "boolean" } }, required: ["task_id", "completed"] }, annotations: { readOnlyHint: false } },
+      { name: "verify_live_readiness", description: "Execute automated database trajectory verification across policies and tests.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: false } },
+      { name: "get_soc2_readiness", description: "Retrieve SOC 2 Type 1 and Type 2 gap analysis, PBC list, and CUECs.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: true } },
+      { name: "generate_audit_sample", description: "Generate an AICPA-compliant randomized population sample for auditor fieldwork.", inputSchema: { type: "object", properties: { population_type: { type: "string" }, sample_size: { type: "integer" } }, required: ["population_type"] }, annotations: { readOnlyHint: false } },
+      { name: "get_auditor_hub", description: "Retrieve all 21 pre-staged AICPA Provided By Client (PBC) audit deliverables.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: true } },
+      { name: "update_pbc_status", description: "Update auditor review status and notes on an auditor PBC item.", inputSchema: { type: "object", properties: { pbc_id: { type: "string" }, status: { type: "string" }, notes: { type: "string" } }, required: ["pbc_id", "status"] }, annotations: { readOnlyHint: false } },
+      { name: "evaluate_policy_jev", description: "Execute live TypeSafe JEV System One evaluation on a policy document.", inputSchema: { type: "object", properties: { title: { type: "string" }, content: { type: "string" } }, required: ["content"] }, annotations: { readOnlyHint: true } },
+      { name: "link_compatible_controls", description: "Automatically link verified compatible compliance controls to a policy document.", inputSchema: { type: "object", properties: { policy_id: { type: "string" }, control_ids: { type: "array" } }, required: ["policy_id", "control_ids"] }, annotations: { readOnlyHint: false } },
+      { name: "get_policy_versions", description: "Retrieve immutable historical version snapshots for a policy.", inputSchema: { type: "object", properties: { policy_id: { type: "string" } }, required: ["policy_id"] }, annotations: { readOnlyHint: true } },
+      { name: "auto_populate_system_description", description: "Auto-populate AICPA SOC 2 Section 3 System Description.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: false } },
+      { name: "update_system_description", description: "Update narrative sections in AICPA Section 3 System Description.", inputSchema: { type: "object", properties: { sections: { type: "array" } }, required: ["sections"] }, annotations: { readOnlyHint: false } },
+      { name: "analyze_vendor_soc2", description: "Analyze third-party vendor SOC 2 examination report and extract CUECs.", inputSchema: { type: "object", properties: { vendor_name: { type: "string" } }, required: ["vendor_name"] }, annotations: { readOnlyHint: false } },
+      { name: "auto_fill_questionnaire", description: "Draft answers to security questionnaire prompts grounded in published policies.", inputSchema: { type: "object", properties: { prompt: { type: "string" } }, required: ["prompt"] }, annotations: { readOnlyHint: true } }
+    ];
+
     if (url.pathname === "/.well-known/web-mcp" || url.pathname === "/.well-known/mcp.json") {
       return new Response(JSON.stringify({
         protocol: "webmcp",
@@ -528,19 +555,7 @@ export default {
         name: "Harbor GRC WebMCP Agent Control",
         description: "Direct in-browser and headless WebMCP agent capabilities for Harbor GRC compliance workspace.",
         transport: ["in-page", "json-rpc"],
-        tools: [
-          { name: "navigate_view", description: "Navigate the live Harbor GRC web application to any of the 23 views.", inputSchema: { type: "object", properties: { view: { type: "string" }, record_id: { type: "string" } }, required: ["view"] }, annotations: { readOnlyHint: false } },
-          { name: "get_workspace_overview", description: "Retrieve current workspace compliance readiness metrics.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: true } },
-          { name: "get_framework_harmonization", description: "Calculate cross-framework compliance coverage percentages.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: true } },
-          { name: "run_continuous_checks", description: "Execute automated continuous control checks.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: false } },
-          { name: "list_records", description: "Query and list compliance records from any collection.", inputSchema: { type: "object", properties: { resource: { type: "string" }, q: { type: "string" }, status: { type: "string" } }, required: ["resource"] }, annotations: { readOnlyHint: true } },
-          { name: "create_record", description: "Create a new record in a compliance resource collection.", inputSchema: { type: "object", properties: { resource: { type: "string" }, payload: { type: "object" } }, required: ["resource", "payload"] }, annotations: { readOnlyHint: false } },
-          { name: "update_record", description: "Update fields on an existing compliance record.", inputSchema: { type: "object", properties: { resource: { type: "string" }, id: { type: "string" }, payload: { type: "object" } }, required: ["resource", "id", "payload"] }, annotations: { readOnlyHint: false } },
-          { name: "evaluate_policy_jev", description: "Execute live TypeSafe JEV System One evaluation on a policy document.", inputSchema: { type: "object", properties: { title: { type: "string" }, content: { type: "string" } }, required: ["content"] }, annotations: { readOnlyHint: true } },
-          { name: "auto_populate_system_description", description: "Auto-populate AICPA SOC 2 Section 3 System Description.", inputSchema: { type: "object", properties: {} }, annotations: { readOnlyHint: false } },
-          { name: "analyze_vendor_soc2", description: "Analyze third-party vendor SOC 2 examination report and extract CUECs.", inputSchema: { type: "object", properties: { vendor_name: { type: "string" } }, required: ["vendor_name"] }, annotations: { readOnlyHint: false } },
-          { name: "auto_fill_questionnaire", description: "Draft answers to security questionnaire prompts grounded in published policies.", inputSchema: { type: "object", properties: { prompt: { type: "string" } }, required: ["prompt"] }, annotations: { readOnlyHint: true } }
-        ]
+        tools: ALL_WEBMCP_TOOLS
       }), { headers: { "Content-Type": "application/json" } });
     }
 
@@ -561,19 +576,7 @@ export default {
             jsonrpc: "2.0",
             id: rpc_id,
             result: {
-              tools: [
-                { name: "navigate_view", description: "Navigate the live Harbor GRC web application to any of the 23 views.", inputSchema: { type: "object", properties: { view: { type: "string" }, record_id: { type: "string" } }, required: ["view"] } },
-                { name: "get_workspace_overview", description: "Retrieve current workspace compliance readiness metrics.", inputSchema: { type: "object", properties: {} } },
-                { name: "get_framework_harmonization", description: "Calculate cross-framework compliance coverage percentages.", inputSchema: { type: "object", properties: {} } },
-                { name: "run_continuous_checks", description: "Execute automated continuous control checks.", inputSchema: { type: "object", properties: {} } },
-                { name: "list_records", description: "Query and list compliance records from any collection.", inputSchema: { type: "object", properties: { resource: { type: "string" } }, required: ["resource"] } },
-                { name: "create_record", description: "Create a new record in a compliance resource collection.", inputSchema: { type: "object", properties: { resource: { type: "string" }, payload: { type: "object" } }, required: ["resource", "payload"] } },
-                { name: "update_record", description: "Update fields on an existing compliance record.", inputSchema: { type: "object", properties: { resource: { type: "string" }, id: { type: "string" }, payload: { type: "object" } }, required: ["resource", "id", "payload"] } },
-                { name: "evaluate_policy_jev", description: "Execute live TypeSafe JEV System One evaluation on a policy document.", inputSchema: { type: "object", properties: { title: { type: "string" }, content: { type: "string" } }, required: ["content"] } },
-                { name: "auto_populate_system_description", description: "Auto-populate AICPA SOC 2 Section 3 System Description.", inputSchema: { type: "object", properties: {} } },
-                { name: "analyze_vendor_soc2", description: "Analyze third-party vendor SOC 2 examination report and extract CUECs.", inputSchema: { type: "object", properties: { vendor_name: { type: "string" } }, required: ["vendor_name"] } },
-                { name: "auto_fill_questionnaire", description: "Draft answers to security questionnaire prompts grounded in published policies.", inputSchema: { type: "object", properties: { prompt: { type: "string" } }, required: ["prompt"] } }
-              ]
+              tools: ALL_WEBMCP_TOOLS
             }
           }), { headers: { "Content-Type": "application/json" } });
         }

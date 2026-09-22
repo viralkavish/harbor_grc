@@ -24,6 +24,17 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.8.0] - 2026-09-22
+
+### Added
+- **Complete 24 WebMCP Agent Tools & Edge Security Isolation**
+- Comprehensive 24-Tool WebMCP Suite: Registered full control tools covering navigation, CRUD, continuous checks, roadmap, SOC 2 readiness, sampling, auditor hub, and JEV.
+- Strict Edge Security Isolation: Enforced session authentication on all /api/* tool execution endpoints preventing unauthenticated access or mutation.
+- Path Traversal & Resource Guard: Restricted collection names to allowlisted resources and blocked path traversal characters.
+- Automated Credential Redaction: Integrated recursive secret masking on all agent responses to prevent accidental token or credential exposure.
+
+---
+
 ## [0.7.1] - 2026-09-22
 
 ### Fixed

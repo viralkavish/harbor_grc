@@ -49,9 +49,17 @@ describe('WebMCP Polyfill & Tool Registration', () => {
     const mc = getModelContext();
     const tools = await mc.getTools();
 
-    expect(tools.length).toBeGreaterThanOrEqual(10);
+    expect(tools.length).toBeGreaterThanOrEqual(20);
     expect(tools.some(t => t.name === 'navigate_view')).toBe(true);
     expect(tools.some(t => t.name === 'get_workspace_overview')).toBe(true);
+    expect(tools.some(t => t.name === 'search_workspace')).toBe(true);
+    expect(tools.some(t => t.name === 'list_records')).toBe(true);
+    expect(tools.some(t => t.name === 'create_record')).toBe(true);
+    expect(tools.some(t => t.name === 'update_record')).toBe(true);
+    expect(tools.some(t => t.name === 'delete_record')).toBe(true);
+    expect(tools.some(t => t.name === 'get_roadmap')).toBe(true);
+    expect(tools.some(t => t.name === 'get_auditor_hub')).toBe(true);
+    expect(tools.some(t => t.name === 'evaluate_policy_jev')).toBe(true);
 
     // Test navigate_view actuation
     const navResult = await mc.executeTool('navigate_view', { view: 'frameworks' });

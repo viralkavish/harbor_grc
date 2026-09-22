@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { ChevronRight, History, Menu, Search, Settings, Shield, X } from 'lucide-react';
+import { ChevronRight, History, Menu, Search, Settings, Shield, X, Bot } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Navigate, Workspace } from '../lib/types';
 import { APP_VERSION } from '../version';
@@ -14,12 +14,14 @@ type Props = {
   onNavigate: Navigate;
   onSearch: () => void;
   onChangelog: () => void;
+  onOpenWebMcp?: () => void;
   children: ReactNode;
 };
 
-export function AppShell({ workspace, sections, activeView, onNavigate, onSearch, onChangelog, children }: Props) {
+export function AppShell({ workspace, sections, activeView, onNavigate, onSearch, onChangelog, onOpenWebMcp, children }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 900px)').matches);
+  const [isAgentActuating, setIsAgentActuating] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const sidebar = useRef<HTMLElement>(null);
   const main = useRef<HTMLElement>(null);
@@ -27,6 +29,20 @@ export function AppShell({ workspace, sections, activeView, onNavigate, onSearch
   const current = sections.flatMap(section => section.items).find(item => item.id === activeView);
   const group = sections.find(section => section.items.some(item => item.id === activeView));
   const shortcut = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
+
+  useEffect(() => {
+    const handleStart = () => setIsAgentActuating(true);
+    const handleEnd = () => setTimeout(() => setIsAgentActuating(false), 1200);
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('webmcp:tool-calling', handleStart);
+      window.addEventListener('webmcp:tool-executed', handleEnd);
+      return () => {
+        window.removeEventListener('webmcp:tool-calling', handleStart);
+        window.removeEventListener('webmcp:tool-executed', handleEnd);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 900px)');
@@ -103,6 +119,7 @@ export function AppShell({ workspace, sections, activeView, onNavigate, onSearch
         <footer className="sidebar-footer">
           <div className="workspace-identity"><span className="workspace-avatar" aria-hidden="true">{(workspace.organization || workspace.name || 'H').slice(0, 1).toUpperCase()}</span><span><strong>{workspace.organization || workspace.name}</strong><small>{workspace.name}</small></span></div>
           <button type="button" className="release-link" onClick={() => { setMenuOpen(false); onChangelog(); }}><span className="mono">v{APP_VERSION}</span><span>What’s new <History size={13} aria-hidden="true" /></span></button>
+          <button type="button" className="release-link" onClick={() => { setMenuOpen(false); onOpenWebMcp?.(); }}><span className="mono" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent)' }}><Bot size={12} /> WebMCP</span><span>Agent tools</span></button>
         </footer>
       </aside>
       <div className="main-wrapper" inert={drawerOpen}>
@@ -112,6 +129,17 @@ export function AppShell({ workspace, sections, activeView, onNavigate, onSearch
             <div className="workspace-breadcrumb" aria-label="Current location"><span className="breadcrumb-group">{group?.title || 'Workspace'}</span><ChevronRight size={13} aria-hidden="true" /><span>{current?.label || 'Page not found'}</span></div>
           </div>
           <div className="topbar-actions">
+            <button
+              type="button"
+              className="topbar-release"
+              onClick={onOpenWebMcp}
+              aria-label="Open WebMCP agent control and inspector"
+              title="WebMCP Agent Tools Active"
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', borderColor: isAgentActuating ? 'var(--accent)' : undefined }}
+            >
+              <Bot size={13} color="var(--accent)" />
+              <span style={{ fontWeight: 600 }}>{isAgentActuating ? 'Actuating…' : 'WebMCP'}</span>
+            </button>
             <button type="button" className="topbar-release" onClick={onChangelog} aria-label={`Version ${APP_VERSION}, view changelog`}>v{APP_VERSION}</button>
             <span className="topbar-divider" aria-hidden="true" />
             <button type="button" className="icon-button" aria-label="Search workspace" title={`Search workspace (${shortcut})`} onClick={onSearch}><Search size={18} /></button>

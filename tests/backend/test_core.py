@@ -38,5 +38,5 @@ def test_health_uses_factory_without_global_data_writes(tmp_path):
     from server.app import create_app
     with TestClient(create_app(tmp_path), base_url="http://127.0.0.1:8765") as client:
         assert client.get('/api/health').json() == {
-            'status': 'ok', 'version': '0.6.1', 'storage': 'sqlite'
+            'status': 'ok', 'version': '0.7.0', 'storage': 'sqlite'
         }

@@ -53,6 +53,9 @@ import { SettingsView } from './views/SettingsView';
 import { FrameworksView } from './views/FrameworksView';
 import { ChangelogModal } from './components/ChangelogModal';
 import { VendorSoc2Modal } from './components/VendorSoc2Modal';
+import { WebMcpInspectorModal } from './components/WebMcpInspectorModal';
+import { initWebMcpPolyfill } from './lib/webmcp/polyfill';
+import { registerHarborWebMcpTools } from './lib/webmcp/harborWebMcp';
 import { APP_VERSION } from './version';
 import type { Schema, Bootstrap } from './lib/types';
 
@@ -72,6 +75,7 @@ export function App() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [showChangelogModal, setShowChangelogModal] = useState(false);
   const [analyzingVendor, setAnalyzingVendor] = useState<any | null>(null);
+  const [showWebMcpModal, setShowWebMcpModal] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const notify = useCallback((message: string, kind: 'success' | 'error' = 'success') => {
@@ -88,6 +92,12 @@ export function App() {
     window.location.hash = id ? `${view}/${id}` : view;
     window.scrollTo(0, 0);
   }, []);
+
+  // Initialize and register WebMCP Agent Tools
+  useEffect(() => {
+    initWebMcpPolyfill();
+    registerHarborWebMcpTools({ onNavigate: navigate, notify });
+  }, [navigate, notify]);
 
   // Sync hash routing
   useEffect(() => {
@@ -186,7 +196,15 @@ export function App() {
 
   return (
     <>
-      <AppShell workspace={bootstrap.workspace} sections={NAV_SECTIONS} activeView={activeView} onNavigate={navigate} onSearch={() => setCommandPaletteOpen(true)} onChangelog={() => setShowChangelogModal(true)}>
+      <AppShell
+        workspace={bootstrap.workspace}
+        sections={NAV_SECTIONS}
+        activeView={activeView}
+        onNavigate={navigate}
+        onSearch={() => setCommandPaletteOpen(true)}
+        onChangelog={() => setShowChangelogModal(true)}
+        onOpenWebMcp={() => setShowWebMcpModal(true)}
+      >
           {activeView === 'overview' && (
             <OverviewView onNavigate={navigate} notify={notify} />
           )}
@@ -389,6 +407,13 @@ export function App() {
         isOpen={!!analyzingVendor}
         onClose={() => setAnalyzingVendor(null)}
         vendor={analyzingVendor}
+        notify={notify}
+      />
+
+      {/* WebMCP Agent Control & Inspector Modal */}
+      <WebMcpInspectorModal
+        isOpen={showWebMcpModal}
+        onClose={() => setShowWebMcpModal(false)}
         notify={notify}
       />
 

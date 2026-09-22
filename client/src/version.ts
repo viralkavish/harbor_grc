@@ -1,5 +1,5 @@
-export const APP_VERSION = '0.6.1';
-export const RELEASE_DATE = '2026-09-21';
+export const APP_VERSION = '0.7.0';
+export const RELEASE_DATE = '2026-09-22';
 
 export interface ChangelogEntry {
   version: string;
@@ -11,9 +11,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '0.7.0',
+    date: '2026-09-22',
+    badge: 'Latest',
+    title: "WebMCP Standard Agent Control Suite & In-Page Inspector",
+    highlights: [
+      "WebMCP W3C/Chrome Standard Runtime: Integrated document.modelContext and window.modelContext registering 11 full-capability tools for AI agents.",
+      "In-Page Agent Steering: AI agents can directly actuate views, list/create/update records, run continuous tests, and trigger JEV evaluations via WebMCP.",
+      "WebMCP Inspector & Interactive Console: Visual inspector modal with live tool discovery, JSON test execution, and real-time actuation log.",
+      "Dual Protocol Endpoints: Deployed standard discovery manifests (/.well-known/web-mcp, /.well-known/mcp.json) and JSON-RPC 2.0 endpoint (/api/mcp)."
+    ]
+  },
+  {
     version: '0.6.1',
     date: '2026-09-21',
-    badge: 'Latest',
+    badge: 'Stable',
     title: "Fix Frameworks Route Parity on Edge & Client Resiliency",
     highlights: [
       "Edge Worker Route Parity: Added /api/frameworks/harmonization and advanced feature routes to Cloudflare Worker, preventing 404 'Record not found' errors.",

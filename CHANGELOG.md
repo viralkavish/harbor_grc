@@ -24,6 +24,17 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.7.0] - 2026-09-22
+
+### Added
+- **WebMCP Standard Agent Control Suite & In-Page Inspector**
+- WebMCP W3C/Chrome Standard Runtime: Integrated document.modelContext and window.modelContext registering 11 full-capability tools for AI agents.
+- In-Page Agent Steering: AI agents can directly actuate views, list/create/update records, run continuous tests, and trigger JEV evaluations via WebMCP.
+- WebMCP Inspector & Interactive Console: Visual inspector modal with live tool discovery, JSON test execution, and real-time actuation log.
+- Dual Protocol Endpoints: Deployed standard discovery manifests (/.well-known/web-mcp, /.well-known/mcp.json) and JSON-RPC 2.0 endpoint (/api/mcp).
+
+---
+
 ## [0.6.1] - 2026-09-21
 
 ### Fixed

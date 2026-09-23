@@ -24,6 +24,18 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.11.0] - 2026-09-23
+
+### Added
+- **R2: Evidence Vault Hardening, Provenance & Observation Coverage**
+- Mandatory provenance fields on evidence artifacts: captured_at, captured_by, source_system, collection_method, period_covered, retention_rule, legal_hold
+- Immutable evidence versioning (supersedes_id, v1 -> v2 chain), prior version mutation lockout (409 Conflict), and lineage traversal (/versions)
+- Cryptographic SHA-256 integrity verification: on-demand (/verify), scheduled (/verify_all), and download tamper guard (500 on mismatch)
+- Observation-window coverage API (/api/evidence/coverage) with automated interval unions and explicit gap detection
+- Strict legal hold protection blocking deletion (409 Conflict), period_covered requirement for collected evidence, and expiring alerts
+
+---
+
 ## [0.10.0] - 2026-09-23
 
 ### Added

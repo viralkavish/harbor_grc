@@ -61,7 +61,11 @@ def test_policy_publishing_versioning_and_export(client):
 def test_evidence_upload_and_download(client):
     content = b"Mock Audit Evidence Report\nHash: abc123xyz"
     files = {'file': ('evidence_2026.txt', io.BytesIO(content), 'text/plain')}
-    data = {'title': 'Firewall Audit Report', 'description': 'Annual configuration audit'}
+    data = {
+        'title': 'Firewall Audit Report',
+        'description': 'Annual configuration audit',
+        'period_covered': json.dumps({'start': '2027-01-01', 'end': '2027-12-31'})
+    }
 
     upload_res = client.post('/api/evidence/upload', files=files, data=data)
     assert upload_res.status_code == 201

@@ -63,6 +63,13 @@ def update_record(db, resource, record_id, payload):
             )
             item['version'] = prev_version + 1
 
+    if resource == 'evidence':
+        rows = db.execute("SELECT body FROM records WHERE resource='evidence'").fetchall()
+        for r in rows:
+            b = json.loads(r[0])
+            if b.get('supersedes_id') == record_id:
+                raise HTTPException(409, "Historical evidence versions are immutable and cannot be modified")
+
     item['updated_at'] = now()
     save(db, resource, item)
     sync_links(db, resource, item, previous)
@@ -72,6 +79,14 @@ def update_record(db, resource, record_id, payload):
 
 def delete_record(db, resource, record_id):
     item = get_record(db, resource, record_id)
+    if resource == 'evidence':
+        if item.get('legal_hold'):
+            raise HTTPException(409, "Cannot delete evidence under active legal hold")
+        rows = db.execute("SELECT body FROM records WHERE resource='evidence'").fetchall()
+        for r in rows:
+            b = json.loads(r[0])
+            if b.get('supersedes_id') == record_id:
+                raise HTTPException(409, "Cannot delete superseded historical evidence version; only the head version may be deleted")
     clean_links(db, resource, record_id)
     if resource == 'policies':
         db.execute('DELETE FROM policy_versions WHERE policy_id=?', (record_id,))

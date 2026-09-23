@@ -78,7 +78,38 @@ To focus strictly on internal SOC 2 Type II readiness and eliminate unnecessary 
 
 ---
 
-## 7. Deployment & Operations
+## 7. Evidence Vault Hardening & Retention Standards (R2)
+
+- **Mandatory Provenance Fields**:
+  - `captured_at`: ISO-8601, tz-aware UTC timestamp of artifact capture.
+  - `captured_by`: Named authenticated identity (e.g. workspace security lead), never anonymous.
+  - `source_system`: Originating system (e.g. `manual-upload`, `aws-config`, `okta`, `github`).
+  - `collection_method`: `manual` | `automated`.
+  - `period_covered`: `{start, end}` date interval required for SOC 2 Type II operating effectiveness evidence.
+  - `retention_rule`: Baseline retention classification (default `soc2-7yr`).
+  - `legal_hold`: Boolean flag. When `true`, blocks deletion attempts with HTTP 409 Conflict.
+  - `version`: Integer sequence (starts at 1).
+  - `supersedes_id`: Reference linking to the prior version in the lineage.
+  - `integrity_status`: `verified` | `failed` | `unchecked`.
+- **Immutable Versioning**:
+  - Re-uploading evidence for an artifact creates a new record with `version = previous.version + 1` and `supersedes_id = previous.id`.
+  - Prior/superseded versions become strictly read-only; attempts to mutate historical metadata return HTTP 409 Conflict.
+  - Deletion of non-head versions is rejected with HTTP 409 Conflict to maintain complete audit chain continuity.
+  - Full version chain is inspectable via `GET /api/evidence/{id}/versions`.
+- **Cryptographic Integrity & Tamper Guards**:
+  - Bytes are hashed server-side at stream capture using SHA-256.
+  - `POST /api/evidence/{id}/verify` recomputes the SHA-256 hash of on-disk bytes, compares against stored checksum, and logs verification status.
+  - Download guard: `GET /api/evidence/{id}/file` recomputes the file hash prior to streaming; if tampered, the service refuses to serve the file and returns HTTP 500.
+- **Observation Window Coverage & Gap Surfacing**:
+  - `GET /api/evidence/coverage?control_id=<id>&window_start=2027-01-01&window_end=<date>` unions covered date intervals across linked evidence and surfaces explicit uncovered day gaps.
+  - Gaps are transparently identified, never concealed.
+- **Retention Rules & Open Verification Notice**:
+  - Default evidence retention: `soc2-7yr`. Security logs: $\ge 90$ days hot, $\ge 1$ year cold.
+  - **Open Verification Notice**: *Pending CPA-firm confirmation (open verification item). The AICPA sets no fixed universal retention duration for SOC 2 Type II audit documentation. Specific retention rules must be confirmed with the engaged CPA firm prior to executing automated purge workflows.*
+
+---
+
+## 8. Deployment & Operations
 
 ### Single-Server Systemd Deployment
 Install the user-level systemd unit:

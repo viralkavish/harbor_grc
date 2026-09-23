@@ -61,7 +61,16 @@ RESOURCES = {
         field('inherent_score','number',9,readonly=True),field('residual_score','number',4,readonly=True)]),
     'evidence': resource('Evidence','Evidence','collected,in_review,approved,expired',[
         choice('source','manual,link,import'),field('url','url'),ref('control_ids','controls',True),*dates('collected_date','expires_date'),
-        field('filename',default=None,readonly=True),field('file_size','number',None,readonly=True),field('sha256',default=None,readonly=True)]),
+        field('filename',default=None,readonly=True),field('file_size','number',None,readonly=True),field('sha256',default=None,readonly=True),
+        field('captured_at',readonly=True),field('captured_by',default='system'),
+        field('source_system',default='manual-upload'),
+        choice('collection_method','manual,automated',default='manual'),
+        field('period_covered','json',default={}),
+        field('retention_rule',default='soc2-7yr'),
+        field('legal_hold','boolean',default=False),
+        field('version','number',1,readonly=True),
+        field('supersedes_id',default=None),
+        choice('integrity_status','verified,failed,unchecked',default='unchecked')]),
     'audits': resource('Audits','Audit','planning,in_progress,in_review,complete',[
         ref('framework_id','frameworks'),*dates('period_start','period_end'),field('auditor')]),
     'audit_requests': resource('Audit requests','Audit request','open,in_progress,submitted,accepted',[
@@ -139,8 +148,8 @@ def validate(resource_name, payload, existing=None):
                 fail(key,'expected an array of strings')
             value = list(dict.fromkeys(value))
         elif kind=='json':
-            if not isinstance(value,list) or len(value)>5000:
-                fail(key,'expected array, maximum 5000 entries')
+            if not isinstance(value, (list, dict)):
+                fail(key,'expected array or object')
         result[key] = value
     for key,f in fields.items():
         if f.get('required') and not result.get(key):

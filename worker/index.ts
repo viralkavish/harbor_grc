@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.10.0"
+        version: "0.11.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -1392,6 +1392,53 @@ export default {
 
       if (apiPath.startsWith("/controls/") && apiPath.includes("/versions")) {
         return new Response(JSON.stringify({ versions: [] }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/evidence/coverage") {
+        return new Response(JSON.stringify({
+          control_id: "all",
+          window_start: "2027-01-01",
+          window_end: "2027-12-31",
+          is_fully_covered: true,
+          coverage_percentage: 100.0,
+          covered_ranges: [{ start: "2027-01-01", end: "2027-12-31" }],
+          gaps: [],
+          evidence_count: 1,
+          uncovered_days: 0
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/evidence/expiring") {
+        return new Response(JSON.stringify({
+          expired_count: 0,
+          expiring_soon_count: 0,
+          expired: [],
+          expiring_soon: []
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/evidence/verify_all") {
+        return new Response(JSON.stringify({
+          total: 1,
+          verified: 1,
+          failed: 0,
+          failed_ids: []
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath.startsWith("/evidence/") && apiPath.endsWith("/verify")) {
+        return new Response(JSON.stringify({
+          id: apiPath.split("/")[2],
+          integrity_status: "verified",
+          sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath.startsWith("/evidence/") && apiPath.endsWith("/versions")) {
+        return new Response(JSON.stringify({
+          evidence_id: apiPath.split("/")[2],
+          versions: []
+        }), { headers: { "Content-Type": "application/json" } });
       }
 
       // Generic Resource Read & List Endpoints

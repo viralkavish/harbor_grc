@@ -8,6 +8,7 @@ import {
   Award,
   Settings as SettingsIcon,
   Target,
+  Activity,
 } from 'lucide-react';
 import { api } from './lib/api';
 import { Loading, ErrorState, Toast, Badge } from './components/ui';
@@ -25,6 +26,7 @@ import { SettingsView } from './views/SettingsView';
 import { FrameworksView } from './views/FrameworksView';
 import { ActivityView } from './views/ActivityView';
 import { AuditorPortalView } from './views/AuditorPortalView';
+import { MonitoringView } from './views/MonitoringView';
 import { ChangelogModal } from './components/ChangelogModal';
 import { APP_VERSION } from './version';
 import type { Schema, Bootstrap } from './lib/types';
@@ -131,6 +133,7 @@ export function App() {
       items: [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'soc2_readiness', label: 'SOC 2 Readiness', icon: Award },
+        { id: 'monitoring', label: 'Continuous Monitoring', icon: Activity },
         { id: 'pilot', label: 'Blind Pilot', icon: Target },
         { id: 'policies', label: 'Policies', icon: FileText, countKey: 'policies' },
         { id: 'evidence', label: 'Evidence', icon: FileCheck, countKey: 'evidence' },
@@ -157,6 +160,10 @@ export function App() {
 
           {activeView === 'soc2_readiness' && (
             <SOC2ReadinessView notify={notify} onNavigate={navigate} />
+          )}
+
+          {activeView === 'monitoring' && (
+            <MonitoringView notify={notify} onNavigate={navigate} />
           )}
 
           {activeView === 'pilot' && (

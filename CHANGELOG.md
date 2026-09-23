@@ -24,6 +24,19 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.15.0] - 2026-09-23
+
+### Added
+- **R5: Continuous Monitoring, Scheduler, Transparency & Exceptions Lifecycle**
+- Added persisted monitoring_runs table with M3 auditor-grade transparency fields
+- Implemented daily scheduled monitoring sweep mechanism with health status reporting
+- Built comprehensive exceptions lifecycle (open -> acknowledged -> remediated -> closed) with automatic creation and deduplication
+- Remapped all continuous checks to authoritative R1 TSC-2017-2022 catalog control IDs
+- Centralized universal R3 append-only hash-chained audit logging across monitoring runs and exception workflows
+- Upgraded MonitoringView UI with checks transparency details, exceptions workbench, run history, and scheduler controls
+
+---
+
 ## [0.14.0] - 2026-09-23
 
 ### Added

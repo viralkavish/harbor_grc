@@ -2,6 +2,7 @@
 
 Evaluates both application compliance records and real local host telemetry (disk encryption, firewall).
 Provides instant pass/fail/warning verdicts, audit evidence data, and actionable remediation steps.
+Fully mapped to authoritative R1 TSC-2017-2022 catalog controls with auditor-grade M3 transparency fields.
 """
 from datetime import date, datetime, timedelta
 import json
@@ -83,6 +84,7 @@ def evaluate_continuous_tests(db) -> list[dict]:
     today_str = today.isoformat()
     ts = now()
     tests = []
+    TEST_VER = "2.0.0"
 
     # 1. Policies Approved
     policies = Store.records(db, 'policies')
@@ -90,14 +92,20 @@ def evaluate_continuous_tests(db) -> list[dict]:
     p_status = "pass" if len(pub_policies) >= 6 else ("warning" if pub_policies else "fail")
     tests.append({
         "id": "test_policies_approved",
+        "test_id": "test_policies_approved",
         "title": "Baseline Information Security Policies Approved",
         "category": "Policies & Governance",
-        "control_code": "CC1.1-GOV",
+        "control_ids": ["TF-CC1.1-01"],
+        "control_code": "TF-CC1.1-01",
         "status": p_status,
         "summary": f"{len(pub_policies)} of {len(policies)} policies published with executive approval.",
         "remediation": "Publish required baseline policies in the Policies module with an authorized officer signature.",
         "last_run": ts,
-        "evidence_data": {"published_count": len(pub_policies), "total_policies": len(policies)}
+        "evidence_data": {"published_count": len(pub_policies), "total_policies": len(policies)},
+        "source_system": "twofrom-grc-internal",
+        "query_logic": "SELECT count(*) FROM policies WHERE status = 'published'; thresholds: >=6 pass, >0 warning, 0 fail",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 2. Policy SLAs & Annual Renewals
@@ -109,14 +117,20 @@ def evaluate_continuous_tests(db) -> list[dict]:
     sla_status = "fail" if expired_policies else "pass"
     tests.append({
         "id": "test_policy_slas",
+        "test_id": "test_policy_slas",
         "title": "Annual Policy Review Cadence (SLA)",
         "category": "Policies & Governance",
-        "control_code": "CC1.2-REVIEW",
+        "control_ids": ["TF-CC1.2-01"],
+        "control_code": "TF-CC1.2-01",
         "status": sla_status,
         "summary": "All approved policies are within their annual review schedule." if not expired_policies else f"{len(expired_policies)} policy/policies exceeded review date: {', '.join(expired_policies)}",
         "remediation": "Review and re-publish expired policies annually to maintain continuous audit assurance.",
         "last_run": ts,
-        "evidence_data": {"expired_policies": expired_policies}
+        "evidence_data": {"expired_policies": expired_policies},
+        "source_system": "twofrom-grc-internal",
+        "query_logic": "SELECT title, review_date FROM policies WHERE status = 'published' AND review_date < CURRENT_DATE",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 3. Employee Policy Acceptance
@@ -126,7 +140,6 @@ def evaluate_continuous_tests(db) -> list[dict]:
         acc_status = "pass"
         acc_msg = "No personnel records currently active."
     else:
-        # Check acceptances
         acc_rows = db.execute("SELECT DISTINCT person_email FROM policy_acceptances").fetchall()
         accepted_emails = {r[0].lower() for r in acc_rows}
         compliant_people = sum(1 for p in active_people if p.get('email', '').lower() in accepted_emails or p.get('acknowledged_policy_ids'))
@@ -135,42 +148,60 @@ def evaluate_continuous_tests(db) -> list[dict]:
         acc_msg = f"{compliant_people}/{len(active_people)} active personnel have accepted required policies ({acc_pct:.0f}%)."
     tests.append({
         "id": "test_employee_acceptance",
+        "test_id": "test_employee_acceptance",
         "title": "Workforce Policy Acceptance & Attestation",
         "category": "Human Resources",
-        "control_code": "HR.3-ACKNOWLEDGE",
+        "control_ids": ["TF-CC1.4-01"],
+        "control_code": "TF-CC1.4-01",
         "status": acc_status,
         "summary": acc_msg,
         "remediation": "Ensure all workforce members accept security and acceptable use policies upon hire and after annual revisions.",
         "last_run": ts,
-        "evidence_data": {"active_workforce": len(active_people)}
+        "evidence_data": {"active_workforce": len(active_people)},
+        "source_system": "twofrom-grc-internal",
+        "query_logic": "JOIN people with policy_acceptances on email; compute percentage >= 95% pass, >= 50% warning, < 50% fail",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 4. Host Disk Encryption (Real OS inspection)
     disk_status, disk_msg, disk_ev = check_real_host_disk_encryption()
     tests.append({
         "id": "test_host_disk_encryption",
+        "test_id": "test_host_disk_encryption",
         "title": "Endpoint & Storage Full-Disk Encryption",
         "category": "Host & Infrastructure",
-        "control_code": "CC6.7-ENC-REST",
+        "control_ids": ["TF-CC6.7-01"],
+        "control_code": "TF-CC6.7-01",
         "status": disk_status,
         "summary": disk_msg,
         "remediation": "Enable LUKS, FileVault, or BitLocker full-disk encryption on company hardware and servers.",
         "last_run": ts,
-        "evidence_data": disk_ev
+        "evidence_data": disk_ev,
+        "source_system": "host-os",
+        "query_logic": "lsblk -o NAME,TYPE,FSTYPE,MOUNTPOINTS; inspect root/home partitions for crypto_LUKS or crypt mapper devices",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 5. Host Firewall Active (Real OS inspection)
     fw_status, fw_msg, fw_ev = check_real_host_firewall()
     tests.append({
         "id": "test_host_firewall",
+        "test_id": "test_host_firewall",
         "title": "Host Firewall & Inbound Packet Filtering",
         "category": "Host & Infrastructure",
-        "control_code": "CC6.6-NET-SEC",
+        "control_ids": ["TF-CC6.6-01"],
+        "control_code": "TF-CC6.6-01",
         "status": fw_status,
         "summary": fw_msg,
         "remediation": "Ensure host firewalls (ufw, nftables, or security groups) are enabled: sudo ufw enable",
         "last_run": ts,
-        "evidence_data": fw_ev
+        "evidence_data": fw_ev,
+        "source_system": "host-os",
+        "query_logic": "systemctl is-active ufw || systemctl is-active nftables || iptables -L -n; verify packet filtering active",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 6. SSH Security Hygiene
@@ -187,14 +218,20 @@ def evaluate_continuous_tests(db) -> list[dict]:
             pass
     tests.append({
         "id": "test_ssh_security_hygiene",
+        "test_id": "test_ssh_security_hygiene",
         "title": "SSH Remote Access & Credential Hygiene",
         "category": "Host & Infrastructure",
-        "control_code": "CC6.1-MFA",
+        "control_ids": ["TF-CC6.1-01"],
+        "control_code": "TF-CC6.1-01",
         "status": ssh_status,
         "summary": ssh_msg,
         "remediation": "Set PermitRootLogin no and PasswordAuthentication no in /etc/ssh/sshd_config.",
         "last_run": ts,
-        "evidence_data": {"sshd_config_checked": sshd_path.exists()}
+        "evidence_data": {"sshd_config_checked": sshd_path.exists()},
+        "source_system": "host-os",
+        "query_logic": "Inspect /etc/ssh/sshd_config for 'PermitRootLogin yes'; verify root remote password access is disabled",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 7. User Access Reviews Completed
@@ -203,14 +240,20 @@ def evaluate_continuous_tests(db) -> list[dict]:
     ar_status = "fail" if pending_reviews else "pass"
     tests.append({
         "id": "test_access_reviews_completed",
+        "test_id": "test_access_reviews_completed",
         "title": "Quarterly User Access Reviews & Account Auditing",
         "category": "Access Control",
-        "control_code": "CC6.4-RECERT",
+        "control_ids": ["TF-CC6.4-01"],
+        "control_code": "TF-CC6.4-01",
         "status": ar_status,
         "summary": "All access review decisions are resolved." if not pending_reviews else f"{len(pending_reviews)} access review campaign(s) have undecided accounts.",
         "remediation": "Complete pending keep/revoke determinations for all accounts under Access Reviews.",
         "last_run": ts,
-        "evidence_data": {"pending_campaigns": len(pending_reviews)}
+        "evidence_data": {"pending_campaigns": len(pending_reviews)},
+        "source_system": "twofrom-grc-internal",
+        "query_logic": "SELECT entries FROM access_reviews WHERE status != 'completed'; check for pending decisions",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 8. Vendor Risk Assessments
@@ -220,14 +263,20 @@ def evaluate_continuous_tests(db) -> list[dict]:
     vnd_status = "fail" if overdue_vendors else "pass"
     tests.append({
         "id": "test_vendor_risk_reviews",
+        "test_id": "test_vendor_risk_reviews",
         "title": "Critical Vendor Annual Risk Assessments",
         "category": "Third-Party Risk",
-        "control_code": "CC9.1-VENDOR-ASSESS",
+        "control_ids": ["TF-CC9.1-01"],
+        "control_code": "TF-CC9.1-01",
         "status": vnd_status,
         "summary": f"All {len(crit_vendors)} critical/high vendors assessed within 365 days." if not overdue_vendors else f"{len(overdue_vendors)} critical vendor(s) past review date.",
         "remediation": "Review third-party SOC 2 reports or security assessments for high-tier vendors in the Vendors module.",
         "last_run": ts,
-        "evidence_data": {"critical_vendors": len(crit_vendors), "overdue_count": len(overdue_vendors)}
+        "evidence_data": {"critical_vendors": len(crit_vendors), "overdue_count": len(overdue_vendors)},
+        "source_system": "twofrom-grc-internal",
+        "query_logic": "SELECT review_date FROM vendors WHERE tier IN ('critical', 'high') AND review_date < CURRENT_DATE",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 9. Vendor DPAs & Sub-processor Agreements
@@ -235,14 +284,20 @@ def evaluate_continuous_tests(db) -> list[dict]:
     dpa_status = "warning" if missing_dpas else "pass"
     tests.append({
         "id": "test_vendor_dpas",
+        "test_id": "test_vendor_dpas",
         "title": "Data Processing Agreements (DPAs) with Sub-processors",
         "category": "Third-Party Risk",
-        "control_code": "CC9.2-DPA",
+        "control_ids": ["TF-CC9.2-01"],
+        "control_code": "TF-CC9.2-01",
         "status": dpa_status,
         "summary": "Data access vendors have documented assessment notes." if not missing_dpas else f"{len(missing_dpas)} vendor(s) with data access need documented DPA verification.",
         "remediation": "Execute and record Data Processing Agreements (DPAs) with vendors processing customer personal data.",
         "last_run": ts,
-        "evidence_data": {"unvetted_data_vendors": len(missing_dpas)}
+        "evidence_data": {"unvetted_data_vendors": len(missing_dpas)},
+        "source_system": "twofrom-grc-internal",
+        "query_logic": "SELECT id, title FROM vendors WHERE data_access IS NOT NULL AND length(assessment_notes) = 0",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 10. Evidence Currency & Expiration
@@ -251,14 +306,20 @@ def evaluate_continuous_tests(db) -> list[dict]:
     evi_status = "fail" if expired_evi else "pass"
     tests.append({
         "id": "test_evidence_currency",
+        "test_id": "test_evidence_currency",
         "title": "Compliance Evidence Currency & Validity",
         "category": "Evidence & Audit",
-        "control_code": "CC7.2-PEN-TEST",
+        "control_ids": ["TF-CC7.2-01"],
+        "control_code": "TF-CC7.2-01",
         "status": evi_status,
         "summary": "All collected evidence attachments are current." if not expired_evi else f"{len(expired_evi)} evidence attachment(s) have passed their expiration date.",
         "remediation": "Upload refreshed screenshots, penetration tests, or SOC 2 reports in the Evidence module.",
         "last_run": ts,
-        "evidence_data": {"expired_evidence_count": len(expired_evi)}
+        "evidence_data": {"expired_evidence_count": len(expired_evi)},
+        "source_system": "twofrom-grc-internal",
+        "query_logic": "SELECT id, title, expires_date FROM evidence WHERE expires_date < CURRENT_DATE",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 11. Control Ownership
@@ -268,14 +329,20 @@ def evaluate_continuous_tests(db) -> list[dict]:
     ctl_status = "fail" if unowned else "pass"
     tests.append({
         "id": "test_control_ownership",
+        "test_id": "test_control_ownership",
         "title": "Control Accountability & Ownership Assignment",
         "category": "Policies & Governance",
-        "control_code": "CC1.1-GOV",
+        "control_ids": ["TF-CC1.3-01"],
+        "control_code": "TF-CC1.3-01",
         "status": ctl_status,
         "summary": f"All {len(app_controls)} controls have designated owners." if not unowned else f"{len(unowned)} control(s) lack an assigned accountable owner.",
         "remediation": "Assign compliance control owners (e.g. CISO, VP Engineering, HR Lead) across your controls register.",
         "last_run": ts,
-        "evidence_data": {"unowned_controls_count": len(unowned)}
+        "evidence_data": {"unowned_controls_count": len(unowned)},
+        "source_system": "twofrom-grc-internal",
+        "query_logic": "SELECT id, title FROM controls WHERE status != 'not_applicable' AND (owner IS NULL OR trim(owner) = '')",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 12. High Risk Mitigation
@@ -284,42 +351,60 @@ def evaluate_continuous_tests(db) -> list[dict]:
     risk_status = "fail" if high_unmitigated else "pass"
     tests.append({
         "id": "test_high_risk_mitigation",
+        "test_id": "test_high_risk_mitigation",
         "title": "Enterprise Risk Register Treatment Mapping",
         "category": "Risk Management",
-        "control_code": "GV.1-RISK-REG",
+        "control_ids": ["TF-CC3.2-01"],
+        "control_code": "TF-CC3.2-01",
         "status": risk_status,
         "summary": "All high risks have documented control treatments." if not high_unmitigated else f"{len(high_unmitigated)} high/critical risk(s) lack mapped mitigating controls.",
         "remediation": "Link mitigating compliance controls to all critical risks in the Risks register.",
         "last_run": ts,
-        "evidence_data": {"unmitigated_high_risks": len(high_unmitigated)}
+        "evidence_data": {"unmitigated_high_risks": len(high_unmitigated)},
+        "source_system": "twofrom-grc-internal",
+        "query_logic": "SELECT id, title FROM risks WHERE status != 'closed' AND inherent_score >= 12 AND (control_ids IS NULL OR json_array_length(control_ids) = 0)",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 13. Insecure Network Ports (Real OS check)
     port_status, port_msg, port_ev = check_real_open_listening_ports()
     tests.append({
         "id": "test_network_open_ports",
+        "test_id": "test_network_open_ports",
         "title": "Network Attack Surface & Insecure Port Filtering",
         "category": "Host & Infrastructure",
-        "control_code": "CC6.6-NET-SEC",
+        "control_ids": ["TF-CC6.6-01"],
+        "control_code": "TF-CC6.6-01",
         "status": port_status,
         "summary": port_msg,
         "remediation": "Disable cleartext protocols (Telnet, unencrypted FTP) and close unneeded public listening ports.",
         "last_run": ts,
-        "evidence_data": port_ev
+        "evidence_data": port_ev,
+        "source_system": "host-os",
+        "query_logic": "ss -tuln; inspect listening ports for cleartext services (Telnet port 23, FTP port 21)",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 14. System Audit Logging (Real OS check)
     log_status, log_msg, log_ev = check_system_logging()
     tests.append({
         "id": "test_system_logging_active",
+        "test_id": "test_system_logging_active",
         "title": "Centralized System Logging & Retention Daemon",
         "category": "Host & Infrastructure",
-        "control_code": "CC7.3-LOGGING",
+        "control_ids": ["TF-CC7.3-01"],
+        "control_code": "TF-CC7.3-01",
         "status": log_status,
         "summary": log_msg,
         "remediation": "Ensure systemd-journald or auditd logging service is running with persistent disk storage.",
         "last_run": ts,
-        "evidence_data": log_ev
+        "evidence_data": log_ev,
+        "source_system": "host-os",
+        "query_logic": "systemctl is-active systemd-journald || auditd; verify persistent audit logging daemon active",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 15. Workforce Background Checks
@@ -327,14 +412,20 @@ def evaluate_continuous_tests(db) -> list[dict]:
     bg_status = "fail" if unscreened else "pass"
     tests.append({
         "id": "test_background_checks",
+        "test_id": "test_background_checks",
         "title": "Pre-Employment Background Check Screening",
         "category": "Human Resources",
-        "control_code": "HR.1-BACKGROUND",
+        "control_ids": ["TF-CC1.4-01"],
+        "control_code": "TF-CC1.4-01",
         "status": bg_status,
         "summary": "All active personnel have verified background checks." if not unscreened else f"{len(unscreened)} employee(s) have unverified or failed background screening.",
         "remediation": "Verify pre-employment background screening records for all active workforce members.",
         "last_run": ts,
-        "evidence_data": {"unscreened_count": len(unscreened)}
+        "evidence_data": {"unscreened_count": len(unscreened)},
+        "source_system": "twofrom-grc-internal",
+        "query_logic": "SELECT id, email FROM people WHERE status IN ('active', 'onboarding') AND background_check = 'failed'",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # 16. AICPA System Description Published
@@ -349,14 +440,20 @@ def evaluate_continuous_tests(db) -> list[dict]:
     desc_status = "pass" if has_desc else "warning"
     tests.append({
         "id": "test_system_description",
+        "test_id": "test_system_description",
         "title": "AICPA SOC 2 Section 3 System Description",
         "category": "Policies & Governance",
-        "control_code": "CC2.1-COMM",
+        "control_ids": ["TF-CC2.1-01"],
+        "control_code": "TF-CC2.1-01",
         "status": desc_status,
         "summary": "AICPA SOC 2 System Description is drafted and structured for auditor review." if has_desc else "AICPA System Description has not been published yet.",
         "remediation": "Draft and review your Section 3 System Description in the System Description module.",
         "last_run": ts,
-        "evidence_data": {"system_description_initialized": has_desc}
+        "evidence_data": {"system_description_initialized": has_desc},
+        "source_system": "twofrom-grc-internal",
+        "query_logic": "SELECT value FROM settings WHERE key = 'system_description'; check non-empty sections structure",
+        "generated_at": ts,
+        "test_version": TEST_VER
     })
 
     # Attach copy-pasteable remediation snippets (Vanta/Drata-style fix scripts)

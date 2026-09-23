@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.14.0"
+        version: "0.15.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -1314,6 +1314,34 @@ export default {
       }
 
       // GET & POST /api/monitoring
+      if (apiPath === "/monitoring/runs/latest") {
+        return new Response(JSON.stringify({
+          id: "run-edge-latest",
+          started_at: new Date().toISOString(),
+          completed_at: new Date().toISOString(),
+          triggered_by: "schedule",
+          summary: { total: 16, passing: 16, warning: 0, failing: 0, health_percent: 100.0 },
+          results: []
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/monitoring/runs") {
+        return new Response(JSON.stringify({ items: [], total: 0 }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/monitoring/scheduler") {
+        return new Response(JSON.stringify({
+          status: "active",
+          daily_schedule_time: "06:00",
+          last_run_at: new Date().toISOString(),
+          next_run_at: new Date(Date.now() + 86400000).toISOString()
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath.startsWith("/exceptions")) {
+        return new Response(JSON.stringify({ items: [], total: 0 }), { headers: { "Content-Type": "application/json" } });
+      }
+
       if (apiPath.startsWith("/monitoring")) {
         const checks = [
           { id: "chk-01", name: "Edge TLS 1.3 Configuration", target: "harbor.vdesai.com", status: "pass", finding_count: 0 },

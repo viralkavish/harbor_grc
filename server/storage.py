@@ -165,6 +165,15 @@ class Store:
                     audit_log_head_hash TEXT NOT NULL, manifest TEXT NOT NULL,
                     content_bytes BLOB NOT NULL, sha256 TEXT NOT NULL,
                     FOREIGN KEY(engagement_id) REFERENCES engagements(id) ON DELETE CASCADE);
+                CREATE TABLE IF NOT EXISTS monitoring_runs (
+                    id TEXT PRIMARY KEY, started_at TEXT NOT NULL, completed_at TEXT NOT NULL,
+                    triggered_by TEXT NOT NULL, results TEXT NOT NULL, summary TEXT);
+                CREATE TABLE IF NOT EXISTS exceptions (
+                    id TEXT PRIMARY KEY, test_id TEXT NOT NULL DEFAULT '', control_refs TEXT NOT NULL DEFAULT '[]',
+                    title TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'open', owner TEXT NOT NULL DEFAULT '',
+                    due_date TEXT, tags TEXT NOT NULL DEFAULT '[]', reason TEXT NOT NULL DEFAULT '',
+                    notes TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+                    history TEXT NOT NULL DEFAULT '[]');
             ''')
             from .audit_ops import ensure_audit_log_initialized
             ensure_audit_log_initialized(db)

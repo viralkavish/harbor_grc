@@ -94,8 +94,10 @@ RESOURCES = {
         field('system'),field('reviewer'),field('entries','json',[])]),
     'questionnaires': resource('Questionnaires','Questionnaire','draft,in_progress,in_review,complete',[
         field('customer'),field('questions','json',[])]),
-    'exceptions': resource('Exceptions','Exception','requested,approved,rejected,expired',[
-        ref('control_id','controls'),field('reason','textarea'),*dates('expires_date'),field('approver')]),
+    'exceptions': resource('Exceptions','Exception','open,acknowledged,remediated,closed,requested,approved,rejected,expired',[
+        field('test_id', default=''),ref('control_refs','controls',True),ref('control_id','controls'),
+        field('reason','textarea'),*dates('expires_date'),field('approver'),
+        field('notes','json',[]),field('history','json',[])]),
 }
 
 

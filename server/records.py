@@ -47,6 +47,16 @@ def create_record(db, resource, payload, actor: str | None = None):
     item.update(id=str(uuid4()), created_at=now(), updated_at=now())
     save(db, resource, item)
     sync_links(db, resource, item)
+
+    if resource == 'policies':
+        author = actor or item.get('author') or item.get('owner') or 'staff'
+        db.execute(
+            """INSERT OR REPLACE INTO policy_versions
+               (id, policy_id, version, content, created_at, approved_by, approved_at, updated_by, change_reason, title)
+               VALUES (?, ?, 1, ?, ?, NULL, NULL, ?, 'Initial policy authoring', ?)""",
+            (str(uuid4()), item['id'], item.get('content', ''), now(), author, item.get('title', ''))
+        )
+
     log(db, 'create', resource, item, actor=actor, after=item)
     return item
 
@@ -56,17 +66,38 @@ def update_record(db, resource, record_id, payload, actor: str | None = None):
     item = validate(resource, payload, previous)
     validate_links(db, resource, item)
 
-    if resource == 'policies' and 'content' in payload and previous.get('content') != item.get('content'):
-        prev_version = previous.get('version', 1)
-        db.execute(
-            "INSERT INTO policy_versions (id, policy_id, version, content, created_at) VALUES (?, ?, ?, ?, ?)",
-            (str(uuid4()), record_id, prev_version, previous.get('content', ''), now())
-        )
-        item['version'] = prev_version + 1
-        if previous.get('status') == 'published':
-            item['status'] = 'draft'
-            item['approved_at'] = None
-            item['approver'] = ''
+    if resource == 'policies':
+        change_reason = payload.get('change_reason') or payload.get('edit_reason') or 'Policy content revision'
+        updated_by = actor or item.get('author') or item.get('owner') or 'staff'
+        content_changed = 'content' in payload and previous.get('content') != item.get('content')
+        title_changed = 'title' in payload and previous.get('title') != item.get('title')
+
+        if content_changed or title_changed or 'change_reason' in payload:
+            prev_version = previous.get('version', 1)
+            db.execute(
+                """INSERT INTO policy_versions
+                   (id, policy_id, version, content, created_at, approved_by, approved_at, updated_by, change_reason, title)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    str(uuid4()),
+                    record_id,
+                    prev_version,
+                    previous.get('content', ''),
+                    previous.get('updated_at') or now(),
+                    previous.get('approved_by'),
+                    previous.get('approved_at'),
+                    previous.get('updated_by') or 'staff',
+                    previous.get('change_reason') or 'Prior version snapshot',
+                    previous.get('title', '')
+                )
+            )
+            item['version'] = prev_version + 1
+            item['change_reason'] = change_reason
+            item['updated_by'] = updated_by
+            if previous.get('status') == 'published' and content_changed:
+                item['status'] = 'draft'
+                item['approved_at'] = None
+                item['approver'] = ''
 
     if resource == 'controls':
         defn_fields = ['title', 'description', 'points_of_focus', 'test_procedure', 'evidence_requirement', 'type', 'nature', 'frequency', 'owner', 'criterion_mapping']

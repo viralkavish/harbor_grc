@@ -45,7 +45,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
     if auto_seed:
         seed_starter_data(store)
 
-    app = FastAPI(title='tofromGRC', version='0.19.1', docs_url=None, redoc_url=None)
+    app = FastAPI(title='tofromGRC', version='0.20.0', docs_url=None, redoc_url=None)
     app.state.store = store
     install_security(app, store)
 
@@ -55,7 +55,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
 
     @app.get('/api/health')
     def health():
-        return {'status': 'ok', 'version': '0.19.1', 'storage': 'sqlite'}
+        return {'status': 'ok', 'version': '0.20.0', 'storage': 'sqlite'}
 
     @app.get('/api/bootstrap')
     def bootstrap(request: Request, response: Response):

@@ -59,7 +59,9 @@ RESOURCES = {
         field('approver',default=''),
         field('submitted_by',default='',readonly=True),
         field('submitted_at',default=None,readonly=True),
-        field('rejection_reason',default='',readonly=True)]),
+        field('rejection_reason',default='',readonly=True),
+        field('change_reason',default=''),
+        field('updated_by',default='')]),
     'vendors': resource('Vendors','Vendor','intake,in_review,approved,rejected,offboarded',[
         field('website','url'),field('category'),choice('tier','low,medium,high,critical','medium'),field('data_access','textarea'),
         field('contact_email','email'),*dates('renewal_date','review_date'),*SCORES,field('assessment_notes','textarea'),ref('evidence_ids','evidence',True)]),

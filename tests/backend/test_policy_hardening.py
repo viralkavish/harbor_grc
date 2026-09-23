@@ -258,3 +258,51 @@ def test_all_mutations_logged_in_r3_audit_log(test_setup):
     assert approve_entry["actor"] == approver
     assert approve_entry["after"] is not None
     assert approve_entry["after"]["status"] == "published"
+
+
+def test_policy_version_history_with_author_and_change_reason_and_print_view(test_setup):
+    """Asserts editing policy captures who and why in version history, and print view renders cleanly."""
+    client, _, _ = test_setup
+
+    # 1. Create a new policy
+    create_res = client.post("/api/policies", json={
+        "title": "DNI 2025 Incident Response Policy",
+        "description": "Incident response guidelines",
+        "owner": "ciso@tofrom.com",
+        "content": "# Incident Response\n\nAll incidents must be triaged within 15 minutes.",
+        "change_reason": "Initial authoring for DNI 2025 readiness"
+    })
+    assert create_res.status_code == 201
+    pol = create_res.json()
+    pol_id = pol["id"]
+
+    # 2. Edit the policy with explicit reason
+    edit_res = client.patch(f"/api/policies/{pol_id}", json={
+        "content": "# Incident Response\n\nAll incidents must be triaged within 10 minutes.\nTabletop exercises run bi-annually.",
+        "change_reason": "Tightened SLA from 15m to 10m per DNI 2025 recommendations"
+    })
+    assert edit_res.status_code == 200
+    updated_pol = edit_res.json()
+    assert updated_pol["version"] == 2
+
+    # 3. Fetch version history
+    v_res = client.get(f"/api/policies/{pol_id}/versions")
+    assert v_res.status_code == 200
+    v_data = v_res.json()
+    items = v_data["items"]
+    assert len(items) >= 2
+    # Verify that change_reason and updated_by are present
+    v2 = next((v for v in items if v["version"] == 2), None)
+    v1 = next((v for v in items if v["version"] == 1), None)
+    assert v1 is not None
+    assert v1["change_reason"] is not None
+    assert v1["updated_by"] is not None
+
+    # 4. Fetch executive print view
+    print_res = client.get(f"/api/policies/{pol_id}/print")
+    assert print_res.status_code == 200
+    assert "text/html" in print_res.headers["content-type"]
+    assert "tofromGRC" in print_res.text
+    assert "Document Revision History" in print_res.text
+    assert "Segregation of Duties" in print_res.text
+

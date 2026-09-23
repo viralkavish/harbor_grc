@@ -40,6 +40,8 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
   // Step 3: Documents & Assets
   const [uploadedPolicies, setUploadedPolicies] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadingControls, setUploadingControls] = useState(false);
+  const [importedControlsCount, setImportedControlsCount] = useState(0);
   const [assets, setAssets] = useState([
     { name: 'AWS Cloud Infrastructure', type: 'cloud', env: 'Production' },
     { name: 'Google Workspace IdP', type: 'identity', env: 'Enterprise' },
@@ -109,6 +111,24 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
       notify(err.message, 'error');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleUploadControlsCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingControls(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('dry_run', 'false');
+      const res = await api.post('/import/controls', formData);
+      setImportedControlsCount(res.imported || 0);
+      notify(`Imported ${res.imported || 0} controls from "${file.name}"`);
+    } catch (err: any) {
+      notify(err.message, 'error');
+    } finally {
+      setUploadingControls(false);
     }
   };
 
@@ -427,6 +447,30 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
                         </span>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              {/* DNI 2025 Controls Upload Section */}
+              <div style={{ background: 'var(--surface-raised)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ink)', display: 'block' }}>
+                      Upload DNI 2025 Report Controls (.csv)
+                    </span>
+                    <small style={{ color: 'var(--muted)' }}>
+                      Import existing controls from your DNI 2025 compliance assessment directly into the workspace.
+                    </small>
+                  </div>
+                  <label className="button button-sm button-primary" style={{ cursor: 'pointer' }}>
+                    <Upload size={13} /> {uploadingControls ? 'Importing…' : 'Select Controls CSV'}
+                    <input type="file" accept=".csv" onChange={handleUploadControlsCSV} style={{ display: 'none' }} />
+                  </label>
+                </div>
+
+                {importedControlsCount > 0 && (
+                  <div style={{ padding: '8px 12px', background: 'var(--card-bg)', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '12px', color: 'var(--success)', fontWeight: 600 }}>
+                    ✓ Successfully imported {importedControlsCount} controls from DNI 2025 report
                   </div>
                 )}
               </div>

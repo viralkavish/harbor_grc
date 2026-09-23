@@ -114,7 +114,8 @@ class Store:
                 CREATE TABLE IF NOT EXISTS policy_versions (
                     id TEXT PRIMARY KEY, policy_id TEXT NOT NULL, version INTEGER NOT NULL,
                     content TEXT NOT NULL, created_at TEXT NOT NULL,
-                    approved_by TEXT, approved_at TEXT);
+                    approved_by TEXT, approved_at TEXT,
+                    updated_by TEXT, change_reason TEXT, title TEXT);
                 CREATE TABLE IF NOT EXISTS policy_acceptances (
                     id TEXT PRIMARY KEY, policy_id TEXT NOT NULL, person_id TEXT,
                     person_name TEXT NOT NULL, person_email TEXT NOT NULL, version INTEGER NOT NULL,
@@ -219,6 +220,18 @@ class Store:
                 pass
             try:
                 db.execute("ALTER TABLE policy_versions ADD COLUMN approved_at TEXT")
+            except Exception:
+                pass
+            try:
+                db.execute("ALTER TABLE policy_versions ADD COLUMN updated_by TEXT")
+            except Exception:
+                pass
+            try:
+                db.execute("ALTER TABLE policy_versions ADD COLUMN change_reason TEXT")
+            except Exception:
+                pass
+            try:
+                db.execute("ALTER TABLE policy_versions ADD COLUMN title TEXT")
             except Exception:
                 pass
             try:

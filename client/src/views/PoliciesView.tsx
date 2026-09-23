@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import {
   FileText, CheckCircle2, History, Download, Plus, Trash2, Edit,
-  Send, UserCheck, BookOpen, AlertTriangle, Clock, Layers, Sparkles, X
+  Send, UserCheck, BookOpen, AlertTriangle, Clock, Layers, Sparkles, X,
+  Printer, Eye, Code, FileCheck
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { PageHeader, Badge, Loading, ErrorState, EmptyState, formatDate, Note } from '../components/ui';
@@ -26,6 +27,9 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
   const [editControls, setEditControls] = useState<string[]>([]);
   const [editReviewDate, setEditReviewDate] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [editChangeReason, setEditChangeReason] = useState('');
+  const [viewMode, setViewMode] = useState<'document' | 'markdown'>('document');
+  const [viewingVersion, setViewingVersion] = useState<any | null>(null);
 
   // Modals
   const [showVersions, setShowVersions] = useState(false);
@@ -144,6 +148,7 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
     setEditControls([]);
     setEditReviewDate(null);
     setEditContent('# Policy Title\n\n## 1. Scope and Purpose\nDescribe the scope and purpose of this policy.\n\n## 2. Policy Statements\n- Baseline requirement 1\n- Baseline requirement 2');
+    setEditChangeReason('Initial policy authoring');
     setIsCreating(true);
   };
 
@@ -155,36 +160,43 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
     setEditControls(selectedPolicy.control_ids || []);
     setEditReviewDate(selectedPolicy.review_date || null);
     setEditContent(selectedPolicy.content || '');
+    setEditChangeReason('');
     setIsEditing(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isCreating && !editChangeReason.trim()) {
+      notify('Please document the reason for this revision / what changed', 'error');
+      return;
+    }
     setSaving(true);
     try {
       if (isCreating) {
         const res = await api.post('/policies', {
-          title: editTitle,
-          description: editDescription,
-          owner: editOwner,
+          title: editTitle.trim(),
+          description: editDescription.trim(),
+          owner: editOwner.trim(),
           control_ids: editControls,
           review_date: editReviewDate,
           content: editContent,
-          status: 'draft'
+          status: 'draft',
+          change_reason: editChangeReason.trim() || 'Initial policy authoring'
         });
-        notify('Policy created in draft');
+        notify('Policy created in draft (v1 snapshot recorded)');
         setIsCreating(false);
         setSelectedPolicy(res);
       } else if (selectedPolicy) {
         const res = await api.patch(`/policies/${selectedPolicy.id}`, {
-          title: editTitle,
-          description: editDescription,
-          owner: editOwner,
+          title: editTitle.trim(),
+          description: editDescription.trim(),
+          owner: editOwner.trim(),
           control_ids: editControls,
           review_date: editReviewDate,
-          content: editContent
+          content: editContent,
+          change_reason: editChangeReason.trim()
         });
-        notify('Policy updated (new draft version saved)');
+        notify(`Policy updated (v${res.version} snapshot recorded with reason)`);
         setIsEditing(false);
         setSelectedPolicy(res);
       }
@@ -442,7 +454,35 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
                   <p style={{ color: 'var(--muted)', fontSize: '13px' }}>{selectedPolicy.description}</p>
                 </div>
 
-                <div className="view-inline" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <div className="view-inline" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <div className="view-inline" style={{ display: 'flex', gap: '2px', background: 'var(--surface-raised)', padding: '2px', borderRadius: '6px', border: '1px solid var(--border)', marginRight: '6px' }}>
+                    <button
+                      type="button"
+                      className={`button button-sm ${viewMode === 'document' ? 'button-primary' : ''}`}
+                      style={{ padding: '3px 10px', fontSize: '11px' }}
+                      onClick={() => setViewMode('document')}
+                    >
+                      <FileText size={12} /> Executive Document
+                    </button>
+                    <button
+                      type="button"
+                      className={`button button-sm ${viewMode === 'markdown' ? 'button-primary' : ''}`}
+                      style={{ padding: '3px 10px', fontSize: '11px' }}
+                      onClick={() => setViewMode('markdown')}
+                    >
+                      <Code size={12} /> Markdown
+                    </button>
+                  </div>
+
+                  <a
+                    href={`/api/policies/${selectedPolicy.id}/print?autoprint=true`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="button button-sm button-primary"
+                    title="Print executive document or save as PDF"
+                  >
+                    <Printer size={13} /> Print / Save PDF
+                  </a>
                   <button className="button button-sm" onClick={() => setShowJevModal(true)} title="Check policy compatibility against controls with JEV">
                     <Sparkles size={13} color="var(--accent)" /> JEV Match
                   </button>
@@ -596,10 +636,83 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
                 </div>
               )}
 
-              {/* Markdown Content Surface */}
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px', lineHeight: 1.7, color: 'var(--ink)' }}>
-                <Markdown>{selectedPolicy.content || '*No content provided for this policy.*'}</Markdown>
-              </div>
+              {/* Content View Surface */}
+              {viewMode === 'document' ? (
+                <div style={{ borderTop: '1px solid var(--border)', marginTop: '16px', paddingTop: '20px' }}>
+                  {/* Executive Document Layout */}
+                  <div style={{
+                    background: 'var(--surface-raised)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    padding: '20px 24px',
+                    marginBottom: '20px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid var(--accent)', paddingBottom: '12px', marginBottom: '16px' }}>
+                      <div>
+                        <span style={{ fontSize: '11px', letterSpacing: '1px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--accent)' }}>
+                          tofromGRC • Information Security & Governance Program
+                        </span>
+                        <h2 style={{ fontSize: '22px', fontWeight: 800, margin: '4px 0 0 0', color: 'var(--ink)' }}>
+                          {selectedPolicy.title}
+                        </h2>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <Badge value={selectedPolicy.status} />
+                        <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
+                          Version {selectedPolicy.version || 1}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '12px' }}>
+                      <div>
+                        <span style={{ color: 'var(--muted)', display: 'block' }}>Document ID</span>
+                        <strong className="mono">{selectedPolicy.id}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--muted)', display: 'block' }}>Executive Owner</span>
+                        <strong>{selectedPolicy.owner || 'Unassigned'}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--muted)', display: 'block' }}>Approved By</span>
+                        <strong>{selectedPolicy.approved_by || selectedPolicy.approver || 'Pending Review'}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--muted)', display: 'block' }}>Annual Review SLA</span>
+                        <strong>{selectedPolicy.review_date ? formatDate(selectedPolicy.review_date) : 'Annual Review Required'}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: 'var(--card-bg)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    padding: '28px 32px',
+                    lineHeight: 1.8,
+                    fontSize: '14px',
+                    color: 'var(--ink)'
+                  }}>
+                    <Markdown>{selectedPolicy.content || '*No content provided for this policy.*'}</Markdown>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+                  <pre style={{
+                    background: 'var(--surface-raised)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    padding: '16px',
+                    fontSize: '12px',
+                    fontFamily: 'var(--font-mono)',
+                    lineHeight: 1.6,
+                    maxHeight: '500px',
+                    overflowY: 'auto'
+                  }}>
+                    {selectedPolicy.content || '*No content provided for this policy.*'}
+                  </pre>
+                </div>
+              )}
             </div>
           )}
 
@@ -618,6 +731,20 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
                 <div className="field">
                   <span>Executive Description</span>
                   <textarea rows={2} value={editDescription} onChange={e => setEditDescription(e.target.value)} />
+                </div>
+
+                <div className="field">
+                  <span>Reason for Revision / What Changed *</span>
+                  <textarea
+                    rows={2}
+                    required
+                    placeholder="Document what changed in this version and why (e.g. Updated password requirements per DNI 2025 report recommendations)..."
+                    value={editChangeReason}
+                    onChange={e => setEditChangeReason(e.target.value)}
+                  />
+                  <small style={{ color: 'var(--muted)', fontSize: '11px', marginTop: '2px' }}>
+                    Every revision is permanently tracked with author, timestamp, and this change reason in immutable history.
+                  </small>
                 </div>
 
                 <div className="field-grid">
@@ -842,27 +969,50 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {versions.map((v: any) => (
                   <div key={v.version} style={{ border: '1px solid var(--border)', borderRadius: '6px', padding: '14px 18px', background: 'var(--surface-raised)' }}>
-                    <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                       <div>
-                        <strong style={{ fontSize: '14px', color: 'var(--ink)' }}>Version {v.version}</strong>
-                        {v.approved_by && (
-                          <span className="badge badge-success" style={{ marginLeft: '8px', fontSize: '10px' }}>
-                            Approved by {v.approved_by}
-                          </span>
+                        <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <strong style={{ fontSize: '14px', color: 'var(--ink)' }}>Version {v.version}</strong>
+                          {v.approved_by ? (
+                            <span className="badge badge-success" style={{ fontSize: '10px' }}>
+                              Approved by {v.approved_by}
+                            </span>
+                          ) : (
+                            <span className="badge badge-neutral" style={{ fontSize: '10px' }}>Draft / Revision</span>
+                          )}
+                          <span className="mono" style={{ fontSize: '12px', color: 'var(--muted)' }}>{formatDate(v.created_at)}</span>
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                          <span>Author / Editor: <strong style={{ color: 'var(--ink)' }}>{v.updated_by || 'Author'}</strong></span>
+                        </div>
+                        {v.change_reason && (
+                          <div style={{ marginTop: '4px', fontSize: '12px', color: 'var(--accent)', background: 'rgba(56, 189, 248, 0.08)', padding: '4px 8px', borderRadius: '4px', borderLeft: '3px solid var(--accent)' }}>
+                            <strong>Why:</strong> {v.change_reason}
+                          </div>
                         )}
-                        <span className="mono" style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '8px' }}>{formatDate(v.created_at)}</span>
                       </div>
-                      <button
-                        className="button button-sm"
-                        style={{ padding: '2px 8px', fontSize: '11px' }}
-                        onClick={() => handleRestoreVersion(v.version)}
-                      >
-                        Restore as Draft
-                      </button>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          className="button button-sm"
+                          style={{ padding: '2px 8px', fontSize: '11px' }}
+                          onClick={() => setViewingVersion(viewingVersion === v ? null : v)}
+                        >
+                          <Eye size={12} /> {viewingVersion === v ? 'Hide Content' : 'View Content'}
+                        </button>
+                        <button
+                          className="button button-sm button-primary"
+                          style={{ padding: '2px 8px', fontSize: '11px' }}
+                          onClick={() => handleRestoreVersion(v.version)}
+                        >
+                          Restore as Draft
+                        </button>
+                      </div>
                     </div>
-                    <pre style={{ maxHeight: '140px', overflowY: 'auto', background: 'var(--card-bg)', border: '1px solid var(--border)', padding: '10px', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
-                      {v.content}
-                    </pre>
+                    {viewingVersion === v && (
+                      <pre style={{ maxHeight: '200px', overflowY: 'auto', background: 'var(--card-bg)', border: '1px solid var(--border)', padding: '12px', fontSize: '11px', fontFamily: 'var(--font-mono)', lineHeight: 1.5, marginTop: '10px', borderRadius: '4px' }}>
+                        {v.content}
+                      </pre>
+                    )}
                   </div>
                 ))}
               </div>

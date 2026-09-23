@@ -649,7 +649,8 @@ def policy_router(store: Store):
         with store.transaction() as db:
             get_record(db, 'policies', policy_id)
             rows = db.execute(
-                "SELECT version, content, created_at, approved_by, approved_at FROM policy_versions WHERE policy_id=? ORDER BY version DESC",
+                """SELECT version, content, created_at, approved_by, approved_at, updated_by, change_reason, title
+                   FROM policy_versions WHERE policy_id=? ORDER BY version DESC""",
                 (policy_id,)
             ).fetchall()
             items = [
@@ -658,11 +659,161 @@ def policy_router(store: Store):
                     'content': r[1],
                     'created_at': r[2],
                     'approved_by': r[3],
-                    'approved_at': r[4]
+                    'approved_at': r[4],
+                    'updated_by': r[5] or 'Author',
+                    'change_reason': r[6] or ('Approved release' if r[3] else 'Revision'),
+                    'title': r[7] or ''
                 }
                 for r in rows
             ]
             return {'items': items, 'total': len(items)}
+
+    @router.get('/{policy_id}/print')
+    def print_policy(policy_id: str, autoprint: bool = False):
+        """Generates executive, print-ready document layout with revision table and signature block."""
+        with store.transaction() as db:
+            policy = get_record(db, 'policies', policy_id)
+            rows = db.execute(
+                """SELECT version, created_at, updated_by, change_reason, approved_by
+                   FROM policy_versions WHERE policy_id=? ORDER BY version ASC""",
+                (policy_id,)
+            ).fetchall()
+
+        revision_rows = "".join(
+            f"<tr><td style='padding:6px 10px;border:1px solid #ddd;'>v{r[0]}</td>"
+            f"<td style='padding:6px 10px;border:1px solid #ddd;'>{r[1][:10]}</td>"
+            f"<td style='padding:6px 10px;border:1px solid #ddd;'>{r[2] or 'Author'}</td>"
+            f"<td style='padding:6px 10px;border:1px solid #ddd;'>{r[3] or 'Revision'}</td>"
+            f"<td style='padding:6px 10px;border:1px solid #ddd;'>{r[4] or '—'}</td></tr>"
+            for r in rows
+        ) if rows else f"<tr><td style='padding:6px 10px;border:1px solid #ddd;'>v{policy.get('version', 1)}</td><td style='padding:6px 10px;border:1px solid #ddd;'>{policy.get('created_at', '')[:10]}</td><td style='padding:6px 10px;border:1px solid #ddd;'>{policy.get('owner', 'Author')}</td><td style='padding:6px 10px;border:1px solid #ddd;'>Current policy</td><td style='padding:6px 10px;border:1px solid #ddd;'>{policy.get('approved_by') or '—'}</td></tr>"
+
+        # Format markdown body into clean HTML paragraphs/headings
+        raw_content = policy.get('content', '')
+        formatted_body = []
+        for line in raw_content.split('\n'):
+            line_str = line.strip()
+            if line_str.startswith('### '):
+                formatted_body.append(f"<h3 style='margin-top:20px;margin-bottom:8px;font-size:16px;color:#111827;'>{line_str[4:]}</h3>")
+            elif line_str.startswith('## '):
+                formatted_body.append(f"<h2 style='margin-top:24px;margin-bottom:10px;font-size:18px;border-bottom:1px solid #e5e7eb;padding-bottom:4px;color:#111827;'>{line_str[3:]}</h2>")
+            elif line_str.startswith('# '):
+                formatted_body.append(f"<h1 style='margin-top:28px;margin-bottom:12px;font-size:22px;color:#111827;'>{line_str[2:]}</h1>")
+            elif line_str.startswith('- ') or line_str.startswith('* '):
+                formatted_body.append(f"<li style='margin-bottom:4px;margin-left:20px;color:#374151;'>{line_str[2:]}</li>")
+            elif line_str:
+                formatted_body.append(f"<p style='margin-bottom:12px;line-height:1.6;color:#374151;'>{line_str}</p>")
+
+        content_html = "\n".join(formatted_body)
+        print_script = "<script>window.onload = function() { window.print(); };</script>" if autoprint else ""
+
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{policy['title']} - tofromGRC Compliance Policy</title>
+<style>
+  body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px auto; max-width: 850px; color: #1f2937; line-height: 1.5; }}
+  .header {{ display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2563eb; padding-bottom: 16px; margin-bottom: 24px; }}
+  .org-title {{ font-size: 12px; letter-spacing: 1px; font-weight: 700; text-transform: uppercase; color: #2563eb; }}
+  .doc-title {{ font-size: 24px; font-weight: 800; margin: 4px 0 0 0; color: #111827; }}
+  .meta-box {{ width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 12px; }}
+  .meta-box th, .meta-box td {{ border: 1px solid #e5e7eb; padding: 6px 10px; }}
+  .meta-box th {{ background-color: #f9fafb; color: #6b7280; text-align: left; font-weight: 600; width: 25%; }}
+  .badge {{ display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px; text-transform: uppercase; background: #e5e7eb; color: #374151; }}
+  .badge-published {{ background: #dcfce7; color: #166534; }}
+  .badge-in_review {{ background: #e0f2fe; color: #075985; }}
+  .badge-draft {{ background: #fef9c3; color: #854d0e; }}
+  .section-title {{ font-size: 15px; font-weight: 700; margin-top: 32px; margin-bottom: 12px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; color: #4b5563; }}
+  .rev-table {{ width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 24px; }}
+  .rev-table th {{ background: #f9fafb; border: 1px solid #ddd; padding: 6px 10px; text-align: left; }}
+  .signature-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; page-break-inside: avoid; }}
+  .sig-line {{ border-top: 1px solid #111827; padding-top: 8px; margin-top: 50px; font-size: 12px; }}
+  @media print {{
+    body {{ margin: 20mm 15mm; max-width: 100%; }}
+    .no-print {{ display: none !important; }}
+    @page {{ margin: 20mm 15mm; }}
+  }}
+</style>
+</head>
+<body>
+<div class="no-print" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; background: #f3f4f6; padding: 12px 18px; border-radius: 6px;">
+  <span><strong>Executive Policy Document:</strong> Ready for PDF export or physical archive.</span>
+  <button onclick="window.print()" style="background:#2563eb;color:#fff;border:none;padding:8px 16px;border-radius:4px;font-weight:600;cursor:pointer;">
+    Print / Save as PDF
+  </button>
+</div>
+
+<div class="header">
+  <div>
+    <span class="org-title">tofromGRC • Information Security & Compliance</span>
+    <h1 class="doc-title">{policy['title']}</h1>
+  </div>
+  <div style="text-align: right;">
+    <span class="badge badge-{policy['status']}">{policy['status']}</span>
+    <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">Version {policy.get('version', 1)}</div>
+  </div>
+</div>
+
+<table class="meta-box">
+  <tr>
+    <th>Document ID</th><td>{policy['id']}</td>
+    <th>Executive Owner</th><td>{policy.get('owner') or 'Unassigned'}</td>
+  </tr>
+  <tr>
+    <th>Approval Status</th><td>{policy['status'].upper()}</td>
+    <th>Approved By</th><td>{policy.get('approved_by') or policy.get('approver') or 'Pending Independent Review'}</td>
+  </tr>
+  <tr>
+    <th>Approved Version</th><td>v{policy.get('approved_version') or '1.0'}</td>
+    <th>Approval Date</th><td>{policy.get('approved_at') or 'Pending Review'}</td>
+  </tr>
+  <tr>
+    <th>Annual Review SLA</th><td>{policy.get('review_date') or 'Annual Review Required'}</td>
+    <th>Classification</th><td>Confidential — Internal Governance Document</td>
+  </tr>
+</table>
+
+<div class="policy-body">
+{content_html}
+</div>
+
+<div class="section-title">Document Revision History</div>
+<table class="rev-table">
+  <thead>
+    <tr>
+      <th>Version</th><th>Date</th><th>Author / Editor</th><th>Change Reason</th><th>Executive Approver</th>
+    </tr>
+  </thead>
+  <tbody>
+    {revision_rows}
+  </tbody>
+</table>
+
+<div class="signature-grid">
+  <div>
+    <div style="font-size: 12px; font-weight: 700; color: #374151;">Policy Author / Program Lead</div>
+    <div class="sig-line">
+      <strong>Signature:</strong> ____________________________<br>
+      <strong>Name:</strong> {policy.get('submitted_by') or policy.get('owner') or 'Author'}<br>
+      <strong>Date:</strong> {policy.get('updated_at', '')[:10]}
+    </div>
+  </div>
+  <div>
+    <div style="font-size: 12px; font-weight: 700; color: #374151;">Executive Approval (Segregation of Duties)</div>
+    <div class="sig-line">
+      <strong>Signature:</strong> ____________________________<br>
+      <strong>Name:</strong> {policy.get('approved_by') or policy.get('approver') or 'Chief Information Security Officer'}<br>
+      <strong>Date:</strong> {policy.get('approved_at', '')[:10] if policy.get('approved_at') else 'Pending Approval'}
+    </div>
+  </div>
+</div>
+
+{print_script}
+</body>
+</html>
+"""
+        return Response(content=html, media_type="text/html")
 
     @router.get('/{policy_id}/export')
     def export_policy(policy_id: str):

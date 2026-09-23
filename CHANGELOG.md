@@ -24,6 +24,17 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.20.0] - 2026-09-23
+
+### Added
+- **Policy Version History, Executive PDF View & DNI 2025 Controls Library**
+- Added immutable version tracking capturing who made changes and why (change_reason) on every policy revision
+- Added executive formatted policy view and print-ready PDF export with formal governance letterhead and signature block
+- Built dedicated Controls Library view (ControlsView.tsx) with manual control creation and DNI 2025 vintage support
+- Added bulk CSV import for DNI 2025 report controls in Controls Library and Onboarding Step 3
+
+---
+
 ## [0.19.1] - 2026-09-23
 
 ### Fixed

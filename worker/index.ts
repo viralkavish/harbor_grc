@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.19.1"
+        version: "0.20.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -1527,7 +1527,11 @@ export default {
 
       // GET /api/policies/:id/versions
       if (apiPath.startsWith("/policies/") && apiPath.endsWith("/versions")) {
-        return new Response(JSON.stringify({ versions: [] }), { headers: { "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ items: [], total: 0 }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath.startsWith("/policies/") && apiPath.endsWith("/print")) {
+        return new Response(`<!DOCTYPE html><html><head><title>Policy Document</title></head><body><h1>tofromGRC Policy Document</h1><p>Executive compliance document layout.</p></body></html>`, { headers: { "Content-Type": "text/html" } });
       }
 
       if (apiPath === "/policies/review_due") {

@@ -11,6 +11,7 @@ import {
   Activity,
   AlertTriangle,
   Calendar,
+  Layers,
 } from 'lucide-react';
 import { api } from './lib/api';
 import { Loading, ErrorState, Toast, Badge } from './components/ui';
@@ -31,6 +32,7 @@ import { AuditorPortalView } from './views/AuditorPortalView';
 import { MonitoringView } from './views/MonitoringView';
 import { RiskRegisterView } from './views/RiskRegisterView';
 import { CoverageDashboardView } from './views/CoverageDashboardView';
+import { ControlsView } from './views/ControlsView';
 import { LoginView } from './views/LoginView';
 import { ChangelogModal } from './components/ChangelogModal';
 import { APP_VERSION } from './version';
@@ -196,10 +198,11 @@ export function App() {
         { id: 'monitoring', label: 'Continuous Monitoring', icon: Activity },
         { id: 'pilot', label: 'Blind Pilot', icon: Target },
         { id: 'policies', label: 'Policies', icon: FileText, countKey: 'policies' },
+        { id: 'controls', label: 'Controls Library', icon: Shield, countKey: 'controls' },
         { id: 'evidence', label: 'Evidence', icon: FileCheck, countKey: 'evidence' },
         { id: 'coverage', label: 'Coverage Dashboard', icon: Calendar },
         { id: 'risks', label: 'Risk Register', icon: AlertTriangle, countKey: 'risks' },
-        { id: 'frameworks', label: 'Frameworks & Controls', icon: Shield, countKey: 'controls' },
+        { id: 'frameworks', label: 'Frameworks & Harmonization', icon: Layers },
         { id: 'people', label: 'People', icon: Users, countKey: 'people' },
         { id: 'settings', label: 'Settings', icon: SettingsIcon }
       ]
@@ -290,20 +293,10 @@ export function App() {
           )}
 
           {activeView === 'controls' && (
-            <ResourceTableView
-              resource="controls"
-              schema={schema}
-              title="Compliance Controls Library"
-              description="Authoritative controls, frequency cadences, ownership, policy references, and audit evidence mappings."
+            <ControlsView
               notify={notify}
               onNavigate={navigate}
               selectedId={selectedId}
-              customColumns={(r) => (
-                <div style={{ fontSize: '11px' }}>
-                  <span style={{ color: 'var(--muted)' }}>{r.category || 'General'}</span>
-                  {r.frequency && <span style={{ marginLeft: '6px', color: 'var(--accent)', textTransform: 'capitalize' }}>· {r.frequency}</span>}
-                </div>
-              )}
             />
           )}
       </AppShell>

@@ -17,6 +17,7 @@ from .evidence_ops import evidence_router
 from .monitoring import monitoring_router
 from .sampling_ops import sampling_router
 from .risk_assessment_ops import risk_assessment_router
+from .coverage_ops import coverage_router
 from .csv_ops import csv_router
 from .backup_ops import backup_router
 from .audits_ops import audit_router
@@ -43,7 +44,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
     if auto_seed:
         seed_starter_data(store)
 
-    app = FastAPI(title='tofromGRC', version='0.17.0', docs_url=None, redoc_url=None)
+    app = FastAPI(title='tofromGRC', version='0.18.0', docs_url=None, redoc_url=None)
     app.state.store = store
     install_security(app, store)
 
@@ -53,7 +54,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
 
     @app.get('/api/health')
     def health():
-        return {'status': 'ok', 'version': '0.17.0', 'storage': 'sqlite'}
+        return {'status': 'ok', 'version': '0.18.0', 'storage': 'sqlite'}
 
     @app.get('/api/bootstrap')
     def bootstrap(request: Request, response: Response):
@@ -216,6 +217,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
     app.include_router(monitoring_router(store))
     app.include_router(sampling_router(store))
     app.include_router(risk_assessment_router(store))
+    app.include_router(coverage_router(store))
     app.include_router(csv_router(store))
     app.include_router(backup_router(store))
     app.include_router(audit_router(store))

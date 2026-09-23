@@ -858,6 +858,14 @@ def auditor_router(store: Store):
                 if latest_minutes_row:
                     zf.writestr('LATEST_ASSESSMENT_MINUTES.json', latest_minutes_row[0])
 
+                # 6. Observation-Window Coverage Dossier (R9)
+                latest_cov_row = db.execute("SELECT value FROM settings WHERE key='latest_coverage_dossier'").fetchone()
+                if latest_cov_row:
+                    zf.writestr('COVERAGE_DOSSIER.json', latest_cov_row[0])
+                else:
+                    from .coverage_ops import get_window_config
+                    zf.writestr('COVERAGE_DOSSIER.json', json.dumps({"window": get_window_config(db)}, indent=2))
+
             append_audit_log(
                 db,
                 actor=actor,
@@ -880,9 +888,23 @@ def auditor_router(store: Store):
     def create_pre_audit_snapshot(request: Request):
         ident = get_request_identity(request)
         actor = ident.get("auditor_name") or "Security Lead"
-        eng_id = ident.get("engagement_id") or "eng-default"
+        eng_id = ident.get("engagement_id")
 
         with store.transaction() as db:
+            if not eng_id:
+                eng_row = db.execute("SELECT id FROM engagements WHERE status='active' LIMIT 1").fetchone()
+                if eng_row:
+                    eng_id = eng_row[0]
+                else:
+                    eng_id = "eng-default"
+                    ts = now()
+                    db.execute(
+                        """INSERT OR IGNORE INTO engagements
+                           (id, framework, audit_period_start, audit_period_end, criteria_in_scope, auditor_name, auditor_email, status, created_at, updated_at)
+                           VALUES ('eng-default', 'SOC 2', '2027-01-01', '2027-12-31', '["Security"]', 'Internal Auditor', 'audit@tofrom.internal', 'active', ?, ?)""",
+                        (ts, ts)
+                    )
+
             # Query head hash from R3 audit log
             head_row = db.execute("SELECT entry_hash FROM audit_log ORDER BY seq DESC LIMIT 1").fetchone()
             head_hash = head_row[0] if head_row else "GENESIS"

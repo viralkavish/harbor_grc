@@ -196,6 +196,13 @@ class Store:
                     accepted_by TEXT, accepted_at TEXT, acceptance_expiry TEXT, acceptance_rationale TEXT,
                     review_history TEXT NOT NULL DEFAULT '[]', reopen_reason TEXT, closure_rationale TEXT,
                     created_at TEXT NOT NULL, updated_at TEXT NOT NULL, closed_at TEXT);
+                CREATE TABLE IF NOT EXISTS coverage_gaps (
+                    id TEXT PRIMARY KEY, control_id TEXT NOT NULL, criterion_code TEXT NOT NULL,
+                    gap_start TEXT NOT NULL, gap_end TEXT NOT NULL, days INTEGER NOT NULL,
+                    reason TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'open',
+                    detected_at TEXT NOT NULL, remediation_evidence_ref TEXT, remediation_notes TEXT,
+                    accepted_by TEXT, accepted_at TEXT, acceptance_expiry TEXT, acceptance_rationale TEXT,
+                    closure_note TEXT, closed_at TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
             ''')
             from .audit_ops import ensure_audit_log_initialized
             ensure_audit_log_initialized(db)

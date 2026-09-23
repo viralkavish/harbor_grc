@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.17.0';
+export const APP_VERSION = '0.18.0';
 export const RELEASE_DATE = '2026-09-23';
 
 export interface ChangelogEntry {
@@ -11,9 +11,23 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.17.0',
+    version: '0.18.0',
     date: '2026-09-23',
     badge: 'Latest',
+    title: "R9: Observation-Window Coverage Dashboard & Gap Register",
+    highlights: [
+      "SOC 2 Type II observation-window configuration with audit-scoped change confirmation",
+      "Continuous multi-source evidence interval computation engine with interval gap detection",
+      "Multi-source degradation: open R5 monitoring exceptions and stale R6 policy acceptances",
+      "61-criteria TSC rollup (Security, Availability, Confidentiality, Processing Integrity, Privacy)",
+      "Tamper-evident Gap Register with remediation, segregation of duties acceptance, and explicit closure",
+      "One-click 'What Would the Auditor See' Coverage Dossier export (JSON and CSV) bundled into R4 workpaper ZIP"
+    ]
+  },
+  {
+    version: '0.17.0',
+    date: '2026-09-23',
+    badge: 'Stable',
     title: "R8: Risk Register Hardening, 5x5 Heatmap & Assessment Minutes",
     highlights: [
       "Created dedicated risks table (/api/risks) with server-side inherent and residual scoring",

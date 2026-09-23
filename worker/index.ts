@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.17.0"
+        version: "0.18.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -1528,6 +1528,53 @@ export default {
           gaps: [],
           evidence_count: 1,
           uncovered_days: 0
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/coverage/window") {
+        return new Response(JSON.stringify({
+          observation_window_start: "2027-01-01",
+          observation_window_end: "2027-12-31",
+          total_days: 365,
+          elapsed_days: 0,
+          remaining_days: 365,
+          current_phase: "pre_observation",
+          is_active_window: false,
+          point_in_time_validity_days: 365
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/coverage/summary") {
+        return new Response(JSON.stringify({
+          observation_window: {
+            observation_window_start: "2027-01-01",
+            observation_window_end: "2027-12-31"
+          },
+          overall_coverage_percentage: 100.0,
+          total_controls_count: 61,
+          covered_controls_count: 61,
+          partial_controls_count: 0,
+          missing_controls_count: 0,
+          total_gaps_count: 0,
+          criteria: [],
+          categories: {},
+          controls: []
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/coverage/gaps") {
+        return new Response(JSON.stringify({ items: [], total: 0 }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/coverage/scan_gaps") {
+        return new Response(JSON.stringify({ new_gaps_registered: 0, total_open_gaps: 0 }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/coverage/export") {
+        return new Response(JSON.stringify({
+          dossier_title: "SOC 2 Type II Observation-Window Evidence Coverage Dossier",
+          observation_window: { observation_window_start: "2027-01-01", observation_window_end: "2027-12-31" },
+          summary: { total_controls: 61, covered_controls: 61, partial_controls: 0, missing_controls: 0, overall_coverage_pct: 100.0 }
         }), { headers: { "Content-Type": "application/json" } });
       }
 

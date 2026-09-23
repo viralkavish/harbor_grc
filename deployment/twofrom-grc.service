@@ -1,0 +1,23 @@
+[Unit]
+Description=TwoFrom GRC — Internal SOC 2 Type II Readiness Platform
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/twofrom-grc
+Environment=PYTHONUNBUFFERED=1
+Environment=HARBOR_DATA_DIR=%h/.local/share/twofrom-grc/data
+EnvironmentFile=-%h/.config/twofrom-grc/twofrom.env
+ExecStart=%h/projects/twofrom-grc/.venv/bin/uvicorn server.app:app --host 127.0.0.1 --port 8765
+Restart=on-failure
+RestartSec=5s
+
+# Hardening
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=%h/.local/share/twofrom-grc/data %h/projects/twofrom-grc/backups
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

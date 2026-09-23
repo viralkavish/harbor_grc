@@ -98,7 +98,8 @@ def compute_dashboard(store):
                     'id': e['id'],
                     'title': e['title'],
                     'reason': f"Evidence expired on {e['expires_date']}",
-                    'severity': 'high'
+                    'severity': 'high',
+                    'is_drift': True
                 })
             elif e.get('expires_date') and today <= e['expires_date'] <= soon and e.get('status') != 'expired':
                 attention.append({
@@ -107,6 +108,43 @@ def compute_dashboard(store):
                     'title': e['title'],
                     'reason': f"Evidence expires on {e['expires_date']}",
                     'severity': 'medium'
+                })
+
+        # Control drift: stale policies (>12 months or past review date)
+        for p in policies:
+            p_rev = p.get('review_date')
+            p_app = p.get('approved_at')
+            stale_reason = None
+            if p_rev and p_rev < today:
+                stale_reason = f"Policy review overdue since {p_rev} (control drift)"
+            elif p_app:
+                try:
+                    app_dt = date.fromisoformat(p_app[:10])
+                    if (date.today() - app_dt).days > 365:
+                        stale_reason = "Policy unreviewed for over 12 months (control drift)"
+                except Exception:
+                    pass
+            if stale_reason:
+                attention.append({
+                    'resource': 'policies',
+                    'id': p['id'],
+                    'title': p.get('title', 'Policy'),
+                    'reason': stale_reason,
+                    'severity': 'high',
+                    'is_drift': True
+                })
+
+        # Control drift: incomplete / overdue access reviews
+        access_reviews = Store.records(db, 'access_reviews')
+        for ar in access_reviews:
+            if any(e.get('decision') == 'pending' for e in ar.get('entries', [])):
+                attention.append({
+                    'resource': 'access_reviews',
+                    'id': ar['id'],
+                    'title': ar.get('title', 'Access Review'),
+                    'reason': "Quarterly user access review pending keep/revoke decisions (control drift)",
+                    'severity': 'high',
+                    'is_drift': True
                 })
 
         for c in eligible_controls:
@@ -133,6 +171,8 @@ def compute_dashboard(store):
         from .records import activity
         recent_activity = activity(db, limit=10)['items']
 
+        drift_alerts = [a for a in attention if a.get('is_drift')]
+
         return {
             'counts': counts,
             'readiness': readiness,
@@ -144,5 +184,6 @@ def compute_dashboard(store):
             'upcoming_reviews': upcoming_reviews[:20],
             'activity': recent_activity,
             'risk_matrix': risk_matrix,
-            'attention': attention[:30]
+            'attention': attention[:30],
+            'drift_alerts': drift_alerts[:15]
         }

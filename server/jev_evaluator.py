@@ -1,12 +1,12 @@
 """JEV Policy-to-Control Compatibility and Semantic Evaluation Engine.
 
-Inspired by TypeSafe's JEV System One judgment primitives (jev_check, jev_ask, jev_rank).
-Provides instant, deterministic, and accurate compatibility evaluation between uploaded
+Based on TypeSafe's JEV System One judgment primitives: Choice, Score, and Noul.
+Provides deterministic, verified semantic compatibility evaluation between uploaded
 governance policies and compliance controls (SOC 2, ISO 27001, HIPAA, GDPR, NIST CSF).
 
 Evaluates whether a policy text:
 1. COMPATIBLE ('supported'): Fully satisfies control objectives with verified clauses.
-2. PARTIAL_GAP ('insufficient'): Addresses domain but lacks specific mandatory parameters.
+2. GAP ('insufficient'): Addresses domain but lacks specific mandatory parameters.
 3. CONFLICT ('contradicted'): Contains language directly violating the control baseline.
 4. NOT_APPLICABLE: Policy domain is out of scope for the given control.
 """
@@ -321,6 +321,9 @@ def extract_matched_excerpts(content: str, pattern: str, max_chars: int = 240) -
     return matches
 
 
+TYPESAFE_MODEL = "jev-1.13.0"
+
+
 def call_typesafe_systemone(
     api_key: str,
     state_text: str,
@@ -334,7 +337,7 @@ def call_typesafe_systemone(
         url = endpoint if "systemone" in endpoint else f"{endpoint.rstrip('/')}/systemone"
         payload = {
             "state": state_text[:15000],
-            "model": "jev-latest",
+            "model": TYPESAFE_MODEL,
             "questions": questions
         }
         req = urllib.request.Request(
@@ -385,20 +388,116 @@ def evaluate_policy_against_controls(
                         "conflict": f"Explicitly contradicts, exempts, or bypasses {title}."
                     }
                 }
-                if len(ts_questions) >= 6:
+                if len(ts_questions) >= 16:
                     break
 
         if ts_questions:
             ts_res = call_typesafe_systemone(api_key, clean_content, ts_questions, endpoint or "https://api.typesafe.ai/v1/systemone")
             if ts_res and "answers" in ts_res:
                 typesafe_answers = ts_res.get("answers", {})
-                typesafe_model = ts_res.get("model", "jev-1.13.0")
+                typesafe_model = ts_res.get("model", TYPESAFE_MODEL)
 
     for c in controls:
         code = c.get('code', '')
         title = c.get('title', '')
         category = c.get('category', 'Control')
         rubric = CONTROL_RUBRICS.get(code)
+        safe_key = f"q_{code.replace('.', '_').replace('-', '_')}"
+
+        # 0. Live TypeSafe JEV System One Choice answer evaluation (B1, B3)
+        ts_ans = typesafe_answers.get(safe_key)
+        if ts_ans and isinstance(ts_ans, dict) and ts_ans.get("choice"):
+            choice = str(ts_ans.get("choice")).lower().strip()
+            raw_conf = ts_ans.get("confidence")
+            try:
+                conf = float(raw_conf) if raw_conf is not None else 0.95
+            except (ValueError, TypeError):
+                conf = 0.95
+            reasoning = ts_ans.get("reasoning") or ts_ans.get("explanation") or ""
+
+            matched_snippets = []
+            if rubric:
+                for pat, _ in rubric.get("required_clauses", []):
+                    matched_snippets.extend(extract_matched_excerpts(clean_content, pat))
+                if not matched_snippets and rubric.get("domain"):
+                    matched_snippets = extract_matched_excerpts(clean_content, rf"\b({re.escape(rubric['domain'][0])}s?)\b")[:2]
+
+            if choice == "compatible":
+                results.append({
+                    "control_id": c.get('id'),
+                    "control_code": code,
+                    "control_title": title,
+                    "category": category,
+                    "verdict": "compatible",
+                    "score": round(conf, 2),
+                    "confidence": conf,
+                    "heuristic_score": None,
+                    "decided_by": "jev-live",
+                    "summary": reasoning or f"TypeSafe JEV System One verified policy strictly satisfies {code} ({title}).",
+                    "matched_excerpts": matched_snippets[:3],
+                    "gaps": [],
+                    "recommendations": []
+                })
+                compatible_count += 1
+                continue
+            elif choice in ("gap", "partial_gap"):
+                results.append({
+                    "control_id": c.get('id'),
+                    "control_code": code,
+                    "control_title": title,
+                    "category": category,
+                    "verdict": "gap",
+                    "score": round(max(0.2, conf * 0.5), 2),
+                    "confidence": conf,
+                    "heuristic_score": None,
+                    "decided_by": "jev-live",
+                    "summary": reasoning or f"TypeSafe JEV System One identified compliance gaps in policy for {title}.",
+                    "matched_excerpts": matched_snippets[:2],
+                    "gaps": [reasoning] if reasoning else [f"Missing requirements for {code}"],
+                    "recommendations": [rubric["recommendation"]] if rubric else ["Align policy with control criteria."]
+                })
+                gap_count += 1
+                continue
+            elif choice == "conflict":
+                conflict_excerpts = []
+                if rubric:
+                    for pat, _ in rubric.get("contradictions", []):
+                        conflict_excerpts.extend(extract_matched_excerpts(clean_content, pat))
+                results.append({
+                    "control_id": c.get('id'),
+                    "control_code": code,
+                    "control_title": title,
+                    "category": category,
+                    "verdict": "conflict",
+                    "score": 0.10,
+                    "confidence": conf,
+                    "heuristic_score": None,
+                    "decided_by": "jev-live",
+                    "summary": reasoning or f"TypeSafe JEV System One detected language contradicting {title}.",
+                    "matched_excerpts": conflict_excerpts or matched_snippets[:2],
+                    "gaps": [reasoning] if reasoning else [f"Policy conflicts with {code}"],
+                    "recommendations": [f"Revise contradicting language: {rubric['recommendation']}"] if rubric else ["Remove contradicting statements."]
+                })
+                conflict_count += 1
+                continue
+            elif choice == "not_applicable":
+                results.append({
+                    "control_id": c.get('id'),
+                    "control_code": code,
+                    "control_title": title,
+                    "category": category,
+                    "verdict": "not_applicable",
+                    "score": 0.0,
+                    "confidence": conf,
+                    "heuristic_score": None,
+                    "decided_by": "jev-live",
+                    "summary": reasoning or f"Policy does not govern {title}.",
+                    "matched_excerpts": [],
+                    "gaps": [],
+                    "recommendations": []
+                })
+                na_count += 1
+                continue
 
         if not rubric:
             # Fallback for custom controls without static rubric
@@ -412,7 +511,9 @@ def evaluate_policy_against_controls(
                     "category": category,
                     "verdict": "compatible",
                     "score": 0.82,
-                    "confidence": 0.80,
+                    "confidence": None,
+                    "heuristic_score": 0.80,
+                    "decided_by": "rubric-fallback",
                     "summary": f"Policy content addresses the requirements of {title}.",
                     "matched_excerpts": extract_matched_excerpts(clean_content, rf"\b({'|'.join(terms[:3])})\b"),
                     "gaps": [],
@@ -427,7 +528,9 @@ def evaluate_policy_against_controls(
                     "category": category,
                     "verdict": "not_applicable",
                     "score": 0.0,
-                    "confidence": 0.90,
+                    "confidence": None,
+                    "heuristic_score": 0.90,
+                    "decided_by": "rubric-fallback",
                     "summary": "Policy does not govern this control domain.",
                     "matched_excerpts": [],
                     "gaps": [],
@@ -451,7 +554,9 @@ def evaluate_policy_against_controls(
                 "category": category,
                 "verdict": "not_applicable",
                 "score": 0.0,
-                "confidence": 0.95,
+                "confidence": None,
+                "heuristic_score": 0.95,
+                "decided_by": "rubric-fallback",
                 "summary": "This policy does not cover topics related to this control.",
                 "matched_excerpts": [],
                 "gaps": [],
@@ -478,7 +583,9 @@ def evaluate_policy_against_controls(
                 "category": category,
                 "verdict": "conflict",
                 "score": 0.15,
-                "confidence": 0.94,
+                "confidence": None,
+                "heuristic_score": 0.94,
+                "decided_by": "rubric-fallback",
                 "summary": f"Policy contains clauses conflicting with {code}: {', '.join(conflicts_found)}.",
                 "matched_excerpts": conflict_excerpts,
                 "gaps": conflicts_found,
@@ -510,7 +617,9 @@ def evaluate_policy_against_controls(
                 "category": category,
                 "verdict": "compatible",
                 "score": min(score, 0.99),
-                "confidence": 0.95,
+                "confidence": None,
+                "heuristic_score": 0.95,
+                "decided_by": "rubric-fallback",
                 "summary": f"Policy fully satisfies {code} ({title}) with verified operational language.",
                 "matched_excerpts": matched_snippets[:3],
                 "gaps": [],
@@ -527,7 +636,9 @@ def evaluate_policy_against_controls(
                 "category": category,
                 "verdict": "gap",
                 "score": score,
-                "confidence": 0.88,
+                "confidence": None,
+                "heuristic_score": 0.88,
+                "decided_by": "rubric-fallback",
                 "summary": f"Policy addresses {title} but has missing requirements: {', '.join(missing_clauses)}.",
                 "matched_excerpts": matched_snippets[:2],
                 "gaps": [f"Missing requirement: {m}" for m in missing_clauses],
@@ -543,7 +654,9 @@ def evaluate_policy_against_controls(
                 "category": category,
                 "verdict": "gap",
                 "score": 0.35,
-                "confidence": 0.85,
+                "confidence": None,
+                "heuristic_score": 0.85,
+                "decided_by": "rubric-fallback",
                 "summary": f"Mentions keywords ({', '.join(domain_hits[:3])}) but lacks required compliance commitments.",
                 "matched_excerpts": extract_matched_excerpts(clean_content, rf"\b({re.escape(domain_hits[0])}s?)\b")[:1],
                 "gaps": [f"Missing requirements: {', '.join(missing_clauses)}"],
@@ -553,13 +666,16 @@ def evaluate_policy_against_controls(
 
     total_relevant = compatible_count + gap_count + conflict_count
     overall_score = round((compatible_count / total_relevant * 100), 1) if total_relevant else 0.0
+    has_live_decision = any(r.get("decided_by") == "jev-live" for r in results)
+    primary_decided_by = "jev-live" if has_live_decision else "rubric-fallback"
 
     return {
         "evaluated_at": now(),
-        "engine": f"TypeSafe JEV System One ({typesafe_model})" if typesafe_model else "TypeSafe JEV System One",
-        "model": typesafe_model or "jev-1.13.0",
+        "engine": f"TypeSafe JEV System One ({typesafe_model})" if typesafe_model else "TypeSafe JEV System One (Rubric Fallback)",
+        "model": typesafe_model or TYPESAFE_MODEL,
         "live_cloud_active": bool(typesafe_model),
         "api_key_configured": bool(api_key),
+        "decided_by": primary_decided_by,
         "endpoint": endpoint or "https://api.typesafe.ai/v1",
         "total_controls": len(controls),
         "total_relevant": total_relevant,
@@ -568,7 +684,8 @@ def evaluate_policy_against_controls(
             "gap_count": gap_count,
             "conflict_count": conflict_count,
             "not_applicable_count": na_count,
-            "overall_score": overall_score
+            "overall_score": overall_score,
+            "decided_by": primary_decided_by
         },
         "results": results
     }
@@ -587,10 +704,11 @@ def jev_router(store):
             return {
                 "status": "operational",
                 "provider": "TypeSafe JEV System One",
-                "model": "jev-1.13.0",
+                "model": TYPESAFE_MODEL,
+                "pinned_model": TYPESAFE_MODEL,
                 "live_cloud_connected": bool(key),
                 "api_key_configured": bool(key),
-                "key_preview": f"{key[:11]}...{key[-8:]}" if len(key) >= 19 else ("configured" if key else None),
+                "masked_key": f"...{key[-4:]}" if key else None,
                 "endpoint": endpoint,
                 "rubrics_count": len(CONTROL_RUBRICS),
                 "active": True
@@ -627,15 +745,16 @@ def jev_router(store):
             latency_ms = round((datetime.now() - t0).total_seconds() * 1000, 2)
 
             if live_res and "answers" in live_res:
-                model_name = live_res.get("model", "jev-1.13.0")
+                model_name = live_res.get("model", TYPESAFE_MODEL)
                 usage = live_res.get("usage", {})
                 return {
                     "status": "active",
                     "valid": True,
                     "provider": "TypeSafe JEV System One",
                     "model": model_name,
+                    "pinned_model": TYPESAFE_MODEL,
                     "endpoint": endpoint,
-                    "key_preview": f"{key[:11]}...{key[-8:]}",
+                    "masked_key": f"...{key[-4:]}",
                     "latency_ms": latency_ms,
                     "rubrics_count": len(CONTROL_RUBRICS),
                     "benchmark_score": 100.0,
@@ -651,9 +770,10 @@ def jev_router(store):
                     "status": "active",
                     "valid": True,
                     "provider": "TypeSafe JEV System One",
-                    "model": "jev-1.13.0",
+                    "model": TYPESAFE_MODEL,
+                    "pinned_model": TYPESAFE_MODEL,
                     "endpoint": endpoint,
-                    "key_preview": f"{key[:11]}...{key[-8:]}" if len(key) >= 19 else "***",
+                    "masked_key": f"...{key[-4:]}",
                     "latency_ms": latency_ms,
                     "rubrics_count": len(CONTROL_RUBRICS),
                     "benchmark_score": bench_result["summary"]["overall_score"],
@@ -667,13 +787,11 @@ def jev_router(store):
         policy_id = payload.get('policy_id')
         policy_content = payload.get('content', '')
         policy_title = payload.get('title', 'Uploaded Policy')
-        api_key = payload.get('api_key')
         endpoint = payload.get('endpoint')
 
         with store.transaction() as db:
             ws = store.workspace(db)
-            if not api_key:
-                api_key = ws.get('jev_api_key') or os.environ.get('JEV_API_KEY') or os.environ.get('TYPESAFE_JEV_API_KEY')
+            api_key = ws.get('jev_api_key') or os.environ.get('TYPESAFE_API_KEY') or os.environ.get('JEV_API_KEY') or ''
             if not endpoint:
                 endpoint = ws.get('jev_endpoint')
 
@@ -715,7 +833,7 @@ def jev_router(store):
 
         with store.transaction() as db:
             ws = store.workspace(db)
-            api_key = ws.get('jev_api_key') or os.environ.get('JEV_API_KEY') or os.environ.get('TYPESAFE_JEV_API_KEY')
+            api_key = ws.get('jev_api_key') or os.environ.get('TYPESAFE_API_KEY') or os.environ.get('JEV_API_KEY') or ''
             endpoint = ws.get('jev_endpoint')
 
             controls = Store.records(db, 'controls')

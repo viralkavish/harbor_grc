@@ -121,23 +121,6 @@ def test_system_description_and_roadmap(client):
     assert 'SOC 2 Type II Readiness Trajectory' in export_res.text
 
 
-def test_trust_center_access_requests(client):
-    req_res = client.post('/api/trust/request_access', json={
-        'name': 'Auditor Bob',
-        'email': 'bob@schellman.com',
-        'company': 'Schellman & Co',
-        'nda_signed': True
-    })
-    assert req_res.status_code == 200
-    assert req_res.json()['status'] == 'approved'
-
-    # List requests
-    list_res = client.get('/api/trust/requests')
-    assert list_res.status_code == 200
-    items = list_res.json()['items']
-    assert any(r['email'] == 'bob@schellman.com' for r in items)
-
-
 def test_personnel_compliance_and_onboarding(client):
     person = create(client, 'people', title='Charlie Engineer', email='charlie@acme.com', status='active', training_completed=False)
 

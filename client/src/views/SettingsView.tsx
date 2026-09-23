@@ -35,6 +35,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
   const [jevApiKey, setJevApiKey] = useState('');
   const [jevEndpoint, setJevEndpoint] = useState('https://api.typesafe.ai/v1');
   const [showJevKey, setShowJevKey] = useState(false);
+  const [replacingKey, setReplacingKey] = useState(false);
   const [jevStatus, setJevStatus] = useState<any>(null);
   const [testingJev, setTestingJev] = useState(false);
   const [savingJev, setSavingJev] = useState(false);
@@ -64,8 +65,8 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
       setTrustTitle(ws.trust_title || '');
       setTrustDesc(ws.trust_description || '');
 
-      // Load JEV config
-      setJevApiKey(ws.jev_api_key || '');
+      // Load JEV config (never prefill input with real key)
+      setJevApiKey('');
       setJevEndpoint(ws.jev_endpoint || 'https://api.typesafe.ai/v1');
       try {
         const status = await api.get('/jev/status');
@@ -116,10 +117,13 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
     setTestingJev(true);
     setJevTestResult(null);
     try {
-      const res = await api.post('/jev/test_key', {
-        api_key: jevApiKey,
+      const payload: Record<string, any> = {
         endpoint: jevEndpoint
-      });
+      };
+      if (jevApiKey.trim()) {
+        payload.api_key = jevApiKey.trim();
+      }
+      const res = await api.post('/jev/test_key', payload);
       setJevTestResult(res);
       notify(res.message || 'JEV connection validated successfully');
       try {
@@ -139,11 +143,16 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
   const handleSaveJevConfig = async () => {
     setSavingJev(true);
     try {
-      const updated = await api.patch('/workspace', {
-        jev_api_key: jevApiKey,
+      const payload: Record<string, any> = {
         jev_endpoint: jevEndpoint
-      });
+      };
+      if (jevApiKey.trim()) {
+        payload.jev_api_key = jevApiKey.trim();
+      }
+      const updated = await api.patch('/workspace', payload);
       setWorkspace(updated);
+      setReplacingKey(false);
+      setJevApiKey('');
       try {
         const status = await api.get('/jev/status');
         setJevStatus(status);
@@ -274,26 +283,55 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
           <div className="field-grid">
             <div className="field">
               <span>JEV API Key</span>
-              <div className="view-inline" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <input
-                  type={showJevKey ? 'text' : 'password'}
-                  value={jevApiKey}
-                  onChange={e => setJevApiKey(e.target.value)}
-                  placeholder="e.g. jev_live_sec_..."
-                  style={{ paddingRight: '36px', fontFamily: 'monospace' }}
-                />
-                <button
-                  type="button"
-                  className="icon-button"
-                  onClick={() => setShowJevKey(!showJevKey)}
-                  style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', background: 'transparent' }}
-                  title={showJevKey ? 'Hide key' : 'Show key'}
-                >
-                  {showJevKey ? <EyeOff size={14} /> : <Eye size={14} />}
-                </button>
-              </div>
+              {jevStatus?.api_key_configured && !replacingKey ? (
+                <div className="view-inline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', background: 'var(--surface-raised)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                  <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Check size={16} color="var(--success)" />
+                    <span style={{ fontSize: '13px', color: 'var(--ink)' }}>
+                      Key Configured <span className="mono" style={{ color: 'var(--muted)', marginLeft: '4px' }}>({jevStatus.masked_key || '••••••••'})</span>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="button button-sm"
+                    onClick={() => setReplacingKey(true)}
+                  >
+                    Replace Key
+                  </button>
+                </div>
+              ) : (
+                <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                    <input
+                      type={showJevKey ? 'text' : 'password'}
+                      value={jevApiKey}
+                      onChange={e => setJevApiKey(e.target.value)}
+                      placeholder={replacingKey ? "Enter new TypeSafe JEV key" : "e.g. apikey_..."}
+                      style={{ paddingRight: '36px', fontFamily: 'monospace', width: '100%' }}
+                    />
+                    <button
+                      type="button"
+                      className="icon-button"
+                      onClick={() => setShowJevKey(!showJevKey)}
+                      style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', background: 'transparent' }}
+                      title={showJevKey ? 'Hide key' : 'Show key'}
+                    >
+                      {showJevKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                  {replacingKey && (
+                    <button
+                      type="button"
+                      className="button button-sm"
+                      onClick={() => { setReplacingKey(false); setJevApiKey(''); }}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              )}
               <small style={{ color: 'var(--muted)', marginTop: '4px' }}>
-                TypeSafe JEV API Key (stored encrypted in local workspace settings).
+                TypeSafe JEV API Key (stored encrypted at rest using Fernet; full key is never returned).
               </small>
             </div>
 
@@ -316,7 +354,7 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
           <div className="view-auto-grid" style={{ display: 'grid', gap: '12px', background: 'var(--surface-raised)', border: '1px solid var(--border)', padding: '12px', borderRadius: '6px' }}>
             <div>
               <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Active Judgment Primitives</div>
-              <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>jev_check, jev_ask, jev_rank</strong>
+              <strong style={{ fontSize: '13px', color: 'var(--ink)' }}>Choice, Score, Noul</strong>
             </div>
             <div>
               <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Compliance Rubrics Loaded</div>

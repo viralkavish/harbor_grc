@@ -29,7 +29,7 @@ export function ChangelogModal({ isOpen, onClose }: ChangelogModalProps) {
           <div>
             <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--ink)' }}>
-                Harbor GRC v{APP_VERSION}
+                TwoFrom GRC v{APP_VERSION}
               </span>
               <span
                 style={{

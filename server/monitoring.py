@@ -213,6 +213,30 @@ def monitoring_router(store):
             }
             return res
 
+    @router.get('/drift')
+    def get_control_drift():
+        """Returns active compliance control drift alerts across policies, access reviews, and evidence."""
+        with store.transaction() as db:
+            checks = evaluate_checks(db)
+            drift_findings = []
+            for c in checks:
+                if c['id'] in ('expired_evidence', 'overdue_policy_reviews', 'open_access_reviews', 'unassigned_controls'):
+                    for f in c.get('findings', []):
+                        drift_findings.append({
+                            'check_id': c['id'],
+                            'title': c['title'],
+                            'item_title': f.get('title'),
+                            'resource': f.get('resource'),
+                            'id': f.get('id'),
+                            'reason': f.get('reason'),
+                            'detected_at': now()
+                        })
+            return {
+                "drift_count": len(drift_findings),
+                "is_drift_free": len(drift_findings) == 0,
+                "findings": drift_findings
+            }
+
     @router.post('/run')
     def run_monitoring():
         run_time = now()

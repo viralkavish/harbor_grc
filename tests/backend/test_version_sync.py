@@ -21,7 +21,7 @@ def test_version_synchronization():
 
     # 3. Check server/app.py
     server_app = (PROJECT_ROOT / "server" / "app.py").read_text(encoding="utf-8")
-    m_app = re.search(r"FastAPI\(title='Harbor GRC', version='([^']+)'", server_app)
+    m_app = re.search(r"FastAPI\(title='(?:Harbor|TwoFrom) GRC', version='([^']+)'", server_app)
     assert m_app is not None and m_app.group(1) == current_version, f"server/app.py version mismatch with {current_version}"
 
     # 4. Check worker/index.ts

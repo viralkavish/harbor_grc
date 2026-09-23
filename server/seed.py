@@ -6,7 +6,13 @@ Readiness starts at zero (all controls 'not_started', policies 'draft').
 """
 import json
 from uuid import uuid4
-from .storage import now, Store
+try:
+    from .storage import now, Store
+except ImportError:
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from server.storage import now, Store
 
 FRAMEWORKS_SEED = [
     {
@@ -85,7 +91,7 @@ POLICIES_SEED = [
 **Notice: Starter guidance — review and tailor for your organization's specific scope and requirements.**
 
 ## 1. Objective and Scope
-This policy establishes mandatory baseline information security principles for [Organization Name] across all employees, contractors, systems, and data repositories.
+This policy establishes mandatory baseline information security principles for TwoFrom across all employees, contractors, systems, and data repositories.
 
 ## 2. Governance and Responsibilities
 - **Executive Management** maintains ultimate accountability for the information security program.
@@ -649,3 +655,11 @@ def seed_starter_data(store: Store) -> None:
                 )
 
         db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('starter_seeded', 'true')")
+
+
+if __name__ == "__main__":
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        s = Store(td)
+        seed_starter_data(s)
+        print("✓ seed_starter_data completed successfully.")

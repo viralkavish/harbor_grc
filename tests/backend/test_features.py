@@ -93,37 +93,6 @@ def test_monitoring_checks_and_run(client):
     assert any(c['id'] == 'unassigned_controls' for c in run_data['checks'])
 
 
-def test_questionnaire_policy_suggestions(client):
-    # Publish an access control policy
-    policy = create(
-        client, 'policies',
-        title='Access Control Standard',
-        content='All workforce employees must use multi-factor authentication (MFA) to log in.'
-    )
-    client.post(f"/api/policies/{policy['id']}/publish", json={'approver': 'Security Lead'})
-
-    questionnaire = create(
-        client, 'questionnaires',
-        title='Vendor Security Assessment',
-        customer='Enterprise Client Inc.',
-        questions=[{
-            'id': 'q1',
-            'question': 'Does your organization require multi-factor authentication (MFA) for access?',
-            'answer': '',
-            'status': 'unanswered',
-            'source_ids': []
-        }]
-    )
-
-    suggest_res = client.post(f"/api/questionnaires/{questionnaire['id']}/suggest")
-    assert suggest_res.status_code == 200
-    updated_q = suggest_res.json()
-    q1 = updated_q['questions'][0]
-    assert 'multi-factor authentication' in q1['answer'].lower() or 'mfa' in q1['answer'].lower()
-    assert q1['status'] == 'draft'
-    assert policy['id'] in q1['source_ids']
-
-
 def test_csv_export_and_import(client):
     # Export vendors
     create(client, 'vendors', title='Cloudflare Inc', website='https://cloudflare.com', tier='critical')
@@ -158,7 +127,7 @@ def test_csv_export_and_import(client):
     assert bad_res.status_code == 422
 
 
-def test_backup_and_audit_and_trust_exports(client):
+def test_backup_and_audit_exports(client):
     # Backup ZIP
     backup_res = client.get('/api/backup')
     assert backup_res.status_code == 200
@@ -176,18 +145,6 @@ def test_backup_and_audit_and_trust_exports(client):
         names = zf.namelist()
         assert 'manifest.json' in names
         assert 'AUDIT_DOSSIER.md' in names
-
-    # Trust Center preview and export
-    trust_prev = client.get('/api/trust')
-    assert trust_prev.status_code == 200
-    assert 'workspace' in trust_prev.json()
-
-    trust_exp = client.get('/api/trust/export')
-    assert trust_exp.status_code == 200
-    with zipfile.ZipFile(io.BytesIO(trust_exp.content)) as zf:
-        names = zf.namelist()
-        assert 'TRUST_REPORT.html' in names
-        assert 'TRUST_REPORT.md' in names
 
 
 def test_integrations_catalog(client):

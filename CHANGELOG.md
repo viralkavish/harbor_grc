@@ -24,6 +24,18 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.9.0] - 2026-09-23
+
+### Added
+- **TwoFrom SOC 2 Type II Core, Blind Pilot & Live Jev Integration**
+- Empirical Blind Pilot Module with 4x4 Confusion Matrix and 90/95% Gate
+- Live TypeSafe JEV System One (jev-1.13.0) Choice Decisions & Fernet Key Encryption at Rest
+- First-Run Onboarding Wizard with DNI Policy Authorization Confirmation
+- Observation Period Tracker Countdown to 2027-01-01 & Per-Control Evidence Proof Status
+- Control Drift Monitoring Sweeps & One-Click Auditor PBC Package Export ZIP
+
+---
+
 ## [0.8.0] - 2026-09-22
 
 ### Added

@@ -33,7 +33,7 @@ interface CommandPaletteProps {
   onNavigate: Navigate;
 }
 
-const RECOMMENDED_PAGES = ['overview', 'roadmap', 'tasks', 'soc2_readiness', 'controls', 'evidence'];
+const RECOMMENDED_PAGES = ['overview', 'soc2_readiness', 'pilot', 'policies', 'evidence', 'frameworks', 'people', 'settings'];
 
 export function CommandPalette({isOpen, onClose, onNavigate}: CommandPaletteProps) {
   const [query, setQuery] = useState('');

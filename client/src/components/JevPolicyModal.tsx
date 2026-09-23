@@ -246,6 +246,9 @@ export function JevPolicyModal({
                       ({evaluation.summary.compatible_count} of {evaluation.total_relevant} relevant)
                     </span>
                   </div>
+                  <div style={{ fontSize: '11px', color: evaluation.decided_by === 'jev-live' ? 'var(--success)' : 'var(--muted)', marginTop: '4px', fontWeight: 500 }}>
+                    {evaluation.decided_by === 'jev-live' ? '● TypeSafe JEV System One (Live)' : '○ Offline Rubric Fallback'}
+                  </div>
                   <div style={{ height: '4px', background: 'var(--surface-raised)', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
                     <div style={{ width: `${evaluation.summary.overall_score}%`, height: '100%', background: 'var(--accent)' }} />
                   </div>
@@ -359,14 +362,23 @@ export function JevPolicyModal({
                     >
                       <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                         <div>
-                          <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                          <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                             <span className="mono" style={{ fontSize: '12px', fontWeight: 700, color: 'var(--ink)' }}>{r.control_code}</span>
                             <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ink)' }}>{r.control_title}</span>
                             <span style={{ fontSize: '11px', color: 'var(--muted)', background: 'var(--surface-raised)', padding: '2px 6px', borderRadius: '4px' }}>
                               {r.category}
                             </span>
+                            {r.decided_by === 'jev-live' ? (
+                              <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 7px', borderRadius: '4px', background: 'var(--success-light)', color: 'var(--success)', border: '1px solid var(--success)' }}>
+                                ● TypeSafe Live ({Math.round((r.confidence ?? 0.95) * 100)}% conf)
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '11px', fontWeight: 500, padding: '2px 7px', borderRadius: '4px', background: 'var(--surface-raised)', color: 'var(--muted)', border: '1px solid var(--border)' }}>
+                                ○ Rubric Fallback ({Math.round((r.heuristic_score ?? r.score ?? 0.85) * 100)}% heuristic)
+                              </span>
+                            )}
                           </div>
-                          <p style={{ fontSize: '13px', color: 'var(--muted)' }}>{r.summary}</p>
+                          <p style={{ fontSize: '13px', color: 'var(--muted)', margin: '2px 0 0' }}>{r.summary}</p>
                         </div>
                         <span
                           style={{

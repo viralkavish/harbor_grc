@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Shield, CheckCircle2, AlertCircle, AlertTriangle, ArrowRight, Dna, FileCheck, FileSpreadsheet, RefreshCw, Sparkles, Download } from 'lucide-react';
+import { Shield, CheckCircle2, AlertCircle, AlertTriangle, ArrowRight, Dna, FileCheck, FileSpreadsheet, RefreshCw, Sparkles, Download, Target } from 'lucide-react';
 import { api } from '../lib/api';
 import { PageHeader, Badge, Loading, ErrorState, Note } from '../components/ui';
 import type { Notify, Navigate } from '../lib/types';
@@ -69,10 +69,37 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
         title="SOC 2 Readiness"
         description="Review Type I and Type II gaps, evidence requests, and audit samples."
       >
-        <button className="button" onClick={loadSOC2Data} title="Refresh audit scorecard">
-          <RefreshCw size={14} /> Refresh
-        </button>
+        <div className="view-inline" style={{ display: 'flex', gap: '8px' }}>
+          <button
+            className="button button-primary"
+            onClick={() => onNavigate('pilot')}
+            title="Validate JEV System One with a blind human pilot"
+          >
+            <Target size={14} /> Validate with Blind Pilot
+          </button>
+          <button className="button" onClick={loadSOC2Data} title="Refresh audit scorecard">
+            <RefreshCw size={14} /> Refresh
+          </button>
+        </div>
       </PageHeader>
+
+      {/* Pilot Validation Callout */}
+      <div className="card" style={{ padding: '12px 18px', marginBottom: '20px', background: 'var(--surface-raised)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+        <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Target size={18} color="var(--accent)" />
+          <span style={{ fontSize: '13px', color: 'var(--ink)' }}>
+            <strong>JEV Policy-to-Control Assurance:</strong> Validate AI judgment on TwoFrom internal policies before audit submission.
+          </span>
+        </div>
+        <button
+          type="button"
+          className="button button-sm"
+          style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}
+          onClick={() => onNavigate('pilot')}
+        >
+          Validate with blind pilot →
+        </button>
+      </div>
 
       {/* Type 1 vs Type 2 Comparative Banner */}
       <div className="grid-2" style={{ marginBottom: '24px' }}>
@@ -150,58 +177,150 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
 
       {/* Tab 1: Readiness & Gap Analysis */}
       {activeTab === 'scorecard' && (
-        <div className="grid-2">
-          {/* Type 1 Gaps */}
-          <div className="card">
-            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', color: 'var(--ink)' }}>
-              Type I Control Design Criteria
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {gapData.type1_items.map((item: any, idx: number) => {
-                const isPass = item.status === 'pass';
-                return (
-                  <div className="view-row" key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px' }}>
-                    <div>
-                      <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {isPass ? <CheckCircle2 size={16} color="var(--accent)" /> : <AlertCircle size={16} color="var(--danger)" />}
-                        <strong style={{ fontSize: '13px' }}>{item.title}</strong>
-                      </div>
-                      <small style={{ color: 'var(--muted)', fontSize: '11px', display: 'block', marginLeft: '22px' }}>
-                        {item.detail}
-                      </small>
-                    </div>
-                    <Badge value={item.status} />
-                  </div>
-                );
-              })}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Observation Tracker Countdown Strip */}
+          <div className="card" style={{ padding: '16px 20px', background: 'linear-gradient(135deg, var(--card-bg) 0%, var(--surface-raised) 100%)', borderLeft: '4px solid var(--accent)' }}>
+            <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600 }}>Observation Period Countdown</span>
+                <h3 style={{ margin: '2px 0 0', fontSize: '18px', color: 'var(--ink)' }}>
+                  Target Start: {gapData.observation_tracker?.start_date || '2027-01-01'}
+                </h3>
+                <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--muted)' }}>
+                  Continuous operating effectiveness window ({gapData.observation_tracker?.target_type || 'Type II'}) · Auditor: {gapData.observation_tracker?.auditor || 'Pending assignment'}
+                </p>
+              </div>
+
+              <div style={{ textAlign: 'right' }}>
+                <strong style={{ fontSize: '32px', color: 'var(--accent)' }}>
+                  {gapData.observation_tracker?.days_remaining ?? '—'}
+                </strong>
+                <span style={{ display: 'block', fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600 }}>Days Remaining</span>
+              </div>
             </div>
           </div>
 
-          {/* Type 2 Gaps */}
-          <div className="card">
-            <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', color: 'var(--ink)' }}>
-              Type II Operating Effectiveness Criteria
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {gapData.type2_items.map((item: any, idx: number) => {
-                const isPass = item.status === 'pass';
-                return (
-                  <div className="view-row" key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px' }}>
-                    <div>
-                      <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {isPass ? <CheckCircle2 size={16} color="var(--accent)" /> : <AlertTriangle size={16} color="var(--warning)" />}
-                        <strong style={{ fontSize: '13px' }}>{item.title}</strong>
+          <div className="grid-2">
+            {/* Type 1 Gaps */}
+            <div className="card">
+              <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', color: 'var(--ink)' }}>
+                Type I Control Design Criteria
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {gapData.type1_items.map((item: any, idx: number) => {
+                  const isPass = item.status === 'pass';
+                  return (
+                    <div className="view-row" key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                      <div>
+                        <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {isPass ? <CheckCircle2 size={16} color="var(--accent)" /> : <AlertCircle size={16} color="var(--danger)" />}
+                          <strong style={{ fontSize: '13px' }}>{item.title}</strong>
+                        </div>
+                        <small style={{ color: 'var(--muted)', fontSize: '11px', display: 'block', marginLeft: '22px' }}>
+                          {item.detail}
+                        </small>
                       </div>
-                      <small style={{ color: 'var(--muted)', fontSize: '11px', display: 'block', marginLeft: '22px' }}>
-                        {item.detail}
-                      </small>
+                      <Badge value={item.status} />
                     </div>
-                    <Badge value={item.status} />
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Type 2 Gaps */}
+            <div className="card">
+              <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', color: 'var(--ink)' }}>
+                Type II Operating Effectiveness Criteria
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {gapData.type2_items.map((item: any, idx: number) => {
+                  const isPass = item.status === 'pass';
+                  return (
+                    <div className="view-row" key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                      <div>
+                        <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {isPass ? <CheckCircle2 size={16} color="var(--accent)" /> : <AlertTriangle size={16} color="var(--warning)" />}
+                          <strong style={{ fontSize: '13px' }}>{item.title}</strong>
+                        </div>
+                        <small style={{ color: 'var(--muted)', fontSize: '11px', display: 'block', marginLeft: '22px' }}>
+                          {item.detail}
+                        </small>
+                      </div>
+                      <Badge value={item.status} />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
+
+          {/* Per-Control Evidence Status Table */}
+          {gapData.per_control_evidence && (
+            <div className="card" style={{ padding: '16px 20px' }}>
+              <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--ink)' }}>Per-Control Evidence Proof Status</h3>
+                  <p style={{ fontSize: '12px', color: 'var(--muted)', margin: '2px 0 0' }}>
+                    Auditor evidence artifact currency linked to each compliance control.
+                  </p>
+                </div>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent)' }}>
+                  Coverage: {gapData.evidence_coverage_pct}%
+                </span>
+              </div>
+
+              <div style={{ overflowX: 'auto', maxHeight: '350px' }}>
+                <table className="data-table" style={{ width: '100%', fontSize: '12px' }}>
+                  <thead>
+                    <tr>
+                      <th>Control</th>
+                      <th>Title</th>
+                      <th>Category</th>
+                      <th>Evidence Status</th>
+                      <th style={{ textAlign: 'right' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gapData.per_control_evidence.map((ce: any) => {
+                      const isCurrent = ce.evidence_status === 'current';
+                      const isExpired = ce.evidence_status === 'expired';
+                      return (
+                        <tr key={ce.control_id}>
+                          <td className="mono" style={{ fontWeight: 600 }}>{ce.control_code}</td>
+                          <td>{ce.control_title}</td>
+                          <td><span style={{ fontSize: '11px', color: 'var(--muted)' }}>{ce.category}</span></td>
+                          <td>
+                            {isCurrent ? (
+                              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)' }}>
+                                ● Current ({ce.valid_count} proof)
+                              </span>
+                            ) : isExpired ? (
+                              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--danger)' }}>
+                                ▲ Expired ({ce.expired_count} expired)
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                                ○ Missing Evidence
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <button
+                              type="button"
+                              className="button button-sm"
+                              onClick={() => onNavigate('evidence')}
+                            >
+                              Add Proof
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -215,9 +334,19 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
                 Standard AICPA auditor evidence requests mapped directly to your local repositories.
               </p>
             </div>
-            <span className="badge badge-green">
-              {pbcData?.staged_count} of {pbcData?.total} Deliverables Staged ({pbcData?.readiness_percent}%)
-            </span>
+            <div className="view-inline" style={{ display: 'flex', gap: '8px' }}>
+              <a
+                href="/api/soc2/pbc/export_package"
+                download="TwoFrom_SOC2_PBC_Package.zip"
+                className="button button-sm button-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+              >
+                <Download size={13} /> Export Auditor PBC Package (ZIP)
+              </a>
+              <span className="badge badge-green">
+                {pbcData?.staged_count} of {pbcData?.total} Deliverables Staged ({pbcData?.readiness_percent}%)
+              </span>
+            </div>
           </div>
 
           <div className="view-table-scroll">
@@ -256,9 +385,31 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
                     <Badge value={item.status === 'staged' ? 'complete' : 'pending'} />
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <button className="button button-sm button-primary" onClick={() => onNavigate('evidence')}>
-                      Stage Evidence <ArrowRight size={12} />
-                    </button>
+                    <div className="view-inline" style={{ display: 'inline-flex', gap: '6px' }}>
+                      <button
+                        type="button"
+                        className="button button-sm button-primary"
+                        onClick={async () => {
+                          try {
+                            await api.post(`/soc2/pbc/${item.id}/stage_evidence`, {});
+                            notify(`Staged evidence for ${item.id} (${item.control_code})`);
+                            loadSOC2Data();
+                          } catch (e: any) {
+                            notify(e.message, 'error');
+                          }
+                        }}
+                      >
+                        {item.status === 'staged' ? 'Re-Stage' : 'Quick Stage'}
+                      </button>
+                      <button
+                        type="button"
+                        className="button button-sm"
+                        onClick={() => onNavigate('evidence')}
+                        title="Open Evidence Repository"
+                      >
+                        Repository →
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

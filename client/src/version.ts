@@ -1,5 +1,5 @@
-export const APP_VERSION = '0.8.0';
-export const RELEASE_DATE = '2026-09-22';
+export const APP_VERSION = '0.9.0';
+export const RELEASE_DATE = '2026-09-23';
 
 export interface ChangelogEntry {
   version: string;
@@ -11,9 +11,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '0.9.0',
+    date: '2026-09-23',
+    badge: 'Latest',
+    title: "TwoFrom SOC 2 Type II Core, Blind Pilot & Live Jev Integration",
+    highlights: [
+      "Empirical Blind Pilot Module with 4x4 Confusion Matrix and 90/95% Gate",
+      "Live TypeSafe JEV System One (jev-1.13.0) Choice Decisions & Fernet Key Encryption at Rest",
+      "First-Run Onboarding Wizard with DNI Policy Authorization Confirmation",
+      "Observation Period Tracker Countdown to 2027-01-01 & Per-Control Evidence Proof Status",
+      "Control Drift Monitoring Sweeps & One-Click Auditor PBC Package Export ZIP"
+    ]
+  },
+  {
     version: '0.8.0',
     date: '2026-09-22',
-    badge: 'Latest',
+    badge: 'Stable',
     title: "Complete 24 WebMCP Agent Tools & Edge Security Isolation",
     highlights: [
       "Comprehensive 24-Tool WebMCP Suite: Registered full control tools covering navigation, CRUD, continuous checks, roadmap, SOC 2 readiness, sampling, auditor hub, and JEV.",

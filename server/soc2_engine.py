@@ -123,6 +123,56 @@ def soc2_router(store):
                 {"category": "Observation Window", "title": "Zero Undocumented Control Deviations / Drift", "status": "pass", "detail": "Continuous monitoring active"}
             ]
 
+            # Per-control evidence status & observation countdown (Phase E)
+            ws = store.workspace(db)
+            obs_start_str = ws.get('observation_start') or '2027-01-01'
+            try:
+                obs_date = date.fromisoformat(obs_start_str)
+                days_remaining = (obs_date - today).days
+            except Exception:
+                days_remaining = (date(2027, 1, 1) - today).days
+                obs_start_str = '2027-01-01'
+
+            evidence = Store.records(db, 'evidence')
+            control_evidence_summary = []
+            for c in app_controls:
+                c_id = c['id']
+                c_code = c.get('code', '')
+                linked_ev = [
+                    e for e in evidence
+                    if c_id in e.get('control_ids', []) or c_code in e.get('control_ids', [])
+                ]
+                valid_ev = [e for e in linked_ev if not e.get('expires_date') or e.get('expires_date') >= today.isoformat()]
+                expired_ev = [e for e in linked_ev if e.get('expires_date') and e.get('expires_date') < today.isoformat()]
+
+                if valid_ev:
+                    ev_status = 'current'
+                elif expired_ev:
+                    ev_status = 'expired'
+                else:
+                    ev_status = 'missing'
+
+                control_evidence_summary.append({
+                    'control_id': c_id,
+                    'control_code': c_code,
+                    'control_title': c.get('title', ''),
+                    'category': c.get('category', 'Control'),
+                    'evidence_status': ev_status,
+                    'valid_count': len(valid_ev),
+                    'expired_count': len(expired_ev),
+                    'total_count': len(linked_ev)
+                })
+
+            ev_covered = sum(1 for s in control_evidence_summary if s['evidence_status'] == 'current')
+            ev_coverage_pct = round((ev_covered / len(app_controls) * 100), 1) if app_controls else 0.0
+
+            type2_items.append({
+                "category": "Evidence Coverage",
+                "title": "Per-Control Evidence Proof (>=80%)",
+                "status": "pass" if ev_coverage_pct >= 80 else ("warning" if ev_coverage_pct >= 50 else "fail"),
+                "detail": f"{ev_covered}/{len(app_controls)} controls have current evidence ({ev_coverage_pct}%)"
+            })
+
             t1_pass = sum(1 for i in type1_items if i['status'] == 'pass')
             t1_score = round((t1_pass / len(type1_items)) * 100, 1)
 
@@ -136,6 +186,15 @@ def soc2_router(store):
                 "type2_score": t2_score,
                 "type2_items": type2_items,
                 "type2_ready": t2_score >= 90.0,
+                "observation_tracker": {
+                    "start_date": obs_start_str,
+                    "days_remaining": max(0, days_remaining),
+                    "is_active": days_remaining <= 0,
+                    "target_type": ws.get('audit_type', 'Type II'),
+                    "auditor": ws.get('auditor', '')
+                },
+                "per_control_evidence": control_evidence_summary,
+                "evidence_coverage_pct": ev_coverage_pct,
                 "evaluated_at": now()
             }
 
@@ -245,6 +304,113 @@ def soc2_router(store):
                 "samples": sample_records,
                 "items": sample_records
             }
+
+    @router.post('/pbc/{pbc_id}/stage_evidence')
+    def stage_pbc_evidence(pbc_id: str, payload: dict):
+        """Stages an evidence artifact for an AICPA PBC request and links to target control."""
+        pbc_item = next((p for p in STANDARD_PBC_ITEMS if p['id'] == pbc_id), None)
+        if not pbc_item:
+            raise HTTPException(404, f"PBC item {pbc_id} not found.")
+
+        evidence_id = payload.get('evidence_id')
+        ctrl_code = pbc_item['control_code']
+
+        with store.transaction() as db:
+            if evidence_id:
+                ev = Store.get(db, 'evidence', evidence_id)
+                if not ev:
+                    raise HTTPException(404, f"Evidence record {evidence_id} not found.")
+                c_ids = list(dict.fromkeys(ev.get('control_ids', []) + [ctrl_code]))
+                ev['control_ids'] = c_ids
+                save(db, 'evidence', ev)
+                log(db, 'pbc_evidence_staged', 'evidence', {'id': evidence_id}, {'pbc_id': pbc_id})
+                return {"status": "staged", "pbc_id": pbc_id, "evidence_id": evidence_id}
+
+            title = payload.get('title') or f"Evidence for {pbc_item['title']}"
+            description = payload.get('description') or pbc_item['description']
+            new_id = f"ev-{uuid4().hex[:8]}"
+            new_ev = {
+                "id": new_id,
+                "title": title,
+                "description": description,
+                "category": pbc_item['category'],
+                "control_ids": [ctrl_code],
+                "status": "valid",
+                "collected_at": now(),
+                "created_at": now()
+            }
+            save(db, 'evidence', new_ev)
+            log(db, 'pbc_evidence_created', 'evidence', {'id': new_id}, {'pbc_id': pbc_id})
+            return {"status": "created_and_staged", "pbc_id": pbc_id, "evidence_id": new_id}
+
+    @router.get('/pbc/export_package')
+    @router.get('/export_pbc_package')
+    def export_pbc_package():
+        """Generates auditor ZIP package containing staged evidence and AICPA PBC report."""
+        with store.transaction() as db:
+            ws = store.workspace(db)
+            evidence = Store.records(db, 'evidence')
+
+            buf = io.BytesIO()
+            with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+                manifest = {
+                    "package": "TwoFrom SOC 2 Type II PBC Auditor Package",
+                    "organization": ws.get('company', 'TwoFrom'),
+                    "observation_start": ws.get('observation_start', '2027-01-01'),
+                    "audit_type": ws.get('audit_type', 'Type II'),
+                    "auditor": ws.get('auditor', 'Assigned Auditor'),
+                    "generated_at": now(),
+                    "total_requests": len(STANDARD_PBC_ITEMS),
+                    "items": []
+                }
+
+                report_lines = [
+                    f"# TwoFrom — SOC 2 Type II PBC Package",
+                    f"**Organization:** {ws.get('company', 'TwoFrom')}",
+                    f"**Audit Period Start:** {ws.get('observation_start', '2027-01-01')}",
+                    f"**Exported:** {now()}",
+                    f"**Auditor:** {ws.get('auditor', 'Auditor Fieldwork')}",
+                    "",
+                    "## Provided By Client (PBC) Deliverables Status",
+                    ""
+                ]
+
+                for pbc in STANDARD_PBC_ITEMS:
+                    mapped = [e for e in evidence if pbc['control_code'] in e.get('control_ids', [])]
+                    staged = bool(mapped)
+                    manifest["items"].append({
+                        "id": pbc['id'],
+                        "control_code": pbc['control_code'],
+                        "title": pbc['title'],
+                        "staged": staged,
+                        "evidence_count": len(mapped)
+                    })
+
+                    status_sym = "[x] STAGED" if staged else "[ ] PENDING"
+                    report_lines.append(f"### {pbc['id']}: {pbc['title']} ({pbc['control_code']})")
+                    report_lines.append(f"- **Status:** {status_sym}")
+                    report_lines.append(f"- **Category:** {pbc['category']}")
+                    report_lines.append(f"- **Description:** {pbc['description']}")
+                    if mapped:
+                        report_lines.append("- **Attached Evidence:**")
+                        for m in mapped:
+                            report_lines.append(f"  - `{m['id']}`: {m.get('title', 'Untitled')} ({m.get('filename') or 'Document'})")
+                    report_lines.append("")
+
+                zf.writestr('MANIFEST.json', json.dumps(manifest, indent=2))
+                zf.writestr('PBC_AUDITOR_REPORT.md', '\n'.join(report_lines))
+
+                for e in evidence:
+                    ev_content = f"# {e.get('title')}\n\n{e.get('description', '')}\n\nControl Mappings: {', '.join(e.get('control_ids', []))}\n"
+                    safe_name = f"evidence/{e.get('category', 'general')}/{e['id']}_{e.get('title', 'doc').replace(' ', '_')[:30]}.md"
+                    zf.writestr(safe_name, ev_content)
+
+            buf.seek(0)
+            return Response(
+                content=buf.getvalue(),
+                media_type='application/zip',
+                headers={'Content-Disposition': 'attachment; filename="TwoFrom_SOC2_PBC_Package.zip"'}
+            )
 
     @router.get('/cuecs_and_csocs')
     def get_cuecs_and_csocs():

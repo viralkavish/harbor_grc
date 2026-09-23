@@ -1,61 +1,29 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   Shield,
-  ShieldCheck,
   LayoutDashboard,
-  Compass,
-  ScrollText,
-  Layers,
   FileText,
-  Building2,
-  AlertTriangle,
   FileCheck,
-  Briefcase,
-  CheckSquare,
   Users,
-  HardDrive,
-  UserCheck,
-  HelpCircle,
-  ShieldAlert,
-  Globe,
-  Radio,
   Award,
-  History,
   Settings as SettingsIcon,
-  Search,
-  CheckCircle2,
-  Menu,
-  X,
-  Sparkles
+  Target,
 } from 'lucide-react';
 import { api } from './lib/api';
 import { Loading, ErrorState, Toast, Badge } from './components/ui';
 import { CommandPalette } from './components/CommandPalette';
 import { AppShell } from './components/AppShell';
 import { OverviewView } from './views/OverviewView';
-import { RoadmapView } from './views/RoadmapView';
 import { SOC2ReadinessView } from './views/SOC2ReadinessView';
-import { SystemDescriptionView } from './views/SystemDescriptionView';
-import { ContinuousTestsView } from './views/ContinuousTestsView';
+import { PilotView } from './views/PilotView';
+import { OnboardingWizard } from './views/OnboardingWizard';
 import { ResourceTableView } from './views/ResourceTableView';
 import { PoliciesView } from './views/PoliciesView';
 import { EvidenceView } from './views/EvidenceView';
-import { MonitoringView } from './views/MonitoringView';
-import { AuditsView } from './views/AuditsView';
-import { TasksView } from './views/TasksView';
 import { PeopleView } from './views/PeopleView';
-import { QuestionnairesView } from './views/QuestionnairesView';
-import { AccessReviewsView } from './views/AccessReviewsView';
-import { TrustCenterView } from './views/TrustCenterView';
-import { IntegrationsView } from './views/IntegrationsView';
-import { ActivityView } from './views/ActivityView';
 import { SettingsView } from './views/SettingsView';
 import { FrameworksView } from './views/FrameworksView';
 import { ChangelogModal } from './components/ChangelogModal';
-import { VendorSoc2Modal } from './components/VendorSoc2Modal';
-import { WebMcpInspectorModal } from './components/WebMcpInspectorModal';
-import { initWebMcpPolyfill } from './lib/webmcp/polyfill';
-import { registerHarborWebMcpTools } from './lib/webmcp/harborWebMcp';
 import { APP_VERSION } from './version';
 import type { Schema, Bootstrap } from './lib/types';
 
@@ -74,8 +42,6 @@ export function App() {
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [showChangelogModal, setShowChangelogModal] = useState(false);
-  const [analyzingVendor, setAnalyzingVendor] = useState<any | null>(null);
-  const [showWebMcpModal, setShowWebMcpModal] = useState(false);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const notify = useCallback((message: string, kind: 'success' | 'error' = 'success') => {
@@ -92,12 +58,6 @@ export function App() {
     window.location.hash = id ? `${view}/${id}` : view;
     window.scrollTo(0, 0);
   }, []);
-
-  // Initialize and register WebMCP Agent Tools
-  useEffect(() => {
-    initWebMcpPolyfill();
-    registerHarborWebMcpTools({ onNavigate: navigate, notify });
-  }, [navigate, notify]);
 
   // Sync hash routing
   useEffect(() => {
@@ -136,6 +96,12 @@ export function App() {
       ]);
       setBootstrap(b);
       setSchema(s);
+      const isConfigured = Boolean(b.workspace?.onboarding_completed);
+      const isSkipped = sessionStorage.getItem('wizard_skipped') === 'true';
+      const currentHash = window.location.hash.replace(/^#\/?/, '').split('/')[0];
+      if (!isConfigured && !isSkipped && !currentHash) {
+        setActiveView('onboarding');
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -147,7 +113,7 @@ export function App() {
     loadApp();
   }, []);
 
-  if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loading label="Starting Harbor GRC workspace…" /></div>;
+  if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loading label="Starting TwoFrom GRC workspace…" /></div>;
   if (error) return <div style={{ padding: '40px', maxWidth: '600px', margin: '0 auto' }}><ErrorState message={error} retry={loadApp} /></div>;
   if (!bootstrap || !schema) return null;
 
@@ -155,40 +121,15 @@ export function App() {
 
   const NAV_SECTIONS = [
     {
-      title: 'Monitor & Roadmap',
+      title: 'TwoFrom GRC',
       items: [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-        { id: 'roadmap', label: 'SOC 2 Roadmap', icon: Compass, countKey: null },
-        { id: 'soc2_readiness', label: 'SOC 2 Readiness', icon: Award, countKey: null },
-        { id: 'tests', label: 'Continuous Tests', icon: ShieldCheck, countKey: null },
-        { id: 'monitoring', label: 'Monitoring Checks', icon: Radio, countKey: null }
-      ]
-    },
-    {
-      title: 'Operate',
-      items: [
-        { id: 'frameworks', label: 'Frameworks', icon: Layers, countKey: 'frameworks' },
-        { id: 'controls', label: 'Controls', icon: Shield, countKey: 'controls' },
-        { id: 'evidence', label: 'Evidence', icon: FileCheck, countKey: 'evidence' },
+        { id: 'soc2_readiness', label: 'SOC 2 Readiness', icon: Award },
+        { id: 'pilot', label: 'Blind Pilot', icon: Target },
         { id: 'policies', label: 'Policies', icon: FileText, countKey: 'policies' },
-        { id: 'system_description', label: 'System Description', icon: ScrollText, countKey: null },
-        { id: 'vendors', label: 'Vendors', icon: Building2, countKey: 'vendors' },
-        { id: 'risks', label: 'Risks', icon: AlertTriangle, countKey: 'risks' },
-        { id: 'audits', label: 'Audits', icon: Briefcase, countKey: 'audits' },
-        { id: 'tasks', label: 'Tasks', icon: CheckSquare, countKey: 'tasks' },
+        { id: 'evidence', label: 'Evidence', icon: FileCheck, countKey: 'evidence' },
+        { id: 'frameworks', label: 'Frameworks & Controls', icon: Shield, countKey: 'controls' },
         { id: 'people', label: 'People', icon: Users, countKey: 'people' },
-        { id: 'assets', label: 'Assets', icon: HardDrive, countKey: 'assets' },
-        { id: 'access_reviews', label: 'Access Reviews', icon: UserCheck, countKey: 'access_reviews' },
-        { id: 'questionnaires', label: 'Questionnaires', icon: HelpCircle, countKey: 'questionnaires' },
-        { id: 'exceptions', label: 'Exceptions', icon: ShieldAlert, countKey: 'exceptions' }
-      ]
-    },
-    {
-      title: 'Publish & Configure',
-      items: [
-        { id: 'trust', label: 'Trust Center', icon: Globe },
-        { id: 'integrations', label: 'Integrations', icon: Layers },
-        { id: 'activity', label: 'Activity Log', icon: History },
         { id: 'settings', label: 'Settings', icon: SettingsIcon }
       ]
     }
@@ -203,70 +144,43 @@ export function App() {
         onNavigate={navigate}
         onSearch={() => setCommandPaletteOpen(true)}
         onChangelog={() => setShowChangelogModal(true)}
-        onOpenWebMcp={() => setShowWebMcpModal(true)}
       >
           {activeView === 'overview' && (
             <OverviewView onNavigate={navigate} notify={notify} />
-          )}
-
-          {activeView === 'roadmap' && (
-            <RoadmapView notify={notify} onNavigate={navigate} />
           )}
 
           {activeView === 'soc2_readiness' && (
             <SOC2ReadinessView notify={notify} onNavigate={navigate} />
           )}
 
-          {activeView === 'tests' && (
-            <ContinuousTestsView notify={notify} onNavigate={navigate} />
+          {activeView === 'pilot' && (
+            <PilotView notify={notify} onNavigate={navigate} />
+          )}
+
+          {activeView === 'onboarding' && (
+            <OnboardingWizard
+              onComplete={async () => {
+                await loadApp();
+                navigate('overview');
+              }}
+              onSkip={() => {
+                sessionStorage.setItem('wizard_skipped', 'true');
+                navigate('overview');
+              }}
+              notify={notify}
+            />
           )}
 
           {activeView === 'policies' && (
             <PoliciesView schema={schema} notify={notify} onNavigate={navigate} selectedId={selectedId} />
           )}
 
-          {activeView === 'system_description' && (
-            <SystemDescriptionView notify={notify} onNavigate={navigate} />
-          )}
-
           {activeView === 'evidence' && (
             <EvidenceView schema={schema} notify={notify} onNavigate={navigate} />
           )}
 
-          {activeView === 'monitoring' && (
-            <MonitoringView notify={notify} onNavigate={navigate} />
-          )}
-
-          {activeView === 'audits' && (
-            <AuditsView schema={schema} notify={notify} onNavigate={navigate} />
-          )}
-
-          {activeView === 'tasks' && (
-            <TasksView schema={schema} notify={notify} onNavigate={navigate} />
-          )}
-
           {activeView === 'people' && (
             <PeopleView schema={schema} notify={notify} onNavigate={navigate} />
-          )}
-
-          {activeView === 'questionnaires' && (
-            <QuestionnairesView schema={schema} notify={notify} onNavigate={navigate} />
-          )}
-
-          {activeView === 'access_reviews' && (
-            <AccessReviewsView schema={schema} notify={notify} onNavigate={navigate} />
-          )}
-
-          {activeView === 'trust' && (
-            <TrustCenterView schema={schema} notify={notify} onNavigate={navigate} />
-          )}
-
-          {activeView === 'integrations' && (
-            <IntegrationsView notify={notify} onNavigate={navigate} />
-          )}
-
-          {activeView === 'activity' && (
-            <ActivityView notify={notify} onNavigate={navigate} />
           )}
 
           {activeView === 'settings' && (
@@ -299,94 +213,6 @@ export function App() {
               )}
             />
           )}
-
-          {activeView === 'vendors' && (
-            <ResourceTableView
-              resource="vendors"
-              schema={schema}
-              title="Third-Party Vendor Management"
-              description="Sub-processors, software vendors, data access level, renewal schedule, and inherent/residual risk assessments."
-              notify={notify}
-              onNavigate={navigate}
-              selectedId={selectedId}
-              customColumns={(r) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Badge value={r.tier || 'medium'} />
-                  <button
-                    type="button"
-                    className="button button-sm"
-                    onClick={(e) => { e.stopPropagation(); setAnalyzingVendor(r); }}
-                    style={{ fontSize: '11px', padding: '2px 8px' }}
-                    title="Run AI SOC 2 Examination Review and Extract CUECs"
-                  >
-                    <Sparkles size={11} color="#2563eb" /> AI SOC 2
-                  </button>
-                  {r.website && (
-                    <a href={r.website} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px' }}>
-                      Web
-                    </a>
-                  )}
-                </div>
-              )}
-            />
-          )}
-
-          {activeView === 'risks' && (
-            <ResourceTableView
-              resource="risks"
-              schema={schema}
-              title="Enterprise Risk Register"
-              description="Threat identification, 5×5 inherent and residual risk calculations, treatment assignments, and control mitigations."
-              notify={notify}
-              onNavigate={navigate}
-              selectedId={selectedId}
-              customColumns={(r) => (
-                <div className="mono" style={{ fontSize: '12px' }}>
-                  <span>Inherent: <strong>{r.inherent_score || (r.likelihood * r.impact)}</strong></span>
-                  <span style={{ marginLeft: '8px', color: 'var(--accent)' }}>Residual: <strong>{r.residual_score || (r.residual_likelihood * r.residual_impact)}</strong></span>
-                </div>
-              )}
-            />
-          )}
-
-          {activeView === 'assets' && (
-            <ResourceTableView
-              resource="assets"
-              schema={schema}
-              title="Hardware & Cloud Asset Inventory"
-              description="Company laptops, cloud virtual machines, and data repositories with recorded encryption and MFA baselines."
-              notify={notify}
-              onNavigate={navigate}
-              selectedId={selectedId}
-              customColumns={(r) => (
-                <div style={{ fontSize: '11px', display: 'flex', gap: '6px' }}>
-                  <span style={{ textTransform: 'capitalize' }}>{r.category}</span>
-                  {r.encrypted !== null && (
-                    <span style={{ color: r.encrypted ? 'var(--accent)' : 'var(--danger)', fontWeight: 600 }}>
-                      {r.encrypted ? 'Encrypted' : 'Unencrypted'}
-                    </span>
-                  )}
-                </div>
-              )}
-            />
-          )}
-
-          {activeView === 'exceptions' && (
-            <ResourceTableView
-              resource="exceptions"
-              schema={schema}
-              title="Security Exceptions Register"
-              description="Documented deviations from standard security baselines, business justifications, expiration dates, and executive approvals."
-              notify={notify}
-              onNavigate={navigate}
-              selectedId={selectedId}
-              customColumns={(r) => (
-                <div style={{ fontSize: '11px', color: 'var(--muted)' }}>
-                  <span>Approver: {r.approver || 'Pending'}</span>
-                </div>
-              )}
-            />
-          )}
       </AppShell>
 
       {/* Command Palette */}
@@ -400,21 +226,6 @@ export function App() {
       <ChangelogModal
         isOpen={showChangelogModal}
         onClose={() => setShowChangelogModal(false)}
-      />
-
-      {/* Vendor AI SOC 2 Review Modal */}
-      <VendorSoc2Modal
-        isOpen={!!analyzingVendor}
-        onClose={() => setAnalyzingVendor(null)}
-        vendor={analyzingVendor}
-        notify={notify}
-      />
-
-      {/* WebMCP Agent Control & Inspector Modal */}
-      <WebMcpInspectorModal
-        isOpen={showWebMcpModal}
-        onClose={() => setShowWebMcpModal(false)}
-        notify={notify}
       />
 
       {/* Floating Toast Notifications */}

@@ -115,7 +115,7 @@ def update_package_json(new_version: str) -> None:
 
 def update_server_app(new_version: str) -> None:
     content = SERVER_APP.read_text(encoding="utf-8")
-    content = re.sub(r"app = FastAPI\(title='Harbor GRC', version='[^']+'", f"app = FastAPI(title='Harbor GRC', version='{new_version}'", content)
+    content = re.sub(r"app = FastAPI\(title='(?:Harbor|TwoFrom) GRC', version='[^']+'", f"app = FastAPI(title='TwoFrom GRC', version='{new_version}'", content)
     content = re.sub(r"'version': '[^']+', 'storage': 'sqlite'", f"'version': '{new_version}', 'storage': 'sqlite'", content)
     SERVER_APP.write_text(content, encoding="utf-8")
     print(f"✓ Updated {SERVER_APP.relative_to(PROJECT_ROOT)}")

@@ -1,0 +1,21 @@
+services:
+  twofrom-grc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: twofrom-grc
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8765:8765"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HARBOR_DATA_DIR=/app/data
+      - JEV_KEY_ENCRYPTION_KEY=${JEV_KEY_ENCRYPTION_KEY:-}
+      - TYPESAFE_API_KEY=${TYPESAFE_API_KEY:-}
+    volumes:
+      - twofrom-data:/app/data
+      - twofrom-backups:/app/backups
+
+volumes:
+  twofrom-data:
+  twofrom-backups:

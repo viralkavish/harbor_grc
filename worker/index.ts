@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.8.0"
+        version: "0.9.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -669,6 +669,39 @@ export default {
       }
 
       // GET & PATCH /api/workspace & /api/settings
+      if (apiPath === "/workspace/scope") {
+        const ws = await getOrSeed(env.HARBOR_KV, "workspace", {
+          name: "TwoFrom GRC Workspace",
+          organization: "TwoFrom",
+          company: "TwoFrom",
+          criteria: ["Security", "Availability", "Confidentiality"],
+          audit_type: "Type II",
+          observation_start: "2027-01-01",
+          auditor: "",
+          onboarding_completed: false,
+          dni_permission_confirmed: false
+        });
+        if (method === "GET") {
+          return new Response(JSON.stringify({
+            company: ws.company || ws.organization || "TwoFrom",
+            organization: ws.organization || "TwoFrom",
+            criteria: ws.criteria || ["Security", "Availability", "Confidentiality"],
+            audit_type: ws.audit_type || "Type II",
+            observation_start: ws.observation_start || "2027-01-01",
+            auditor: ws.auditor || "",
+            onboarding_completed: Boolean(ws.onboarding_completed),
+            dni_permission_confirmed: Boolean(ws.dni_permission_confirmed)
+          }), { headers: { "Content-Type": "application/json" } });
+        }
+        if (method === "PATCH") {
+          const body = await request.json().catch(() => ({}));
+          const updated = { ...ws, ...body };
+          if (body.company) updated.organization = body.company;
+          await env.HARBOR_KV.put("workspace", JSON.stringify(updated));
+          return new Response(JSON.stringify(updated), { headers: { "Content-Type": "application/json" } });
+        }
+      }
+
       if (apiPath === "/workspace" || apiPath === "/settings") {
         if (method === "PATCH") {
           const current = await getOrSeed(env.HARBOR_KV, "workspace", {});
@@ -847,7 +880,25 @@ export default {
             { category: "Access Control", title: "Quarterly Access Reviews Completed", status: "pass", detail: "Q3 reviews resolved" },
             { category: "Vendors", title: "Critical Vendor Annual Assessments", status: "pass", detail: "Evaluated within 365 days" },
             { category: "Observation Window", title: "Zero Undocumented Control Drift", status: "pass", detail: "Continuous edge monitoring active" }
-          ]
+          ],
+          observation_tracker: {
+            start_date: "2027-01-01",
+            days_remaining: Math.max(0, Math.ceil((new Date("2027-01-01").getTime() - Date.now()) / (1000 * 60 * 60 * 24))),
+            is_active: false,
+            target_type: "Type II",
+            auditor: "Pending Assignment"
+          },
+          evidence_coverage_pct: 88.5,
+          per_control_evidence: STARTER_CONTROLS.map(c => ({
+            control_id: c.id,
+            control_code: c.code,
+            control_title: c.title,
+            category: "Control",
+            evidence_status: "current",
+            valid_count: 1,
+            expired_count: 0,
+            total_count: 1
+          }))
         }), { headers: { "Content-Type": "application/json" } });
       }
 
@@ -864,6 +915,131 @@ export default {
           staged_count: 4,
           readiness_percent: 100.0
         }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath.includes("/soc2/pbc/") && apiPath.endsWith("/stage_evidence")) {
+        return new Response(JSON.stringify({ status: "staged" }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/soc2/pbc/export_package") {
+        return new Response("PK\x03\x04\x14\x00...", {
+          headers: {
+            "Content-Type": "application/zip",
+            "Content-Disposition": 'attachment; filename="TwoFrom_SOC2_PBC_Package.zip"'
+          }
+        });
+      }
+
+      if (apiPath === "/monitoring/drift") {
+        return new Response(JSON.stringify({
+          drift_count: 0,
+          is_drift_free: true,
+          findings: []
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      // Pilot endpoints (Phase C)
+      if (apiPath.startsWith("/pilot")) {
+        const pilotSub = apiPath.replace(/^\/pilot/, "");
+        if (pilotSub === "/list" && method === "GET") {
+          const raw = await env.HARBOR_KV.get("pilots_list");
+          const list = raw ? JSON.parse(raw) : [
+            { id: "pilot-01", name: "TwoFrom Baseline Validation Pilot", status: "revealed", created_at: "2026-09-22T00:00:00Z", sample_size: 36, revealed_at: "2026-09-22T01:00:00Z" }
+          ];
+          return new Response(JSON.stringify({ items: list }), { headers: { "Content-Type": "application/json" } });
+        }
+        if (pilotSub === "/create" && method === "POST") {
+          const body = await request.json().catch(() => ({}));
+          const newPilot = {
+            id: "pilot-" + Date.now().toString(36),
+            name: body.name || `TwoFrom Blind Pilot (${body.sample_size || 36} pairs)`,
+            status: "pending",
+            sample_size: body.sample_size || 36,
+            created_at: new Date().toISOString()
+          };
+          const raw = await env.HARBOR_KV.get("pilots_list");
+          const list = raw ? JSON.parse(raw) : [];
+          list.unshift(newPilot);
+          await env.HARBOR_KV.put("pilots_list", JSON.stringify(list));
+          return new Response(JSON.stringify(newPilot), { headers: { "Content-Type": "application/json" } });
+        }
+        if (pilotSub.endsWith("/run") && method === "POST") {
+          const pid = pilotSub.split("/")[1];
+          return new Response(JSON.stringify({ id: pid, status: "awaiting_grades", evaluated_pairs: 36 }), { headers: { "Content-Type": "application/json" } });
+        }
+        if (pilotSub.endsWith("/grade") && method === "POST") {
+          const body = await request.json().catch(() => ({}));
+          return new Response(JSON.stringify({ status: "ok", pair_id: body.pair_id, human_verdict: body.human_verdict }), { headers: { "Content-Type": "application/json" } });
+        }
+        if (pilotSub.endsWith("/gate") && method === "GET") {
+          const pid = pilotSub.split("/")[1];
+          return new Response(JSON.stringify({
+            pilot_id: pid,
+            verdict: "GO",
+            overall_agreement_pct: 94.4,
+            high_conf_agreement_pct: 96.8,
+            total_graded: 36,
+            total_pairs: 36,
+            reasons: ["Passed overall agreement threshold (94.4% >= 90%).", "Passed high-confidence agreement threshold (96.8% >= 95%)."]
+          }), { headers: { "Content-Type": "application/json" } });
+        }
+        if (pilotSub.endsWith("/results") && method === "GET") {
+          const pid = pilotSub.split("/")[1];
+          const mockMetrics = {
+            total_pairs: 36,
+            total_graded: 36,
+            agreed_count: 34,
+            overall_agreement_pct: 94.4,
+            high_conf_total: 31,
+            high_conf_agreed: 30,
+            high_conf_agreement_pct: 96.8,
+            estimated_input_tokens: 18400,
+            cost_usd: 0.000773,
+            confusion_matrix: {
+              compatible: { compatible: 22, gap: 1, conflict: 0, not_applicable: 0 },
+              gap: { compatible: 1, gap: 8, conflict: 0, not_applicable: 0 },
+              conflict: { compatible: 0, gap: 0, conflict: 2, not_applicable: 0 },
+              not_applicable: { compatible: 0, gap: 0, conflict: 0, not_applicable: 2 }
+            },
+            gate: {
+              verdict: "GO",
+              overall_pass: true,
+              high_conf_pass: true,
+              reasons: ["Passed overall agreement threshold (94.4% >= 90%).", "Passed high-confidence agreement threshold (96.8% >= 95%)."]
+            }
+          };
+          return new Response(JSON.stringify({
+            pilot_id: pid,
+            name: "TwoFrom Blind Validation Pilot",
+            status: "revealed",
+            metrics: mockMetrics,
+            pairs: []
+          }), { headers: { "Content-Type": "application/json" } });
+        }
+        const pid = pilotSub.replace(/^\//, "");
+        if (pid && !pid.includes("/")) {
+          return new Response(JSON.stringify({
+            id: pid,
+            name: "TwoFrom Blind Pilot",
+            status: "ready_for_reveal",
+            sample_size: 36,
+            created_at: new Date().toISOString(),
+            is_revealed: false,
+            graded_count: 36,
+            pairs: STARTER_CONTROLS.slice(0, 12).map((c, i) => ({
+              id: `pair-${i}`,
+              policy_id: "pol-01",
+              policy_title: "Information Security Policy",
+              policy_snippet: "Multi-Factor Authentication (MFA) is strictly mandatory for all workforce and administrative accounts.",
+              control_id: c.id,
+              control_code: c.code,
+              control_title: c.title,
+              control_category: "Logical Access",
+              human_verdict: "compatible",
+              jev_evaluated: true
+            }))
+          }), { headers: { "Content-Type": "application/json" } });
+        }
       }
 
       // GET /api/soc2/cuecs_and_csocs

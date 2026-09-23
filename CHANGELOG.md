@@ -24,6 +24,15 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.9.1] - 2026-09-23
+
+### Fixed
+- **Brand identity alignment: tofromGRC**
+- Rebrand brand mark and headers to tofromGRC across all interfaces
+- Standardize workspace company identity to tofrom
+
+---
+
 ## [0.9.0] - 2026-09-23
 
 ### Added

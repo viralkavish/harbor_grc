@@ -58,7 +58,7 @@ def test_soc2_pbc_staging_and_export_package(client):
         assert 'MANIFEST.json' in namelist
         assert 'PBC_AUDITOR_REPORT.md' in namelist
         manifest = json.loads(zf.read('MANIFEST.json'))
-        assert manifest['organization'] == 'TwoFrom'
+        assert manifest['organization'] == 'tofrom'
         assert manifest['observation_start'] == '2027-01-01'
 
 

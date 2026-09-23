@@ -80,7 +80,7 @@ export function AppShell({ workspace, sections, activeView, onNavigate, onSearch
         <div className="sidebar-brand">
           <span className="brand-icon"><Shield size={20} aria-hidden="true" /></span>
           <div className="brand-copy">
-            <span className="brand-title">TwoFrom<span className="brand-grc">GRC</span></span>
+            <span className="brand-title">tofrom<span className="brand-grc">GRC</span></span>
             <span className="brand-subtitle">SOC 2 Type II Workspace</span>
           </div>
           {isMobile && <button type="button" className="icon-button" aria-label="Close navigation" onClick={() => setMenuOpen(false)}><X size={20} /></button>}
@@ -117,7 +117,7 @@ export function AppShell({ workspace, sections, activeView, onNavigate, onSearch
               {(workspace.organization || workspace.name || 'T').slice(0, 1).toUpperCase()}
             </span>
             <span>
-              <strong>{workspace.organization || 'TwoFrom'}</strong>
+              <strong>{workspace.organization || 'tofrom'}</strong>
               <small>{workspace.name}</small>
             </span>
           </div>
@@ -132,7 +132,7 @@ export function AppShell({ workspace, sections, activeView, onNavigate, onSearch
           <div className="topbar-context">
             <button ref={menuButton} type="button" className="icon-button mobile-toggle" aria-label="Open navigation" aria-controls="workspace-navigation" aria-expanded={drawerOpen} onClick={() => setMenuOpen(true)}><Menu size={21} /></button>
             <div className="workspace-breadcrumb" aria-label="Current location">
-              <span className="breadcrumb-group">{group?.title || 'TwoFrom'}</span>
+              <span className="breadcrumb-group">{group?.title || 'tofromGRC'}</span>
               <ChevronRight size={13} aria-hidden="true" />
               <span>{current?.label || 'Overview'}</span>
             </div>

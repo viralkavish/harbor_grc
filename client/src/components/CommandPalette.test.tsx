@@ -41,7 +41,7 @@ describe('CommandPalette', () => {
     expect(onNavigate).toHaveBeenLastCalledWith('settings');
   });
 
-  it('finds every TwoFrom page immediately by label, route or description without waiting for records', () => {
+  it('finds every tofrom page immediately by label, route or description without waiting for records', () => {
     vi.useFakeTimers();
     render(<CommandPalette isOpen onClose={vi.fn()} onNavigate={vi.fn()} />);
     const input = screen.getByRole('combobox');

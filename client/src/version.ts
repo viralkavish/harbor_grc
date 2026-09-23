@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.9.0';
+export const APP_VERSION = '0.9.1';
 export const RELEASE_DATE = '2026-09-23';
 
 export interface ChangelogEntry {
@@ -11,9 +11,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.9.0',
+    version: '0.9.1',
     date: '2026-09-23',
     badge: 'Latest',
+    title: "Brand identity alignment: tofromGRC",
+    highlights: [
+      "Rebrand brand mark and headers to tofromGRC across all interfaces",
+      "Standardize workspace company identity to tofrom"
+    ]
+  },
+  {
+    version: '0.9.0',
+    date: '2026-09-23',
+    badge: 'Stable',
     title: "TwoFrom SOC 2 Type II Core, Blind Pilot & Live Jev Integration",
     highlights: [
       "Empirical Blind Pilot Module with 4x4 Confusion Matrix and 90/95% Gate",

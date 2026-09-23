@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.9.0"
+        version: "0.9.1"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -671,9 +671,9 @@ export default {
       // GET & PATCH /api/workspace & /api/settings
       if (apiPath === "/workspace/scope") {
         const ws = await getOrSeed(env.HARBOR_KV, "workspace", {
-          name: "TwoFrom GRC Workspace",
-          organization: "TwoFrom",
-          company: "TwoFrom",
+          name: "tofromGRC Workspace",
+          organization: "tofrom",
+          company: "tofrom",
           criteria: ["Security", "Availability", "Confidentiality"],
           audit_type: "Type II",
           observation_start: "2027-01-01",
@@ -683,8 +683,8 @@ export default {
         });
         if (method === "GET") {
           return new Response(JSON.stringify({
-            company: ws.company || ws.organization || "TwoFrom",
-            organization: ws.organization || "TwoFrom",
+            company: ws.company || ws.organization || "tofrom",
+            organization: ws.organization || "tofrom",
             criteria: ws.criteria || ["Security", "Availability", "Confidentiality"],
             audit_type: ws.audit_type || "Type II",
             observation_start: ws.observation_start || "2027-01-01",
@@ -925,7 +925,7 @@ export default {
         return new Response("PK\x03\x04\x14\x00...", {
           headers: {
             "Content-Type": "application/zip",
-            "Content-Disposition": 'attachment; filename="TwoFrom_SOC2_PBC_Package.zip"'
+            "Content-Disposition": 'attachment; filename="tofrom_SOC2_PBC_Package.zip"'
           }
         });
       }
@@ -944,7 +944,7 @@ export default {
         if (pilotSub === "/list" && method === "GET") {
           const raw = await env.HARBOR_KV.get("pilots_list");
           const list = raw ? JSON.parse(raw) : [
-            { id: "pilot-01", name: "TwoFrom Baseline Validation Pilot", status: "revealed", created_at: "2026-09-22T00:00:00Z", sample_size: 36, revealed_at: "2026-09-22T01:00:00Z" }
+            { id: "pilot-01", name: "tofrom Baseline Validation Pilot", status: "revealed", created_at: "2026-09-22T00:00:00Z", sample_size: 36, revealed_at: "2026-09-22T01:00:00Z" }
           ];
           return new Response(JSON.stringify({ items: list }), { headers: { "Content-Type": "application/json" } });
         }
@@ -952,7 +952,7 @@ export default {
           const body = await request.json().catch(() => ({}));
           const newPilot = {
             id: "pilot-" + Date.now().toString(36),
-            name: body.name || `TwoFrom Blind Pilot (${body.sample_size || 36} pairs)`,
+            name: body.name || `tofrom Blind Pilot (${body.sample_size || 36} pairs)`,
             status: "pending",
             sample_size: body.sample_size || 36,
             created_at: new Date().toISOString()
@@ -1010,7 +1010,7 @@ export default {
           };
           return new Response(JSON.stringify({
             pilot_id: pid,
-            name: "TwoFrom Blind Validation Pilot",
+            name: "tofrom Blind Validation Pilot",
             status: "revealed",
             metrics: mockMetrics,
             pairs: []
@@ -1020,7 +1020,7 @@ export default {
         if (pid && !pid.includes("/")) {
           return new Response(JSON.stringify({
             id: pid,
-            name: "TwoFrom Blind Pilot",
+            name: "tofrom Blind Pilot",
             status: "ready_for_reveal",
             sample_size: 36,
             created_at: new Date().toISOString(),

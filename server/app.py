@@ -39,7 +39,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
     if auto_seed:
         seed_starter_data(store)
 
-    app = FastAPI(title='TwoFrom GRC', version='0.9.0', docs_url=None, redoc_url=None)
+    app = FastAPI(title='tofromGRC', version='0.9.1', docs_url=None, redoc_url=None)
     app.state.store = store
     install_security(app, store)
 
@@ -49,7 +49,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
 
     @app.get('/api/health')
     def health():
-        return {'status': 'ok', 'version': '0.9.0', 'storage': 'sqlite'}
+        return {'status': 'ok', 'version': '0.9.1', 'storage': 'sqlite'}
 
     @app.get('/api/bootstrap')
     def bootstrap(request: Request, response: Response):
@@ -115,8 +115,8 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
         with store.transaction() as db:
             ws = store.workspace(db)
             return {
-                "company": ws.get('company', 'TwoFrom'),
-                "organization": ws.get('organization', 'TwoFrom'),
+                "company": ws.get('company', 'tofrom'),
+                "organization": ws.get('organization', 'tofrom'),
                 "criteria": ws.get('criteria', ['Security', 'Availability', 'Confidentiality']),
                 "audit_type": ws.get('audit_type', 'Type II'),
                 "observation_start": ws.get('observation_start', '2027-01-01'),

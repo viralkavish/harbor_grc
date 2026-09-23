@@ -1,6 +1,6 @@
-"""TwoFrom GRC — Blind Pilot Module.
+"""tofromGRC — Blind Pilot Module.
 
-Validates TypeSafe JEV System One judgment primitives on TwoFrom's own documents before
+Validates TypeSafe JEV System One judgment primitives on tofrom's own documents before
 trusting it in production. Generates stratified policy x control sample pairs, runs Jev
 evaluations in single-pair mode, collects blind human grades (with Jev verdicts strictly hidden),
 and computes overall agreement, high-confidence agreement, confusion matrix, token costs, and
@@ -252,7 +252,7 @@ def pilot_router(store: Store) -> APIRouter:
         policy_ids = payload.get('policy_ids') or []
         sample_size = int(payload.get('sample_size') or 36)
         seed = payload.get('seed')
-        name = payload.get('name') or f"TwoFrom Blind Pilot {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        name = payload.get('name') or f"tofrom Blind Pilot {datetime.now().strftime('%Y-%m-%d %H:%M')}"
 
         with store.transaction() as db:
             all_policies = Store.records(db, 'policies')

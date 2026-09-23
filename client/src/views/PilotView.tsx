@@ -74,7 +74,7 @@ export function PilotView({ notify, onNavigate }: PilotViewProps) {
     try {
       const res = await api.post('/pilot/create', {
         sample_size: sampleSize,
-        name: pilotName || `TwoFrom Blind Pilot (${sampleSize} pairs)`
+        name: pilotName || `tofrom Blind Pilot (${sampleSize} pairs)`
       });
       notify(`Created blind pilot with ${res.sample_size} stratified pairs`);
       setPilotName('');
@@ -138,7 +138,7 @@ export function PilotView({ notify, onNavigate }: PilotViewProps) {
     }
   };
 
-  if (loading && !pilot) return <Loading label="Loading TwoFrom Blind Validation Pilots…" />;
+  if (loading && !pilot) return <Loading label="Loading tofrom Blind Validation Pilots…" />;
 
   const currentPair = pilot?.pairs?.[gradingIndex];
   const isRevealed = pilot?.is_revealed;
@@ -158,7 +158,7 @@ export function PilotView({ notify, onNavigate }: PilotViewProps) {
             </span>
           </div>
           <p className="view-subtitle" style={{ margin: 0 }}>
-            Empirically validate TypeSafe JEV System One judgment on TwoFrom policies before trusting automated control mappings.
+            Empirically validate TypeSafe JEV System One judgment on tofrom policies before trusting automated control mappings.
           </p>
         </div>
 

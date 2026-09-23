@@ -10,11 +10,11 @@ import sqlite3
 from threading import RLock
 from cryptography.fernet import Fernet
 
-WORKSPACE = dict(name='TwoFrom GRC Workspace', organization='TwoFrom', owner='Security Lead', description='Internal SOC 2 Type II readiness workspace for TwoFrom.',
-                 trust_title='Security at TwoFrom', trust_description='SOC 2 Type II Readiness',
+WORKSPACE = dict(name='tofromGRC Workspace', organization='tofrom', owner='Security Lead', description='Internal SOC 2 Type II readiness workspace for tofrom.',
+                 trust_title='Security at tofrom', trust_description='SOC 2 Type II Readiness',
                  trust_policy_ids=[], trust_evidence_ids=[],
                  jev_api_key='', jev_endpoint='https://api.typesafe.ai/v1',
-                 company='TwoFrom', criteria=['Security', 'Availability', 'Confidentiality'],
+                 company='tofrom', criteria=['Security', 'Availability', 'Confidentiality'],
                  audit_type='Type II', observation_start='2027-01-01', auditor='',
                  onboarding_completed=False, dni_permission_confirmed=False)
 

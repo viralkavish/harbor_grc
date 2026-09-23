@@ -88,7 +88,7 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
         <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Target size={18} color="var(--accent)" />
           <span style={{ fontSize: '13px', color: 'var(--ink)' }}>
-            <strong>JEV Policy-to-Control Assurance:</strong> Validate AI judgment on TwoFrom internal policies before audit submission.
+            <strong>JEV Policy-to-Control Assurance:</strong> Validate AI judgment on tofrom internal policies before audit submission.
           </span>
         </div>
         <button
@@ -337,7 +337,7 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
             <div className="view-inline" style={{ display: 'flex', gap: '8px' }}>
               <a
                 href="/api/soc2/pbc/export_package"
-                download="TwoFrom_SOC2_PBC_Package.zip"
+                download="tofrom_SOC2_PBC_Package.zip"
                 className="button button-sm button-primary"
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
               >

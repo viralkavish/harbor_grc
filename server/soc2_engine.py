@@ -354,8 +354,8 @@ def soc2_router(store):
             buf = io.BytesIO()
             with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
                 manifest = {
-                    "package": "TwoFrom SOC 2 Type II PBC Auditor Package",
-                    "organization": ws.get('company', 'TwoFrom'),
+                    "package": "tofrom SOC 2 Type II PBC Auditor Package",
+                    "organization": ws.get('company', 'tofrom'),
                     "observation_start": ws.get('observation_start', '2027-01-01'),
                     "audit_type": ws.get('audit_type', 'Type II'),
                     "auditor": ws.get('auditor', 'Assigned Auditor'),
@@ -365,8 +365,8 @@ def soc2_router(store):
                 }
 
                 report_lines = [
-                    f"# TwoFrom — SOC 2 Type II PBC Package",
-                    f"**Organization:** {ws.get('company', 'TwoFrom')}",
+                    f"# tofrom — SOC 2 Type II PBC Package",
+                    f"**Organization:** {ws.get('company', 'tofrom')}",
                     f"**Audit Period Start:** {ws.get('observation_start', '2027-01-01')}",
                     f"**Exported:** {now()}",
                     f"**Auditor:** {ws.get('auditor', 'Auditor Fieldwork')}",
@@ -409,7 +409,7 @@ def soc2_router(store):
             return Response(
                 content=buf.getvalue(),
                 media_type='application/zip',
-                headers={'Content-Disposition': 'attachment; filename="TwoFrom_SOC2_PBC_Package.zip"'}
+                headers={'Content-Disposition': 'attachment; filename="tofrom_SOC2_PBC_Package.zip"'}
             )
 
     @router.get('/cuecs_and_csocs')

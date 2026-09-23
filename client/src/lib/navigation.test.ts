@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { NAV_ITEMS, NAV_SECTIONS } from './navigation';
 
-describe('TwoFrom GRC navigation', () => {
+describe('tofromGRC navigation', () => {
   it('exposes only the core SOC 2 readiness navigation items', () => {
     const expectedIds = ['overview', 'soc2_readiness', 'pilot', 'policies', 'evidence', 'frameworks', 'people', 'settings'];
     const actualIds = NAV_ITEMS.map(item => item.id);

@@ -113,7 +113,7 @@ export function App() {
     loadApp();
   }, []);
 
-  if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loading label="Starting TwoFrom GRC workspace…" /></div>;
+  if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loading label="Starting tofromGRC workspace…" /></div>;
   if (error) return <div style={{ padding: '40px', maxWidth: '600px', margin: '0 auto' }}><ErrorState message={error} retry={loadApp} /></div>;
   if (!bootstrap || !schema) return null;
 
@@ -121,7 +121,7 @@ export function App() {
 
   const NAV_SECTIONS = [
     {
-      title: 'TwoFrom GRC',
+      title: 'tofromGRC',
       items: [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'soc2_readiness', label: 'SOC 2 Readiness', icon: Award },

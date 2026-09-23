@@ -12,7 +12,7 @@ export interface NavigationItem {
 
 export const NAV_SECTIONS: {title: string; items: NavigationItem[]}[] = [
   {
-    title: 'TwoFrom GRC',
+    title: 'tofromGRC',
     items: [
       {id: 'overview', label: 'Overview', icon: LayoutDashboard, description: 'Workspace overview and readiness posture'},
       {id: 'soc2_readiness', label: 'SOC 2 Readiness', icon: Award, description: 'Assess SOC 2 Type II readiness and remaining gaps'},

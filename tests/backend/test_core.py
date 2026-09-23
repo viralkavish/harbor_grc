@@ -16,7 +16,7 @@ def test_session_protects_persistent_workspace(tmp_path):
     with TestClient(create_app(tmp_path), base_url='http://127.0.0.1:8765') as c:
         bootstrap = c.get('/api/bootstrap')
         assert bootstrap.status_code == 200
-        assert bootstrap.json()['workspace']['name'] == 'TwoFrom GRC Workspace'
+        assert bootstrap.json()['workspace']['name'] == 'tofromGRC Workspace'
         assert 'HttpOnly' in bootstrap.headers['set-cookie']
         assert 'SameSite=strict' in bootstrap.headers['set-cookie']
         assert c.patch('/api/workspace', json={'name': 'Private Harbor'}).status_code == 403
@@ -38,7 +38,7 @@ def test_health_uses_factory_without_global_data_writes(tmp_path):
     from server.app import create_app
     with TestClient(create_app(tmp_path), base_url="http://127.0.0.1:8765") as client:
         assert client.get('/api/health').json() == {
-            'status': 'ok', 'version': '0.9.0', 'storage': 'sqlite'
+            'status': 'ok', 'version': '0.9.1', 'storage': 'sqlite'
         }
 
 
@@ -50,7 +50,7 @@ def test_workspace_scope_validation_and_update(tmp_path):
 
         # 1. Scope defaults
         scope = client.get('/api/workspace/scope').json()
-        assert scope['company'] == 'TwoFrom'
+        assert scope['company'] == 'tofrom'
         assert 'Security' in scope['criteria']
 
         # 2. Reject missing observation_start

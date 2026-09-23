@@ -31,7 +31,7 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
   const [testResult, setTestResult] = useState<any | null>(null);
 
   // Step 2: Scope State
-  const [company, setCompany] = useState('TwoFrom');
+  const [company, setCompany] = useState('tofrom');
   const [criteria, setCriteria] = useState<string[]>(['Security', 'Availability', 'Confidentiality']);
   const [auditType, setAuditType] = useState('Type II');
   const [observationStart, setObservationStart] = useState('2027-01-01');
@@ -143,7 +143,7 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
         dni_permission_confirmed: true,
         onboarding_completed: true
       });
-      notify('TwoFrom GRC setup complete! Welcome to your SOC 2 workspace.');
+      notify('tofromGRC setup complete! Welcome to your SOC 2 workspace.');
       onComplete();
     } catch (e: any) {
       notify(e.message, 'error');
@@ -160,13 +160,13 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
           <span style={{ display: 'inline-flex', padding: '8px', borderRadius: '10px', background: 'var(--surface-raised)', border: '1px solid var(--border)' }}>
             <Shield size={26} color="var(--accent)" />
           </span>
-          <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--ink)' }}>TwoFrom<span style={{ color: 'var(--accent)' }}>GRC</span></span>
+          <span style={{ fontSize: '24px', fontWeight: 800, color: 'var(--ink)' }}>tofrom<span style={{ color: 'var(--accent)' }}>GRC</span></span>
         </div>
         <h2 style={{ margin: '4px 0 0', fontSize: '18px', color: 'var(--ink)' }}>
           SOC 2 Type II Readiness Setup
         </h2>
         <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--muted)' }}>
-          4-step initialization for TwoFrom internal compliance operations.
+          4-step initialization for tofrom internal compliance operations.
         </p>
       </div>
 
@@ -297,7 +297,7 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
             <div className="card-header" style={{ marginBottom: '18px' }}>
               <div className="view-inline" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                 <Shield size={18} color="var(--accent)" />
-                <h3 className="card-title" style={{ margin: 0 }}>Step 2: Scoping TwoFrom's Examination</h3>
+                <h3 className="card-title" style={{ margin: 0 }}>Step 2: Scoping tofrom's Examination</h3>
               </div>
               <p className="card-description">
                 Define organizational boundary, selected Trust Services Criteria, and observation period milestones.
@@ -522,7 +522,7 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
                   <strong style={{ fontSize: '13.5px' }}>Mandatory Intellectual Property & Policy Sourcing Rule</strong>
                 </div>
                 <p style={{ margin: 0, fontSize: '12px', lineHeight: '1.5', color: 'var(--ink)' }}>
-                  If any security, privacy, or engineering policies in this repository were adapted or sourced from DNI (or prior corporate entities), TwoFrom must possess documented written authorization permitting adaptation and reuse. Auditors independently review policy authorship provenance.
+                  If any security, privacy, or engineering policies in this repository were adapted or sourced from DNI (or prior corporate entities), tofrom must possess documented written authorization permitting adaptation and reuse. Auditors independently review policy authorship provenance.
                 </p>
               </div>
 
@@ -551,7 +551,7 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
                       DNI Policy Reuse Authorization
                     </strong>
                     <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                      I confirm that for any governance policies or security standards sourced from DNI, TwoFrom has obtained written permission to reuse and adapt them for TwoFrom's SOC 2 Type II examination.
+                      I confirm that for any governance policies or security standards sourced from DNI, tofrom has obtained written permission to reuse and adapt them for tofrom's SOC 2 Type II examination.
                     </span>
                   </div>
                 </label>
@@ -579,7 +579,7 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
                       Observation Period Commitment (Starts {observationStart})
                     </strong>
                     <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
-                      I confirm TwoFrom's commitment to operating compliance controls continuously throughout the observation period without unmitigated drift.
+                      I confirm tofrom's commitment to operating compliance controls continuously throughout the observation period without unmitigated drift.
                     </span>
                   </div>
                 </label>
@@ -596,7 +596,7 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
                   disabled={!dniConfirmed || submitting}
                   onClick={handleCompleteWizard}
                 >
-                  {submitting ? 'Applying Scope…' : 'Launch TwoFrom GRC Workspace'}
+                  {submitting ? 'Applying Scope…' : 'Launch tofromGRC Workspace'}
                 </button>
               </div>
             </div>

@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.11.0"
+        version: "0.12.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -1439,6 +1439,51 @@ export default {
           evidence_id: apiPath.split("/")[2],
           versions: []
         }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/audit/verify") {
+        return new Response(JSON.stringify({
+          ok: true,
+          entries: 1,
+          checked_at: new Date().toISOString()
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/audit/log") {
+        return new Response(JSON.stringify({
+          items: [
+            {
+              seq: 1,
+              id: "genesis-01",
+              created_at: new Date().toISOString(),
+              actor: "system",
+              action: "genesis",
+              resource: "system",
+              record_id: "root",
+              title: "Audit Log Genesis & Baseline Initialization",
+              prev_hash: "GENESIS",
+              entry_hash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              before: null,
+              after: { status: "initialized", vintage: "TSC-2017-2022" }
+            }
+          ],
+          total: 1
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/audit/export") {
+        const format = url.searchParams.get("format") || "json";
+        if (format === "csv") {
+          return new Response("seq,id,created_at,actor,action,resource,record_id,title,prev_hash,entry_hash,before,after\n1,genesis-01,2026-09-22T00:00:00Z,system,genesis,system,root,'Audit Log Genesis',GENESIS,e3b0c442,,", {
+            headers: {
+              "Content-Type": "text/csv",
+              "Content-Disposition": 'attachment; filename="tofrom_audit_log.csv"'
+            }
+          });
+        }
+        return new Response(JSON.stringify([
+          { seq: 1, id: "genesis-01", actor: "system", action: "genesis", prev_hash: "GENESIS" }
+        ]), { headers: { "Content-Type": "application/json" } });
       }
 
       // Generic Resource Read & List Endpoints

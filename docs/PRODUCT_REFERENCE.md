@@ -109,7 +109,25 @@ To focus strictly on internal SOC 2 Type II readiness and eliminate unnecessary 
 
 ---
 
-## 8. Deployment & Operations
+## 8. Tamper-Evident Audit Log (R3)
+
+- **Append-Only Cryptographic Ledger**:
+  - Every state mutation records: `seq`, `id`, `actor`, `action`, `resource`, `record_id`, `title`, `before`, `after`, `created_at`, `prev_hash`, `entry_hash`.
+  - Canonical serialization: `json.dumps(..., sort_keys=True, separators=(',', ':'))` prevents formatting ambiguities.
+  - Linked hash chain: Each entry incorporates the SHA-256 `entry_hash` of the prior sequence number, forming an unbroken chain rooted at `GENESIS`.
+- **Dual-Layer Immutability**:
+  - **Database Layer**: SQLite triggers `audit_log_no_update` and `audit_log_no_delete` abort any direct SQL `UPDATE` or `DELETE` attempt (`RAISE(ABORT)`).
+  - **Application Layer**: All business mutations route strictly through `append_audit_log()`.
+- **Integrity Verification**:
+  - `GET /api/audit/verify` re-computes the full hash chain from seq 1 to head, immediately isolating any single-byte alteration, record omission, or sequence swap (`broken_at_seq`).
+- **Retention & Export Standards**:
+  - Audit trail retention: $\ge 1$ year minimum.
+  - Formats: Immutable point-in-time export available via `GET /api/audit/export?format=csv` (with formula injection neutralization) and `GET /api/audit/export?format=json`.
+  - **Open Verification Notice**: *Pending CPA-firm confirmation (open verification item). Confirm retention schedules with the engagement team before establishing automated purge procedures.*
+
+---
+
+## 9. Deployment & Operations
 
 ### Single-Server Systemd Deployment
 Install the user-level systemd unit:

@@ -18,6 +18,7 @@ from .monitoring import monitoring_router
 from .csv_ops import csv_router
 from .backup_ops import backup_router
 from .audits_ops import audit_router
+from .audit_ops import audit_router as audit_log_router
 from .integrations import integrations_router
 from .continuous_tests import continuous_tests_router
 from .personnel_ops import personnel_router
@@ -39,7 +40,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
     if auto_seed:
         seed_starter_data(store)
 
-    app = FastAPI(title='tofromGRC', version='0.11.0', docs_url=None, redoc_url=None)
+    app = FastAPI(title='tofromGRC', version='0.12.0', docs_url=None, redoc_url=None)
     app.state.store = store
     install_security(app, store)
 
@@ -49,7 +50,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
 
     @app.get('/api/health')
     def health():
-        return {'status': 'ok', 'version': '0.11.0', 'storage': 'sqlite'}
+        return {'status': 'ok', 'version': '0.12.0', 'storage': 'sqlite'}
 
     @app.get('/api/bootstrap')
     def bootstrap(request: Request, response: Response):
@@ -84,6 +85,8 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
     def update_workspace(payload: dict):
         with store.transaction() as db:
             workspace = store.workspace(db)
+            from .audit_ops import append_audit_log
+            old_ws = dict(workspace)
             for key, value in payload.items():
                 if key not in WORKSPACE and key != 'clear_jev_api_key':
                     raise HTTPException(422, f'Unknown workspace field: {key}')
@@ -107,6 +110,16 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
                 else:
                     workspace[key] = value
             Store.save_workspace(db, workspace)
+            append_audit_log(
+                db,
+                actor=str(workspace.get('owner') or "Security Lead"),
+                action="update_settings",
+                resource="workspace",
+                record_id="workspace",
+                title="Update Workspace Settings",
+                before=sanitize_workspace(old_ws),
+                after=sanitize_workspace(workspace)
+            )
             return sanitize_workspace(workspace)
 
     @app.get('/api/workspace/scope')
@@ -142,6 +155,13 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
 
         with store.transaction() as db:
             workspace = store.workspace(db)
+            old_scope = {
+                "company": workspace.get('company'),
+                "criteria": workspace.get('criteria'),
+                "observation_start": workspace.get('observation_start'),
+                "audit_type": workspace.get('audit_type'),
+                "auditor": workspace.get('auditor')
+            }
             if 'company' in payload:
                 company = str(payload['company']).strip()
                 workspace['company'] = company
@@ -158,6 +178,23 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
                 workspace['onboarding_completed'] = bool(payload['onboarding_completed'])
 
             Store.save_workspace(db, workspace)
+            from .audit_ops import append_audit_log
+            append_audit_log(
+                db,
+                actor=str(workspace.get('owner') or "Security Lead"),
+                action="update_scope",
+                resource="workspace",
+                record_id="workspace",
+                title="Update Audit Scope & Parameters",
+                before=old_scope,
+                after={
+                    "company": workspace.get('company'),
+                    "criteria": workspace.get('criteria'),
+                    "observation_start": workspace.get('observation_start'),
+                    "audit_type": workspace.get('audit_type'),
+                    "auditor": workspace.get('auditor')
+                }
+            )
             return sanitize_workspace(workspace)
 
     @app.get('/api/dashboard')
@@ -169,6 +206,7 @@ def create_app(data_dir: Path | str | None = None, auto_seed: bool = True) -> Fa
         return search_workspace(store, q)
 
     # Mount feature routers
+    app.include_router(audit_log_router(store))
     app.include_router(policy_router(store))
     app.include_router(evidence_router(store))
     app.include_router(monitoring_router(store))

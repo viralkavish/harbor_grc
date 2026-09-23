@@ -24,6 +24,18 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.12.0] - 2026-09-23
+
+### Added
+- **R3: Tamper-Evident Hash-Chained Audit Log**
+- Append-only cryptographic audit log with SHA-256 hash chaining (prev_hash, entry_hash) rooted at GENESIS
+- Database-level immutability enforced via SQLite triggers (audit_log_no_update, audit_log_no_delete)
+- Cryptographic chain verification endpoint (/api/audit/verify) detecting single-byte tampering or order discontinuity
+- Centralized mutation logging across all operations with actor attribution and before/after state snapshots
+- Upgraded Activity Log view with live chain status, before/after diff inspector, and CSV/JSON export
+
+---
+
 ## [0.11.0] - 2026-09-23
 
 ### Added

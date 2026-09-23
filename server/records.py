@@ -20,23 +20,38 @@ def save(db, resource, item):
                (resource, item['id'], json.dumps(item)))
 
 
-def log(db, action, resource, item, details=None):
-    entry = dict(id=str(uuid4()),action=action,resource=resource,record_id=item.get('id',''),
-                 title=item.get('title',''),created_at=now(),details=details or {})
-    db.execute('INSERT INTO activity(body) VALUES (?)', (json.dumps(entry),))
+def log(db, action, resource, item, details=None, actor=None, before=None, after=None):
+    from .audit_ops import append_audit_log
+    effective_actor = actor or "Security Lead"
+    record_id = item.get('id', '') if isinstance(item, dict) else str(item)
+    title = item.get('title', '') if isinstance(item, dict) else str(item)
+    if after is None and details is not None:
+        after = details
+    elif after is None and isinstance(item, dict):
+        after = item
+    return append_audit_log(
+        db,
+        actor=effective_actor,
+        action=action,
+        resource=resource,
+        record_id=record_id,
+        title=title,
+        before=before,
+        after=after
+    )
 
 
-def create_record(db, resource, payload):
+def create_record(db, resource, payload, actor: str | None = None):
     item = validate(resource, payload)
     validate_links(db, resource, item)
     item.update(id=str(uuid4()), created_at=now(), updated_at=now())
     save(db, resource, item)
     sync_links(db, resource, item)
-    log(db, 'create', resource, item)
+    log(db, 'create', resource, item, actor=actor, after=item)
     return item
 
 
-def update_record(db, resource, record_id, payload):
+def update_record(db, resource, record_id, payload, actor: str | None = None):
     previous = get_record(db, resource, record_id)
     item = validate(resource, payload, previous)
     validate_links(db, resource, item)
@@ -73,11 +88,11 @@ def update_record(db, resource, record_id, payload):
     item['updated_at'] = now()
     save(db, resource, item)
     sync_links(db, resource, item, previous)
-    log(db, 'update', resource, item, {'fields':list(payload)})
+    log(db, 'update', resource, item, details={'fields':list(payload)}, actor=actor, before=previous, after=item)
     return item
 
 
-def delete_record(db, resource, record_id):
+def delete_record(db, resource, record_id, actor: str | None = None):
     item = get_record(db, resource, record_id)
     if resource == 'evidence':
         if item.get('legal_hold'):
@@ -93,11 +108,11 @@ def delete_record(db, resource, record_id):
     elif resource == 'controls':
         db.execute('DELETE FROM control_versions WHERE control_id=?', (record_id,))
     db.execute('DELETE FROM records WHERE resource=? AND id=?', (resource, record_id))
-    log(db, 'delete', resource, item)
+    log(db, 'delete', resource, item, actor=actor, before=item)
     return item
 
 
 def activity(db, limit=200):
-    rows = db.execute('SELECT body FROM activity ORDER BY seq DESC LIMIT ?', (limit,)).fetchall()
-    total = db.execute('SELECT count(*) FROM activity').fetchone()[0]
-    return dict(items=[json.loads(r[0]) for r in rows], total=total)
+    from .audit_ops import query_audit_log
+    res = query_audit_log(db, limit=limit)
+    return {"items": res["items"], "total": res["total"]}

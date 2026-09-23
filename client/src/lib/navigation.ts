@@ -1,5 +1,5 @@
 import {
-  Award, FileCheck, FileText, LayoutDashboard, Settings, Shield, Target, Users
+  Award, FileCheck, FileText, History, LayoutDashboard, Settings, Shield, Target, Users
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -21,6 +21,7 @@ export const NAV_SECTIONS: {title: string; items: NavigationItem[]}[] = [
       {id: 'evidence', label: 'Evidence', icon: FileCheck, description: 'Collect and verify auditor evidence proof'},
       {id: 'frameworks', label: 'Frameworks & Controls', icon: Shield, description: 'Browse compliance standards, controls, and harmonization'},
       {id: 'people', label: 'People', icon: Users, description: 'Workforce personnel, security training, and attestations'},
+      {id: 'activity', label: 'Activity Log', icon: History, description: 'Tamper-evident, hash-chained ledger of all state mutations'},
       {id: 'settings', label: 'Settings', icon: Settings, description: 'Configure workspace scope, Jev API key, and preferences'},
     ],
   },

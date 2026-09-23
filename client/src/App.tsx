@@ -23,6 +23,7 @@ import { EvidenceView } from './views/EvidenceView';
 import { PeopleView } from './views/PeopleView';
 import { SettingsView } from './views/SettingsView';
 import { FrameworksView } from './views/FrameworksView';
+import { ActivityView } from './views/ActivityView';
 import { ChangelogModal } from './components/ChangelogModal';
 import { APP_VERSION } from './version';
 import type { Schema, Bootstrap } from './lib/types';
@@ -185,6 +186,10 @@ export function App() {
 
           {activeView === 'settings' && (
             <SettingsView notify={notify} onNavigate={navigate} />
+          )}
+
+          {activeView === 'activity' && (
+            <ActivityView notify={notify} onNavigate={navigate} />
           )}
 
           {/* Compliance Frameworks & Harmonization */}

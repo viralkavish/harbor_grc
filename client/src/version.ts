@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.11.0';
+export const APP_VERSION = '0.12.0';
 export const RELEASE_DATE = '2026-09-23';
 
 export interface ChangelogEntry {
@@ -11,9 +11,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.11.0',
+    version: '0.12.0',
     date: '2026-09-23',
     badge: 'Latest',
+    title: "R3: Tamper-Evident Hash-Chained Audit Log",
+    highlights: [
+      "Append-only cryptographic audit log with SHA-256 hash chaining (prev_hash, entry_hash) rooted at GENESIS",
+      "Database-level immutability enforced via SQLite triggers (audit_log_no_update, audit_log_no_delete)",
+      "Cryptographic chain verification endpoint (/api/audit/verify) detecting single-byte tampering or order discontinuity",
+      "Centralized mutation logging across all operations with actor attribution and before/after state snapshots",
+      "Upgraded Activity Log view with live chain status, before/after diff inspector, and CSV/JSON export"
+    ]
+  },
+  {
+    version: '0.11.0',
+    date: '2026-09-23',
+    badge: 'Stable',
     title: "R2: Evidence Vault Hardening, Provenance & Observation Coverage",
     highlights: [
       "Mandatory provenance fields on evidence artifacts: captured_at, captured_by, source_system, collection_method, period_covered, retention_rule, legal_hold",

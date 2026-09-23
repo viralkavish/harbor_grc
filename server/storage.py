@@ -132,6 +132,8 @@ class Store:
                     jev_summary TEXT, human_verdict TEXT, graded_at TEXT,
                     FOREIGN KEY(pilot_id) REFERENCES pilots(id) ON DELETE CASCADE);
             ''')
+            from .audit_ops import ensure_audit_log_initialized
+            ensure_audit_log_initialized(db)
             db.execute('INSERT OR IGNORE INTO settings VALUES (?,?)', ('workspace', json.dumps(WORKSPACE)))
         self.path.chmod(0o600)
 

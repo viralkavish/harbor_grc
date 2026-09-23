@@ -77,17 +77,9 @@ export function JevPolicyModal({
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('/api/jev/upload_and_evaluate', {
-        method: 'POST',
-        body: formData
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Upload evaluation failed');
-      }
-      const data = await res.json();
+      const data = await api.post('/jev/upload_and_evaluate', formData);
       setEvaluation(data);
-      notify(`JEV analyzed "${file.name}": ${data.summary.compatible_count} controls compatible`);
+      notify(`JEV analyzed "${file.name}": ${data.summary?.compatible_count || 0} controls compatible`);
     } catch (err: any) {
       notify(err.message, 'error');
     } finally {

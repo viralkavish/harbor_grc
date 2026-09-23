@@ -103,7 +103,14 @@ class Store:
                 CREATE TABLE IF NOT EXISTS activity (
                     seq INTEGER PRIMARY KEY AUTOINCREMENT, body TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS sessions (
-                    id TEXT PRIMARY KEY, token TEXT NOT NULL, expires REAL NOT NULL);
+                    id TEXT PRIMARY KEY, token TEXT NOT NULL, expires REAL NOT NULL,
+                    user_id TEXT, last_activity REAL);
+                CREATE TABLE IF NOT EXISTS users (
+                    id TEXT PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL, role TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active',
+                    created_at TEXT NOT NULL, updated_at TEXT NOT NULL, last_login_at TEXT,
+                    failed_attempts INTEGER NOT NULL DEFAULT 0, locked_until REAL DEFAULT 0,
+                    assigned_control_ids TEXT NOT NULL DEFAULT '[]');
                 CREATE TABLE IF NOT EXISTS policy_versions (
                     id TEXT PRIMARY KEY, policy_id TEXT NOT NULL, version INTEGER NOT NULL,
                     content TEXT NOT NULL, created_at TEXT NOT NULL,
@@ -212,6 +219,14 @@ class Store:
                 pass
             try:
                 db.execute("ALTER TABLE policy_versions ADD COLUMN approved_at TEXT")
+            except Exception:
+                pass
+            try:
+                db.execute("ALTER TABLE sessions ADD COLUMN user_id TEXT")
+            except Exception:
+                pass
+            try:
+                db.execute("ALTER TABLE sessions ADD COLUMN last_activity REAL")
             except Exception:
                 pass
 

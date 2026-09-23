@@ -8,14 +8,7 @@ from server.app import create_app
 from server.storage import Store
 
 
-@pytest.fixture
-def test_setup(tmp_path):
-    app = create_app(tmp_path)
-    client = TestClient(app, base_url="http://127.0.0.1:8765")
-    token = client.get("/api/bootstrap").json()["csrf_token"]
-    client.headers["X-CSRF-Token"] = token
-    store = app.state.store
-    return client, store, tmp_path
+
 
 
 def test_chain_verifies_clean_on_startup(test_setup):

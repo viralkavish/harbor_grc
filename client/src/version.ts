@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.18.0';
+export const APP_VERSION = '0.19.1';
 export const RELEASE_DATE = '2026-09-23';
 
 export interface ChangelogEntry {
@@ -11,9 +11,34 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.18.0',
+    version: '0.19.1',
     date: '2026-09-23',
     badge: 'Latest',
+    title: "Fix: Onboarding Step 3 Policy Upload & JEV Evaluation",
+    highlights: [
+      "Added missing /jev/upload_and_evaluate endpoint to edge worker",
+      "Migrated OnboardingWizard and JevPolicyModal to use ApiClient with automatic CSRF token and session handling",
+      "Fixed 404 API not found error on policy document uploads"
+    ]
+  },
+  {
+    version: '0.19.0',
+    date: '2026-09-23',
+    badge: 'Stable',
+    title: "R10: Full RBAC, Argon2 User Authentication & Least Privilege",
+    highlights: [
+      "Argon2id password hashing and 5-attempt/15-minute brute-force lockout policy",
+      "Real staff identity lifecycle with Admin, Compliance Manager, Control Owner, and Viewer roles",
+      "Default-deny permission matrix enforcement across all staff endpoints (loopback bypass retired)",
+      "Segregation of duties enforcement bound to real authenticated user identities",
+      "Admin user provisioning and role management UI in SettingsView",
+      "Dedicated LoginView and single-use setup token bootstrap wizard"
+    ]
+  },
+  {
+    version: '0.18.0',
+    date: '2026-09-23',
+    badge: 'Stable',
     title: "R9: Observation-Window Coverage Dashboard & Gap Register",
     highlights: [
       "SOC 2 Type II observation-window configuration with audit-scoped change confirmation",

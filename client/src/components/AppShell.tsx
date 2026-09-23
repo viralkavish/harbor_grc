@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { ChevronRight, History, Menu, Search, Settings, Shield, X } from 'lucide-react';
+import { ChevronRight, History, Menu, Search, Settings, Shield, X, LogOut } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Navigate, Workspace } from '../lib/types';
 import { APP_VERSION } from '../version';
@@ -14,10 +14,12 @@ type Props = {
   onNavigate: Navigate;
   onSearch: () => void;
   onChangelog: () => void;
+  currentUser?: any;
+  onLogout?: () => void;
   children: ReactNode;
 };
 
-export function AppShell({ workspace, sections, activeView, onNavigate, onSearch, onChangelog, children }: Props) {
+export function AppShell({ workspace, sections, activeView, onNavigate, onSearch, onChangelog, currentUser, onLogout, children }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 900px)').matches);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -138,6 +140,21 @@ export function AppShell({ workspace, sections, activeView, onNavigate, onSearch
             </div>
           </div>
           <div className="topbar-actions">
+            {currentUser && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '6px' }}>
+                <span className="badge badge-primary" style={{ textTransform: 'capitalize', fontSize: '11px', padding: '2px 8px' }}>
+                  {currentUser.role?.replace('_', ' ')}
+                </span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ink)' }}>
+                  {currentUser.name}
+                </span>
+                {onLogout && (
+                  <button type="button" className="icon-button" title="Sign Out" onClick={onLogout}>
+                    <LogOut size={16} />
+                  </button>
+                )}
+              </div>
+            )}
             <button type="button" className="topbar-release" onClick={onChangelog} aria-label={`Version ${APP_VERSION}, view changelog`}>v{APP_VERSION}</button>
             <span className="topbar-divider" aria-hidden="true" />
             <button type="button" className="icon-button" aria-label="Search workspace" title={`Search workspace (${shortcut})`} onClick={onSearch}><Search size={18} /></button>

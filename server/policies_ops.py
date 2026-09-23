@@ -194,8 +194,23 @@ def policy_router(store: Store):
     # =========================================================================
 
     @router.post('/{policy_id}/submit')
-    def submit_policy_for_review(policy_id: str, payload: dict):
-        author = str(payload.get('author', '')).strip()
+    def submit_policy_for_review(policy_id: str, request: Request, payload: dict | None = None):
+        payload = payload or {}
+        user = getattr(request.state, 'user', None)
+
+        if payload.get('author'):
+            author = str(payload['author']).strip()
+            if user and (user.get('email', '').lower() == author.lower() or user.get('name', '').lower() == author.lower()):
+                submitted_id = user.get('id')
+            else:
+                submitted_id = None
+        elif user:
+            author = user.get('email') or user.get('name')
+            submitted_id = user.get('id')
+        else:
+            author = ''
+            submitted_id = None
+
         if not author:
             raise HTTPException(422, "Author identity is required to submit a policy for review.")
 
@@ -207,6 +222,7 @@ def policy_router(store: Store):
             old_state = dict(policy)
             policy['status'] = 'in_review'
             policy['submitted_by'] = author
+            policy['submitted_by_id'] = submitted_id
             policy['submitted_at'] = now()
             policy['rejection_reason'] = ''
             policy['updated_at'] = now()
@@ -225,8 +241,23 @@ def policy_router(store: Store):
             return policy
 
     @router.post('/{policy_id}/approve')
-    def approve_policy(policy_id: str, payload: dict):
-        approver = str(payload.get('approver', '')).strip()
+    def approve_policy(policy_id: str, request: Request, payload: dict | None = None):
+        payload = payload or {}
+        user = getattr(request.state, 'user', None)
+
+        if payload.get('approver'):
+            approver = str(payload['approver']).strip()
+            if user and (user.get('email', '').lower() == approver.lower() or user.get('name', '').lower() == approver.lower()):
+                approver_id = user.get('id')
+            else:
+                approver_id = None
+        elif user:
+            approver = user.get('email') or user.get('name')
+            approver_id = user.get('id')
+        else:
+            approver = ''
+            approver_id = None
+
         if not approver:
             raise HTTPException(422, "Approver identity is required to approve a policy.")
 
@@ -237,7 +268,13 @@ def policy_router(store: Store):
 
             # Segregation of duties (SoD) enforcement
             author = (policy.get('submitted_by') or policy.get('owner') or '').strip()
-            if author and approver.lower() == author.lower():
+            author_id = policy.get('submitted_by_id')
+
+            is_same_person = (
+                (author and approver.lower() == author.lower()) or
+                (author_id and approver_id and author_id == approver_id)
+            )
+            if is_same_person:
                 raise HTTPException(
                     422,
                     f"Segregation of duties violation: policy approver ({approver}) must be different from the author/submitter ({author})."
@@ -279,7 +316,7 @@ def policy_router(store: Store):
             return policy
 
     @router.post('/{policy_id}/publish')
-    def publish_policy_compat(policy_id: str, payload: dict):
+    def publish_policy(policy_id: str, payload: dict, request: Request):
         """Backward-compatible publish endpoint."""
         approver = str(payload.get('approver', '')).strip() or "Chief Security Officer"
         with store.transaction() as db:
@@ -287,7 +324,7 @@ def policy_router(store: Store):
             if not policy.get('submitted_by'):
                 policy['submitted_by'] = 'system'
                 save(db, 'policies', policy)
-        return approve_policy(policy_id, {'approver': approver})
+        return approve_policy(policy_id, request, {'approver': approver})
 
     @router.post('/{policy_id}/reject')
     def reject_policy(policy_id: str, payload: dict):

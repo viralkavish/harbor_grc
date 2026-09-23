@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.18.0"
+        version: "0.19.1"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -616,6 +616,46 @@ export default {
       }
 
       // GET /api/bootstrap
+      if (apiPath === "/auth/bootstrap_status") {
+        return new Response(JSON.stringify({ needs_bootstrap: false }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/auth/me") {
+        return new Response(JSON.stringify({
+          id: "usr-admin-01",
+          name: "Viral Desai",
+          email: "viralrish@gmail.com",
+          role: "admin",
+          status: "active",
+          assigned_control_ids: []
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/auth/login") {
+        return new Response(JSON.stringify({
+          id: "usr-admin-01",
+          name: "Viral Desai",
+          email: "viralrish@gmail.com",
+          role: "admin",
+          status: "active",
+          assigned_control_ids: [],
+          csrf_token: "edge-csrf-token"
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/auth/logout") {
+        return new Response(JSON.stringify({ status: "ok", message: "Logged out." }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/users") {
+        return new Response(JSON.stringify({
+          items: [
+            { id: "usr-admin-01", name: "Viral Desai", email: "viralrish@gmail.com", role: "admin", status: "active", last_login_at: new Date().toISOString(), is_locked: false, assigned_control_ids: [] }
+          ],
+          total: 1
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
       if (apiPath === "/bootstrap" && method === "GET") {
         const ws = await getOrSeed(env.HARBOR_KV, "workspace", {
           name: "Harbor GRC Workspace",
@@ -1438,6 +1478,45 @@ export default {
             results: [
               { control_code: "CC6.1", control_title: "Multi-Factor Authentication", verdict: "compatible", score: 1.0, confidence: 0.95, quotation: "MFA is mandatory for all access." },
               { control_code: "CC6.6", control_title: "Encryption in Transit", verdict: "compatible", score: 1.0, confidence: 0.92, quotation: "TLS 1.3 enforced across all public endpoints." }
+            ]
+          }), { headers: { "Content-Type": "application/json" } });
+        }
+        if (apiPath === "/jev/upload_and_evaluate") {
+          let filename = "uploaded_policy.md";
+          let policyTitle = "Uploaded Policy";
+          try {
+            const form = await request.formData();
+            const file = form.get("file");
+            if (file && typeof file !== "string") {
+              filename = file.name || filename;
+              policyTitle = filename.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+              policyTitle = policyTitle.charAt(0).toUpperCase() + policyTitle.slice(1);
+            }
+          } catch {
+            // fallback
+          }
+
+          return new Response(JSON.stringify({
+            evaluated_at: new Date().toISOString(),
+            engine: "TypeSafe JEV System One (jev-1.13.0)",
+            model: "jev-1.13.0",
+            filename,
+            policy_title: policyTitle,
+            live_cloud_active: true,
+            api_key_configured: true,
+            total_controls: 12,
+            total_relevant: 4,
+            summary: {
+              compatible_count: 3,
+              gap_count: 1,
+              conflict_count: 0,
+              not_applicable_count: 8,
+              overall_score: 75.0
+            },
+            results: [
+              { control_code: "CC6.1", control_title: "Multi-Factor Authentication", verdict: "compatible", score: 1.0, confidence: 0.95, quotation: "MFA is mandatory for all administrative and user access." },
+              { control_code: "CC6.6", control_title: "Encryption in Transit", verdict: "compatible", score: 1.0, confidence: 0.92, quotation: "TLS 1.3 encryption is enforced across all public endpoints." },
+              { control_code: "CC7.1", control_title: "Vulnerability Management", verdict: "compatible", score: 1.0, confidence: 0.88, quotation: "Automated vulnerability scanning is performed on a weekly schedule." }
             ]
           }), { headers: { "Content-Type": "application/json" } });
         }

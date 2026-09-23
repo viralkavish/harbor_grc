@@ -31,6 +31,7 @@ import { AuditorPortalView } from './views/AuditorPortalView';
 import { MonitoringView } from './views/MonitoringView';
 import { RiskRegisterView } from './views/RiskRegisterView';
 import { CoverageDashboardView } from './views/CoverageDashboardView';
+import { LoginView } from './views/LoginView';
 import { ChangelogModal } from './components/ChangelogModal';
 import { APP_VERSION } from './version';
 import type { Schema, Bootstrap } from './lib/types';
@@ -44,6 +45,9 @@ interface ToastItem {
 export function App() {
   const [bootstrap, setBootstrap] = useState<Bootstrap | null>(null);
   const [schema, setSchema] = useState<Schema | null>(null);
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [needsBootstrap, setNeedsBootstrap] = useState(false);
+  const [setupToken, setSetupToken] = useState<string | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeView, setActiveView] = useState('overview');
@@ -102,6 +106,30 @@ export function App() {
     setLoading(true);
     setError('');
     try {
+      // 1. Check bootstrap status
+      const bStatus = await api.get('/auth/bootstrap_status').catch(() => ({ needs_bootstrap: false }));
+      if (bStatus.needs_bootstrap) {
+        setNeedsBootstrap(true);
+        setSetupToken(bStatus.setup_token);
+        setLoading(false);
+        return;
+      }
+      setNeedsBootstrap(false);
+
+      // 2. Check current authenticated session
+      const isAuditor = window.location.hash.startsWith('#auditor') || window.location.pathname.startsWith('/auditor');
+      if (!isAuditor) {
+        try {
+          const user = await api.get('/auth/me');
+          setCurrentUser(user);
+        } catch {
+          setCurrentUser(null);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 3. Load workspace data
       const [b, s] = await Promise.all([
         api.bootstrap(),
         api.get('/schema')
@@ -121,12 +149,40 @@ export function App() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+      setCurrentUser(null);
+      notify('Signed out successfully');
+      loadApp();
+    } catch (err: any) {
+      notify(err.message, 'error');
+    }
+  };
+
   useEffect(() => {
     loadApp();
   }, []);
 
   if (loading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loading label="Starting tofromGRC workspace…" /></div>;
   if (error) return <div style={{ padding: '40px', maxWidth: '600px', margin: '0 auto' }}><ErrorState message={error} retry={loadApp} /></div>;
+
+  const isAuditorRoute = window.location.hash.startsWith('#auditor') || window.location.pathname.startsWith('/auditor') || activeView === 'auditor';
+
+  if (!currentUser && !isAuditorRoute) {
+    return (
+      <LoginView
+        needsBootstrap={needsBootstrap}
+        setupToken={setupToken}
+        onAuthenticated={(u) => {
+          setCurrentUser(u);
+          loadApp();
+        }}
+        notify={notify}
+      />
+    );
+  }
+
   if (!bootstrap || !schema) return null;
 
   const counts = bootstrap.counts || {};
@@ -159,6 +215,8 @@ export function App() {
         onNavigate={navigate}
         onSearch={() => setCommandPaletteOpen(true)}
         onChangelog={() => setShowChangelogModal(true)}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       >
           {activeView === 'overview' && (
             <OverviewView onNavigate={navigate} notify={notify} />

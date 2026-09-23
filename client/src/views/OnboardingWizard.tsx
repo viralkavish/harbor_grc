@@ -98,18 +98,10 @@ export function OnboardingWizard({ onComplete, onSkip, notify }: OnboardingWizar
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('/api/jev/upload_and_evaluate', {
-        method: 'POST',
-        body: formData
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Upload evaluation failed');
-      }
-      const data = await res.json();
+      const data = await api.post('/jev/upload_and_evaluate', formData);
       setUploadedPolicies([...uploadedPolicies, {
         name: file.name,
-        title: data.policy_title,
+        title: data.policy_title || file.name,
         compatibleCount: data.summary?.compatible_count || 0
       }]);
       notify(`Uploaded "${file.name}" (${data.summary?.compatible_count || 0} controls satisfied)`);

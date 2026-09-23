@@ -6,14 +6,7 @@ from fastapi.testclient import TestClient
 from server.app import create_app
 
 
-@pytest.fixture
-def test_setup(tmp_path):
-    app = create_app(tmp_path)
-    client = TestClient(app, base_url="http://127.0.0.1:8765")
-    token = client.get("/api/bootstrap").json()["csrf_token"]
-    client.headers["X-CSRF-Token"] = token
-    store = app.state.store
-    return client, store, tmp_path
+
 
 
 def test_no_hardcoded_true_verification_attributes_remain():

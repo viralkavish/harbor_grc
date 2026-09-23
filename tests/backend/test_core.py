@@ -13,7 +13,9 @@ def client(tmp_path):
 
 def test_session_protects_persistent_workspace(tmp_path):
     from server.app import create_app
+    from tests.backend.conftest import authenticate_client
     with TestClient(create_app(tmp_path), base_url='http://127.0.0.1:8765') as c:
+        authenticate_client(c)
         bootstrap = c.get('/api/bootstrap')
         assert bootstrap.status_code == 200
         assert bootstrap.json()['workspace']['name'] == 'tofromGRC Workspace'
@@ -38,13 +40,15 @@ def test_health_uses_factory_without_global_data_writes(tmp_path):
     from server.app import create_app
     with TestClient(create_app(tmp_path), base_url="http://127.0.0.1:8765") as client:
         assert client.get('/api/health').json() == {
-            'status': 'ok', 'version': '0.18.0', 'storage': 'sqlite'
+            'status': 'ok', 'version': '0.19.1', 'storage': 'sqlite'
         }
 
 
 def test_workspace_scope_validation_and_update(tmp_path):
     from server.app import create_app
+    from tests.backend.conftest import authenticate_client
     with TestClient(create_app(tmp_path), base_url="http://127.0.0.1:8765") as client:
+        authenticate_client(client)
         bootstrap = client.get('/api/bootstrap')
         client.headers['X-CSRF-Token'] = bootstrap.json()['csrf_token']
 

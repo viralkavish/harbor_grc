@@ -5,12 +5,7 @@ from server.app import create_app
 from server.tsc_catalog import TSC_CATALOG, CATALOG_VINTAGE
 
 
-@pytest.fixture
-def client(tmp_path):
-    with TestClient(create_app(tmp_path), base_url="http://127.0.0.1:8765") as c:
-        token = c.get("/api/bootstrap").json()["csrf_token"]
-        c.headers["X-CSRF-Token"] = token
-        yield c
+
 
 
 def test_tsc_catalog_all_61_criteria_present(client):

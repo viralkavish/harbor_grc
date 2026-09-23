@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import {
   Settings as SettingsIcon, Download, Upload, Database, Shield, FileSpreadsheet,
-  Check, AlertCircle, Sparkles, Eye, EyeOff, History
+  Check, AlertCircle, Sparkles, Eye, EyeOff, History, UserPlus, Users, Lock, Unlock
 } from 'lucide-react';
 import { api } from '../lib/api';
-import { PageHeader, Loading, ErrorState, Note } from '../components/ui';
+import { PageHeader, Loading, ErrorState, Note, Badge } from '../components/ui';
+import { Dialog } from '../components/Dialog';
 import { ChangelogModal } from '../components/ChangelogModal';
 import { APP_VERSION, RELEASE_DATE } from '../version';
 import type { Workspace, Notify, Navigate } from '../lib/types';
@@ -42,6 +43,15 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
   const [jevTestResult, setJevTestResult] = useState<any>(null);
   const [showChangelogModal, setShowChangelogModal] = useState(false);
   const [aiModels, setAiModels] = useState<any[]>([]);
+
+  // RBAC User Management states
+  const [users, setUsers] = useState<any[] | null>(null);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserRole, setNewUserRole] = useState('compliance_manager');
+  const [creatingUser, setCreatingUser] = useState(false);
 
   // CSV Import states
   const [importResource, setImportResource] = useState('controls');
@@ -81,10 +91,65 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
       } catch (e) {
         // non-blocking
       }
+
+      try {
+        const uRes = await api.get('/users');
+        setUsers(uRes.items || []);
+      } catch {
+        setUsers(null);
+      }
     } catch (err: any) {
       notify(err.message, 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newUserPassword.length < 12) {
+      notify('Password must be at least 12 characters.', 'error');
+      return;
+    }
+    setCreatingUser(true);
+    try {
+      await api.post('/users', {
+        name: newUserName.trim(),
+        email: newUserEmail.trim().toLowerCase(),
+        password: newUserPassword,
+        role: newUserRole
+      });
+      notify(`User ${newUserName} provisioned successfully`);
+      setShowCreateUserModal(false);
+      setNewUserName('');
+      setNewUserEmail('');
+      setNewUserPassword('');
+      loadSettings();
+    } catch (err: any) {
+      notify(err.message, 'error');
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
+  const handleToggleUserStatus = async (user: any) => {
+    const nextStatus = user.status === 'active' ? 'disabled' : 'active';
+    try {
+      await api.patch(`/users/${user.id}`, { status: nextStatus });
+      notify(`User ${user.name} is now ${nextStatus}`);
+      loadSettings();
+    } catch (err: any) {
+      notify(err.message, 'error');
+    }
+  };
+
+  const handleUnlockUser = async (user: any) => {
+    try {
+      await api.post(`/users/${user.id}/unlock`);
+      notify(`Account unlocked for ${user.name}`);
+      loadSettings();
+    } catch (err: any) {
+      notify(err.message, 'error');
     }
   };
 
@@ -251,6 +316,124 @@ export function SettingsView({ notify, onNavigate }: { notify: Notify; onNavigat
           </div>
         </form>
       </div>
+
+      {/* Role-Based Access Control & User Management (Admin Only) */}
+      {users !== null && (
+        <div className="card">
+          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 4px 0', color: 'var(--ink)' }}>
+                User Provisioning & Role-Based Access Control (RBAC)
+              </h3>
+              <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0 }}>
+                Enforce least-privilege roles across staff: Admin, Compliance Manager, Control Owner, and Viewer.
+              </p>
+            </div>
+            <button className="button button-sm button-primary" onClick={() => setShowCreateUserModal(true)}>
+              <UserPlus size={13} /> Provision User
+            </button>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--muted)' }}>
+                  <th style={{ padding: '8px 12px' }}>Name & Email</th>
+                  <th style={{ padding: '8px 12px' }}>Role</th>
+                  <th style={{ padding: '8px 12px' }}>Status</th>
+                  <th style={{ padding: '8px 12px' }}>Last Login</th>
+                  <th style={{ padding: '8px 12px' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u: any) => (
+                  <tr key={u.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '10px 12px' }}>
+                      <strong style={{ display: 'block', color: 'var(--ink)' }}>{u.name}</strong>
+                      <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{u.email}</span>
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <Badge value={u.role} />
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <Badge value={u.status} />
+                      {u.is_locked && (
+                        <span className="badge badge-danger" style={{ marginLeft: '6px', fontSize: '10px' }}>
+                          Locked
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: '10px 12px', color: 'var(--muted)', fontSize: '11px' }}>
+                      {u.last_login_at ? u.last_login_at.slice(0, 19).replace('T', ' ') : 'Never'}
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        {u.is_locked && (
+                          <button
+                            className="button button-sm"
+                            style={{ padding: '2px 8px', fontSize: '11px' }}
+                            onClick={() => handleUnlockUser(u)}
+                            title="Unlock account"
+                          >
+                            <Unlock size={11} /> Unlock
+                          </button>
+                        )}
+                        <button
+                          className="button button-sm"
+                          style={{ padding: '2px 8px', fontSize: '11px' }}
+                          onClick={() => handleToggleUserStatus(u)}
+                        >
+                          {u.status === 'active' ? 'Disable' : 'Enable'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Provision User Modal */}
+      {showCreateUserModal && (
+        <Dialog title="Provision New Staff User" subtitle="Assign least-privilege role with strict password policy." onClose={() => setShowCreateUserModal(false)}>
+          <form onSubmit={handleCreateUser}>
+            <div className="dialog-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="field">
+                <span>Full Name *</span>
+                <input type="text" required value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="e.g. Dana Scully" autoFocus />
+              </div>
+
+              <div className="field">
+                <span>Work Email *</span>
+                <input type="email" required value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="name@tofrom.internal" />
+              </div>
+
+              <div className="field">
+                <span>Role *</span>
+                <select value={newUserRole} onChange={e => setNewUserRole(e.target.value)}>
+                  <option value="compliance_manager">Compliance Manager (operational GRC execution)</option>
+                  <option value="control_owner">Control Owner (assigned controls & evidence)</option>
+                  <option value="viewer">Viewer (read-only)</option>
+                  <option value="admin">Administrator (full system access)</option>
+                </select>
+              </div>
+
+              <div className="field">
+                <span>Initial Passphrase (min 12 chars) *</span>
+                <input type="password" required minLength={12} value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} placeholder="••••••••••••••••" />
+              </div>
+            </div>
+            <div className="dialog-footer">
+              <button type="button" className="button" onClick={() => setShowCreateUserModal(false)}>Cancel</button>
+              <button type="submit" className="button button-primary" disabled={creatingUser || newUserPassword.length < 12}>
+                {creatingUser ? 'Provisioning…' : 'Provision User'}
+              </button>
+            </div>
+          </form>
+        </Dialog>
+      )}
 
       {/* JEV AI & Evaluation Engine Configuration */}
       <div className="card">

@@ -258,7 +258,8 @@ def soc2_router(store):
                         "role": p.get('role', 'Member'),
                         "department": p.get('department', 'General'),
                         "start_date": p.get('start_date') or "2026-01-15",
-                        "background_check_verified": True,
+                        "background_check_status": p.get('background_check') or 'unverified',
+                        "background_check_verified": (p.get('background_check') == 'verified'),
                         "training_completed": bool(p.get('training_completed')),
                         "policy_acceptance_count": len(p.get('acknowledged_policy_ids', []))
                     })
@@ -275,7 +276,8 @@ def soc2_router(store):
                         "category": v.get('category', 'SaaS'),
                         "review_date": v.get('review_date') or "2026-06-01",
                         "dpa_executed": bool(v.get('data_access')),
-                        "soc2_cert_verified": True
+                        "soc2_cert_status": v.get('soc2_cert_status') or ('verified' if v.get('has_soc2') else 'unverified'),
+                        "soc2_cert_verified": bool(v.get('soc2_cert_verified', False))
                     })
                 pop_total = len(vendors)
 

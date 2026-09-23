@@ -11,14 +11,31 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Sampling tool states
-  const [samplePopType, setSamplePopType] = useState('workforce');
-  const [sampleSize, setSampleSize] = useState(5);
-  const [sampleResults, setSampleResults] = useState<any | null>(null);
-  const [generatingSample, setGeneratingSample] = useState(false);
-
   // Active subtab: 'scorecard' | 'pbc' | 'sampling' | 'cuecs'
   const [activeTab, setActiveTab] = useState<'scorecard' | 'pbc' | 'sampling' | 'cuecs'>('scorecard');
+
+  // Sampling states
+  const [samplePopType, setSamplePopType] = useState('workforce');
+  const [sampleSize, setSampleSize] = useState(5);
+  const [sampleMethod, setSampleMethod] = useState<'random' | 'systematic' | 'judgmental'>('random');
+  const [sampleSeed, setSampleSeed] = useState<number>(() => Math.floor(Math.random() * 900000) + 100000);
+  const [completenessStmt, setCompletenessStmt] = useState(
+    'Reconciled against active workforce directory as of current date; all active and onboarding personnel in scope.'
+  );
+  const [sampleResults, setSampleResults] = useState<any | null>(null);
+  const [generatingSample, setGeneratingSample] = useState(false);
+  const [savedSamples, setSavedSamples] = useState<any[]>([]);
+  const [verifyStatus, setVerifyStatus] = useState<Record<string, any>>({});
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+
+  const loadSavedSamples = async () => {
+    try {
+      const res = await api.get('/sampling');
+      setSavedSamples(res.items || []);
+    } catch {
+      // ignore
+    }
+  };
 
   const loadSOC2Data = async () => {
     setLoading(true);
@@ -41,21 +58,49 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
 
   useEffect(() => {
     loadSOC2Data();
+    loadSavedSamples();
   }, []);
 
-  const handleGenerateSample = async () => {
+  const handleGenerateSample = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!completenessStmt.trim()) {
+      notify('Completeness statement is required (AU-C 530)', 'error');
+      return;
+    }
     setGeneratingSample(true);
     try {
-      const res = await api.post('/soc2/sample_generator', {
+      const res = await api.post('/sampling/generate', {
+        name: `${samplePopType.toUpperCase()} Audit Sample (${sampleMethod})`,
         population_type: samplePopType,
-        sample_size: sampleSize
+        completeness_statement: completenessStmt.trim(),
+        method: sampleMethod,
+        sample_size: sampleSize,
+        seed: sampleMethod !== 'judgmental' ? sampleSeed : undefined
       });
       setSampleResults(res);
-      notify(`Generated ${res.sample_size} random audit samples from ${res.population_total} total records`);
+      notify(`Sample generated: ${res.sample_size} records from population of ${res.population_size}`);
+      loadSavedSamples();
     } catch (err: any) {
       notify(err.message, 'error');
     } finally {
       setGeneratingSample(false);
+    }
+  };
+
+  const handleVerifySample = async (id: string) => {
+    setVerifyingId(id);
+    try {
+      const res = await api.post(`/sampling/${id}/verify`);
+      setVerifyStatus(prev => ({ ...prev, [id]: res }));
+      if (res.match) {
+        notify('Sample verified: 100% reproducible with stored seed.');
+      } else {
+        notify('Verification mismatch detected!', 'error');
+      }
+    } catch (err: any) {
+      notify(err.message, 'error');
+    } finally {
+      setVerifyingId(null);
     }
   };
 
@@ -421,63 +466,226 @@ export function SOC2ReadinessView({ notify, onNavigate }: { notify: Notify; onNa
 
       {/* Tab 3: Population Sampling Engine */}
       {activeTab === 'sampling' && (
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <h3 className="card-title">Auditor Population Sampling Tool</h3>
-              <p className="card-description">
-                AICPA auditors test Type 2 operating effectiveness by requesting random population samples across new hires, pull requests, and access changes.
-              </p>
-            </div>
-          </div>
-
-          <div className="view-grid-three" style={{ display: 'grid', gap: '16px', background: 'var(--surface-raised)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '20px' }}>
-            <div className="field">
-              <span>Select Audit Population</span>
-              <select value={samplePopType} onChange={e => setSamplePopType(e.target.value)}>
-                <option value="workforce">Workforce New Hires & Personnel</option>
-                <option value="vendors">Third-Party Vendors & Sub-processors</option>
-                <option value="controls">Applicable Compliance Controls</option>
-              </select>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Generation & Definition Card */}
+          <div className="card">
+            <div className="card-header">
+              <div>
+                <h3 className="card-title">Auditor Population Sampling Tool (AU-C 530)</h3>
+                <p className="card-description">
+                  Defensible, reproducible population sampling with mandatory completeness reconciliation, stored seeds, and zero fabricated attributes.
+                </p>
+              </div>
             </div>
 
-            <div className="field">
-              <span>Sample Size</span>
-              <input
-                type="number"
-                min="1"
-                max="25"
-                value={sampleSize}
-                onChange={e => setSampleSize(Number(e.target.value))}
-              />
-            </div>
+            <form onSubmit={handleGenerateSample}>
+              <div className="view-grid-four" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '16px' }}>
+                <div className="field">
+                  <span>Audit Population Type *</span>
+                  <select value={samplePopType} onChange={e => setSamplePopType(e.target.value)}>
+                    <option value="workforce">Workforce New Hires & Personnel</option>
+                    <option value="vendors">Third-Party Vendors & Sub-processors</option>
+                    <option value="controls">Applicable Compliance Controls</option>
+                    <option value="evidence">Collected Compliance Evidence</option>
+                    <option value="access_reviews">User Access Review Campaigns</option>
+                  </select>
+                </div>
 
-            <div className="field" style={{ justifyContent: 'flex-end' }}>
-              <button className="button button-primary" onClick={handleGenerateSample} disabled={generatingSample}>
-                <Sparkles size={14} /> {generatingSample ? 'Sampling…' : 'Generate Random Sample'}
-              </button>
-            </div>
-          </div>
+                <div className="field">
+                  <span>Sampling Method *</span>
+                  <select value={sampleMethod} onChange={e => setSampleMethod(e.target.value as any)}>
+                    <option value="random">Seeded Simple Random (AU-C 530)</option>
+                    <option value="systematic">Systematic Interval (Every kth item)</option>
+                    <option value="judgmental">Judgmental / Risk-Based (Manual)</option>
+                  </select>
+                </div>
 
-          {/* Sample Results Table */}
-          {sampleResults && (
-            <div>
-              <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <strong style={{ fontSize: '14px' }}>
-                  Sampled {sampleResults.sample_size} records from population of {sampleResults.population_total}
-                </strong>
-                <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
-                  Generated at {sampleResults.generated_at}
-                </span>
+                <div className="field">
+                  <span>Sample Size *</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    required
+                    value={sampleSize}
+                    onChange={e => setSampleSize(Number(e.target.value))}
+                  />
+                  <small style={{ fontSize: '10px', color: 'var(--muted)' }}>
+                    AICPA Norms: Annual: 1, Qtr: 2, Mth: 2, Wk: 5, Day: 20, Cont: 25
+                  </small>
+                </div>
+
+                {sampleMethod !== 'judgmental' && (
+                  <div className="field">
+                    <span>Reproducible Seed *</span>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <input
+                        type="number"
+                        required
+                        value={sampleSeed}
+                        onChange={e => setSampleSeed(Number(e.target.value))}
+                      />
+                      <button
+                        type="button"
+                        className="button button-sm"
+                        onClick={() => setSampleSeed(Math.floor(Math.random() * 900000) + 100000)}
+                        title="Generate random seed"
+                      >
+                        <RefreshCw size={12} />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', overflow: 'hidden' }}>
-                <pre style={{ padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', maxHeight: '300px', overflowY: 'auto' }}>
-                  {JSON.stringify(sampleResults.samples, null, 2)}
-                </pre>
+              <div className="field" style={{ marginBottom: '16px' }}>
+                <span style={{ fontWeight: 600 }}>Completeness Statement (Required for AU-C 530 Defensibility) *</span>
+                <textarea
+                  rows={2}
+                  required
+                  placeholder="Document population reconciliation, cutoff dates, and inclusion/exclusion criteria..."
+                  value={completenessStmt}
+                  onChange={e => setCompletenessStmt(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button type="submit" className="button button-primary" disabled={generatingSample || !completenessStmt.trim()}>
+                  <Sparkles size={14} /> {generatingSample ? 'Sampling…' : 'Generate & Persist Sample'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Active Sample Results Table */}
+          {sampleResults && (
+            <div className="card">
+              <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+                <div>
+                  <strong style={{ fontSize: '15px' }}>{sampleResults.name}</strong>
+                  <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '10px' }}>
+                    Sampled {sampleResults.sample_size} of {sampleResults.population_size} records ({sampleResults.method} method, seed: {sampleResults.seed || 'none'})
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="button button-sm button-primary"
+                  onClick={() => handleVerifySample(sampleResults.id)}
+                  disabled={verifyingId === sampleResults.id}
+                >
+                  <CheckCircle2 size={12} />
+                  {verifyingId === sampleResults.id ? 'Verifying…' : 'Re-verify Reproducibility'}
+                </button>
+              </div>
+
+              {verifyStatus[sampleResults.id] && (
+                <div style={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  marginBottom: '14px',
+                  fontSize: '12px',
+                  background: verifyStatus[sampleResults.id].match ? 'rgba(115, 217, 177, 0.15)' : 'rgba(255, 107, 107, 0.15)',
+                  border: `1px solid ${verifyStatus[sampleResults.id].match ? 'var(--success)' : 'var(--danger)'}`,
+                  color: 'var(--ink)'
+                }}>
+                  {verifyStatus[sampleResults.id].match ? (
+                    <span>✓ Reproducibility Verified: Exact byte-identical sample re-generated from seed {sampleResults.seed}.</span>
+                  ) : (
+                    <span>✗ Mismatch: Sample reproduction deviated from stored IDs.</span>
+                  )}
+                </div>
+              )}
+
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--muted)' }}>
+                      <th style={{ padding: '8px' }}>Identifier / Title</th>
+                      <th style={{ padding: '8px' }}>Record ID</th>
+                      <th style={{ padding: '8px' }}>Attributes (Verified Only)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sampleResults.sample_items?.map((item: any) => (
+                      <tr key={item.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '10px 8px', fontWeight: 600 }}>{item.title}</td>
+                        <td style={{ padding: '10px 8px', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--muted)' }}>{item.id}</td>
+                        <td style={{ padding: '10px 8px' }}>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {item.email && <span className="badge badge-neutral">{item.email}</span>}
+                            {item.role && <span className="badge badge-neutral">{item.role}</span>}
+                            {item.background_check_status && (
+                              <span className={`badge badge-${item.background_check_status === 'verified' ? 'success' : 'warning'}`}>
+                                Background Check: {item.background_check_status}
+                              </span>
+                            )}
+                            {item.soc2_cert_status && (
+                              <span className={`badge badge-${item.soc2_cert_status === 'verified' ? 'success' : 'warning'}`}>
+                                SOC 2: {item.soc2_cert_status}
+                              </span>
+                            )}
+                            {item.status && <span className="badge badge-neutral">{item.status}</span>}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
+
+          {/* Saved Samples History */}
+          <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
+            <div className="view-row" style={{ padding: '12px 18px', background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)' }}>
+              <strong style={{ fontSize: '13px' }}>Persisted Audit Samples ({savedSamples.length})</strong>
+            </div>
+
+            {savedSamples.length === 0 ? (
+              <p style={{ padding: '20px', color: 'var(--muted)', fontSize: '12px' }}>No saved audit samples yet.</p>
+            ) : (
+              <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--muted)' }}>
+                      <th style={{ padding: '8px 12px' }}>Sample Name</th>
+                      <th style={{ padding: '8px 12px' }}>Population</th>
+                      <th style={{ padding: '8px 12px' }}>Method & Seed</th>
+                      <th style={{ padding: '8px 12px' }}>Size</th>
+                      <th style={{ padding: '8px 12px' }}>Completeness Statement</th>
+                      <th style={{ padding: '8px 12px' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {savedSamples.map((s: any) => (
+                      <tr key={s.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '10px 12px', fontWeight: 600 }}>{s.name}</td>
+                        <td style={{ padding: '10px 12px' }}>{s.population_type} (N={s.population_size})</td>
+                        <td style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)' }}>
+                          {s.method} {s.seed ? `(seed: ${s.seed})` : ''}
+                        </td>
+                        <td style={{ padding: '10px 12px' }}>{s.sample_size}</td>
+                        <td style={{ padding: '10px 12px', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {s.completeness_statement}
+                        </td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <button
+                            type="button"
+                            className="button button-sm"
+                            style={{ padding: '2px 8px', fontSize: '11px' }}
+                            onClick={() => handleVerifySample(s.id)}
+                            disabled={verifyingId === s.id}
+                          >
+                            {verifyingId === s.id ? 'Verifying…' : 'Verify'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

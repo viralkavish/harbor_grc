@@ -86,7 +86,7 @@ RESOURCES = {
         choice('priority','low,medium,high,urgent','medium'),field('related_type'),field('related_id'),field('checklist','json',[])]),
     'people': resource('People','Person','onboarding,active,offboarding,inactive',[
         field('email','email'),field('department'),field('role'),*dates('start_date'),field('training_completed','boolean',False),
-        *dates('training_due'),ref('acknowledged_policy_ids','policies',True)]),
+        *dates('training_due'),field('background_check',default='unverified'),ref('acknowledged_policy_ids','policies',True)]),
     'assets': resource('Assets','Asset','active,in_review,retired',[
         choice('category','hardware,software,cloud,data,other'),field('identifier'),field('system'),
         field('encrypted','boolean',None,nullable=True),field('mfa_enabled','boolean',None,nullable=True),*dates('last_reviewed')]),

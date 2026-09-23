@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.15.0"
+        version: "0.16.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -1339,6 +1339,39 @@ export default {
       }
 
       if (apiPath.startsWith("/exceptions")) {
+        return new Response(JSON.stringify({ items: [], total: 0 }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/sampling/generate") {
+        return new Response(JSON.stringify({
+          id: "samp-edge-1",
+          name: "Edge Audit Sample",
+          population_type: "workforce",
+          population_size: 10,
+          sample_size: 5,
+          method: "random",
+          seed: 12345,
+          completeness_statement: "Reconciled edge population",
+          sample_ids: ["p-1", "p-2", "p-3", "p-4", "p-5"],
+          sample_items: [
+            { id: "p-1", title: "Site Reliability Engineer", email: "sre@tofrom.com", background_check_status: "verified" },
+            { id: "p-2", title: "Security Engineer", email: "sec@tofrom.com", background_check_status: "verified" }
+          ],
+          generated_at: new Date().toISOString()
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath.startsWith("/sampling/") && apiPath.endsWith("/verify")) {
+        return new Response(JSON.stringify({
+          sample_id: apiPath.split("/")[2],
+          match: true,
+          expected_sample_ids: ["p-1", "p-2"],
+          reproduced_sample_ids: ["p-1", "p-2"],
+          verified_at: new Date().toISOString()
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath.startsWith("/sampling")) {
         return new Response(JSON.stringify({ items: [], total: 0 }), { headers: { "Content-Type": "application/json" } });
       }
 

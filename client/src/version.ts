@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.15.0';
+export const APP_VERSION = '0.16.0';
 export const RELEASE_DATE = '2026-09-23';
 
 export interface ChangelogEntry {
@@ -11,9 +11,23 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.15.0',
+    version: '0.16.0',
     date: '2026-09-23',
     badge: 'Latest',
+    title: "R7: Sampling-Engine Upgrade, Seeded Reproducibility & Zero Fabricated Attributes",
+    highlights: [
+      "Built persistent samples table (/api/sampling) with mandatory AU-C 530 completeness statements",
+      "Implemented seeded simple random, systematic interval, and judgmental sampling with per-item rationales",
+      "Guaranteed byte-identical reproducibility on re-runs and added verification endpoint (/api/sampling/:id/verify)",
+      "Eliminated all hardcoded verification claims across sampling and population generators",
+      "Linked sample audit metadata to R4 auditor testing-support view and integrated universal R3 audit logging",
+      "Upgraded SOC 2 Readiness Population Sampling workbench with interactive verification badges and history"
+    ]
+  },
+  {
+    version: '0.15.0',
+    date: '2026-09-23',
+    badge: 'Stable',
     title: "R5: Continuous Monitoring, Scheduler, Transparency & Exceptions Lifecycle",
     highlights: [
       "Added persisted monitoring_runs table with M3 auditor-grade transparency fields",

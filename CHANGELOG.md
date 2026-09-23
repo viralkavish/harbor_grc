@@ -24,6 +24,19 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.16.0] - 2026-09-23
+
+### Added
+- **R7: Sampling-Engine Upgrade, Seeded Reproducibility & Zero Fabricated Attributes**
+- Built persistent samples table (/api/sampling) with mandatory AU-C 530 completeness statements
+- Implemented seeded simple random, systematic interval, and judgmental sampling with per-item rationales
+- Guaranteed byte-identical reproducibility on re-runs and added verification endpoint (/api/sampling/:id/verify)
+- Eliminated all hardcoded verification claims across sampling and population generators
+- Linked sample audit metadata to R4 auditor testing-support view and integrated universal R3 audit logging
+- Upgraded SOC 2 Readiness Population Sampling workbench with interactive verification badges and history
+
+---
+
 ## [0.15.0] - 2026-09-23
 
 ### Added

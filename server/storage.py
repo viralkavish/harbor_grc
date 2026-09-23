@@ -174,6 +174,15 @@ class Store:
                     due_date TEXT, tags TEXT NOT NULL DEFAULT '[]', reason TEXT NOT NULL DEFAULT '',
                     notes TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
                     history TEXT NOT NULL DEFAULT '[]');
+                CREATE TABLE IF NOT EXISTS samples (
+                    id TEXT PRIMARY KEY, name TEXT NOT NULL, population_type TEXT NOT NULL,
+                    population_source TEXT NOT NULL, population_size INTEGER NOT NULL,
+                    population_filters TEXT NOT NULL, completeness_statement TEXT NOT NULL,
+                    method TEXT NOT NULL, seed INTEGER, method_params TEXT,
+                    sample_size INTEGER NOT NULL, sample_ids TEXT NOT NULL,
+                    sample_items TEXT NOT NULL, generated_at TEXT NOT NULL,
+                    generated_by TEXT NOT NULL, criterion_refs TEXT NOT NULL,
+                    control_refs TEXT NOT NULL, notes TEXT);
             ''')
             from .audit_ops import ensure_audit_log_initialized
             ensure_audit_log_initialized(db)

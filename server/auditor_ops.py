@@ -636,6 +636,11 @@ def auditor_router(store: Store):
             latest_run_row = db.execute(
                 "SELECT results FROM monitoring_runs ORDER BY completed_at DESC LIMIT 1"
             ).fetchone()
+            sample_rows = db.execute(
+                """SELECT id, name, population_type, method, seed, population_size,
+                          completeness_statement, sample_size, control_refs, generated_at
+                   FROM samples ORDER BY generated_at DESC"""
+            ).fetchall()
 
         mon_map = {}
         if latest_run_row:
@@ -646,6 +651,28 @@ def auditor_router(store: Store):
             except Exception:
                 pass
 
+        samples_by_control: dict[str, list[dict]] = {}
+        for s in sample_rows:
+            try:
+                c_refs = json.loads(s[8]) if s[8] else []
+            except Exception:
+                c_refs = []
+            sample_meta = {
+                "id": s[0],
+                "name": s[1],
+                "population_type": s[2],
+                "method": s[3],
+                "seed": s[4],
+                "population_size": s[5],
+                "sample_size": s[7],
+                "completeness_statement": s[6],
+                "generated_at": s[9]
+            }
+            for cr in c_refs:
+                if cr not in samples_by_control:
+                    samples_by_control[cr] = []
+                samples_by_control[cr].append(sample_meta)
+
         ev_map = {e['id']: e for e in all_evidence}
         items = []
         for c in controls:
@@ -653,6 +680,7 @@ def auditor_router(store: Store):
                 continue
 
             linked_ev = [ev_map[eid] for eid in c.get('evidence_ids', []) if eid in ev_map]
+            linked_samples = samples_by_control.get(c.get('id'), [])
             test_match = mon_map.get(c.get('id'))
             if test_match:
                 mon_res = {
@@ -692,6 +720,7 @@ def auditor_router(store: Store):
                     "version": c.get('version', 1)
                 },
                 "monitoring_results": mon_res,
+                "linked_samples": linked_samples,
                 "linked_evidence": [
                     {
                         "id": e['id'],

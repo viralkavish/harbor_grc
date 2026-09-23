@@ -106,7 +106,8 @@ class Store:
                     id TEXT PRIMARY KEY, token TEXT NOT NULL, expires REAL NOT NULL);
                 CREATE TABLE IF NOT EXISTS policy_versions (
                     id TEXT PRIMARY KEY, policy_id TEXT NOT NULL, version INTEGER NOT NULL,
-                    content TEXT NOT NULL, created_at TEXT NOT NULL);
+                    content TEXT NOT NULL, created_at TEXT NOT NULL,
+                    approved_by TEXT, approved_at TEXT);
                 CREATE TABLE IF NOT EXISTS policy_acceptances (
                     id TEXT PRIMARY KEY, policy_id TEXT NOT NULL, person_id TEXT,
                     person_name TEXT NOT NULL, person_email TEXT NOT NULL, version INTEGER NOT NULL,
@@ -167,6 +168,14 @@ class Store:
             ''')
             from .audit_ops import ensure_audit_log_initialized
             ensure_audit_log_initialized(db)
+            try:
+                db.execute("ALTER TABLE policy_versions ADD COLUMN approved_by TEXT")
+            except Exception:
+                pass
+            try:
+                db.execute("ALTER TABLE policy_versions ADD COLUMN approved_at TEXT")
+            except Exception:
+                pass
             db.execute('INSERT OR IGNORE INTO settings VALUES (?,?)', ('workspace', json.dumps(WORKSPACE)))
         self.path.chmod(0o600)
 

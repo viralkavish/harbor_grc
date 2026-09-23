@@ -24,6 +24,19 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.14.0] - 2026-09-23
+
+### Added
+- **R6: Policy Management Hardening, Segregation of Duties & Acceptance Currency**
+- Enforced Segregation of Duties (SoD) with author vs approver identity validation (HTTP 422 on self-approval)
+- Added immutable version restore mechanism creating new draft versions from historical snapshots
+- Exposed first-class latest approved versions (GET /policies/:id/approved and version_at) for audit observation accuracy
+- Implemented annual review enforcement (GET /api/policies/review_due) resetting review SLA to +365 days on approval
+- Built workforce acceptance currency engine tracking current vs stale vs missing signatures per approved version
+- Migrated all policy mutations to R3 tamper-evident append_audit_log with actor and before/after captures
+
+---
+
 ## [0.13.0] - 2026-09-23
 
 ### Added

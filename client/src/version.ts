@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.13.0';
+export const APP_VERSION = '0.14.0';
 export const RELEASE_DATE = '2026-09-23';
 
 export interface ChangelogEntry {
@@ -11,9 +11,23 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.13.0',
+    version: '0.14.0',
     date: '2026-09-23',
     badge: 'Latest',
+    title: "R6: Policy Management Hardening, Segregation of Duties & Acceptance Currency",
+    highlights: [
+      "Enforced Segregation of Duties (SoD) with author vs approver identity validation (HTTP 422 on self-approval)",
+      "Added immutable version restore mechanism creating new draft versions from historical snapshots",
+      "Exposed first-class latest approved versions (GET /policies/:id/approved and version_at) for audit observation accuracy",
+      "Implemented annual review enforcement (GET /api/policies/review_due) resetting review SLA to +365 days on approval",
+      "Built workforce acceptance currency engine tracking current vs stale vs missing signatures per approved version",
+      "Migrated all policy mutations to R3 tamper-evident append_audit_log with actor and before/after captures"
+    ]
+  },
+  {
+    version: '0.13.0',
+    date: '2026-09-23',
+    badge: 'Stable',
     title: "R4: Auditor Portal, Engagement Scoping, RFI & Workpapers",
     highlights: [
       "Engagement lifecycle management (/api/engagements) with SHA-256 hashed bearer tokens and observation window gating",

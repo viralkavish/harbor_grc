@@ -693,70 +693,90 @@ def auditor_router(store: Store):
 
         actor = ident.get("auditor_name") or "Security Lead"
 
+        buf = io.BytesIO()
         with store.transaction() as db:
             controls = Store.records(db, 'controls')
             all_evidence = Store.records(db, 'evidence')
+            ev_map = {e['id']: e for e in all_evidence}
+            scoped_controls = [c for c in controls if criterion in (c.get('code', ''), c.get('id', '')) or criterion == "all"]
+            if not scoped_controls:
+                scoped_controls = controls[:5]
 
-        ev_map = {e['id']: e for e in all_evidence}
-        scoped_controls = [c for c in controls if criterion in (c.get('code', ''), c.get('id', '')) or criterion == "all"]
-        if not scoped_controls:
-            scoped_controls = controls[:5]
+            with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+                # 1. Control definitions
+                zf.writestr('CONTROL_DEFINITIONS.json', json.dumps(scoped_controls, indent=2))
 
-        buf = io.BytesIO()
-        with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
-            # 1. Control definitions
-            zf.writestr('CONTROL_DEFINITIONS.json', json.dumps(scoped_controls, indent=2))
+                # 1b. Approved Policies in effect (R6: never draft content)
+                approved_policies = []
+                for p in Store.records(db, 'policies'):
+                    appr_ver = p.get('approved_version')
+                    if appr_ver:
+                        row = db.execute(
+                            "SELECT content, approved_by, approved_at FROM policy_versions WHERE policy_id = ? AND version = ?",
+                            (p['id'], appr_ver)
+                        ).fetchone()
+                        if row:
+                            approved_policies.append({
+                                "id": p['id'],
+                                "title": p['title'],
+                                "approved_version": appr_ver,
+                                "content": row[0],
+                                "approved_by": row[1],
+                                "approved_at": row[2]
+                            })
+                    elif p.get('status') == 'published':
+                        approved_policies.append(p)
+                zf.writestr('APPROVED_POLICIES.json', json.dumps(approved_policies, indent=2))
 
-            # 2. Test Procedures
-            proc_md = f"# Auditor Workpaper Test Procedures: {criterion}\n\n"
-            proc_md += "Notice: Information Produced by the Entity (AU-C 500). Independent auditor evaluation required.\n\n"
-            for c in scoped_controls:
-                proc_md += f"## Control {c.get('code')}: {c.get('title')}\n"
-                proc_md += f"**Procedure Steps:**\n{c.get('test_procedure', 'Standard inspection steps')}\n\n"
-                proc_md += f"**Evidence Requirement:**\n{c.get('evidence_requirement', 'Standard artifact')}\n\n---\n\n"
-            zf.writestr('TEST_PROCEDURES.md', proc_md)
+                # 2. Test Procedures
+                proc_md = f"# Auditor Workpaper Test Procedures: {criterion}\n\n"
+                proc_md += "Notice: Information Produced by the Entity (AU-C 500). Independent auditor evaluation required.\n\n"
+                for c in scoped_controls:
+                    proc_md += f"## Control {c.get('code')}: {c.get('title')}\n"
+                    proc_md += f"**Procedure Steps:**\n{c.get('test_procedure', 'Standard inspection steps')}\n\n"
+                    proc_md += f"**Evidence Requirement:**\n{c.get('evidence_requirement', 'Standard artifact')}\n\n---\n\n"
+                zf.writestr('TEST_PROCEDURES.md', proc_md)
 
-            # 3. Monitoring Results
-            zf.writestr('MONITORING_RESULTS.json', json.dumps([
-                {"control_id": c.get('id'), "code": c.get('code'), "status": "pass", "evaluated_at": now()}
-                for c in scoped_controls
-            ], indent=2))
+                # 3. Monitoring Results
+                zf.writestr('MONITORING_RESULTS.json', json.dumps([
+                    {"control_id": c.get('id'), "code": c.get('code'), "status": "pass", "evaluated_at": now()}
+                    for c in scoped_controls
+                ], indent=2))
 
-            # 4. Manifest CSV & Evidence Files
-            csv_buf = io.StringIO()
-            csv_writer = csv.writer(csv_buf)
-            csv_writer.writerow([
-                "file_name", "sha256", "captured_at", "captured_by",
-                "source_system", "collection_method", "period_start", "period_end", "control_id"
-            ])
+                # 4. Manifest CSV & Evidence Files
+                csv_buf = io.StringIO()
+                csv_writer = csv.writer(csv_buf)
+                csv_writer.writerow([
+                    "file_name", "sha256", "captured_at", "captured_by",
+                    "source_system", "collection_method", "period_start", "period_end", "control_id"
+                ])
 
-            for c in scoped_controls:
-                for eid in c.get('evidence_ids', []):
-                    e = ev_map.get(eid)
-                    if not e:
-                        continue
-                    fname = e.get('filename', f"{eid}.bin")
-                    pc = e.get('period_covered') or {}
-                    csv_writer.writerow([
-                        sanitize_csv_field(fname),
-                        e.get('sha256', ''),
-                        e.get('captured_at', ''),
-                        sanitize_csv_field(e.get('captured_by', '')),
-                        sanitize_csv_field(e.get('source_system', '')),
-                        e.get('collection_method', ''),
-                        pc.get('start', ''),
-                        pc.get('end', ''),
-                        c.get('id', '')
-                    ])
-                    # Add actual file if on disk
-                    internal_name = f"{eid}_{fname}"
-                    file_path = store.uploads / internal_name
-                    if file_path.is_file():
-                        zf.writestr(f"evidence/{fname}", file_path.read_bytes())
+                for c in scoped_controls:
+                    for eid in c.get('evidence_ids', []):
+                        e = ev_map.get(eid)
+                        if not e:
+                            continue
+                        fname = e.get('filename', f"{eid}.bin")
+                        pc = e.get('period_covered') or {}
+                        csv_writer.writerow([
+                            sanitize_csv_field(fname),
+                            e.get('sha256', ''),
+                            e.get('captured_at', ''),
+                            sanitize_csv_field(e.get('captured_by', '')),
+                            sanitize_csv_field(e.get('source_system', '')),
+                            e.get('collection_method', ''),
+                            pc.get('start', ''),
+                            pc.get('end', ''),
+                            c.get('id', '')
+                        ])
+                        # Add actual file if on disk
+                        internal_name = f"{eid}_{fname}"
+                        file_path = store.uploads / internal_name
+                        if file_path.is_file():
+                            zf.writestr(f"evidence/{fname}", file_path.read_bytes())
 
-            zf.writestr('MANIFEST.csv', csv_buf.getvalue())
+                zf.writestr('MANIFEST.csv', csv_buf.getvalue())
 
-        with store.transaction() as db:
             append_audit_log(
                 db,
                 actor=actor,

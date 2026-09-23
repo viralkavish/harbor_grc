@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import {
   FileText, CheckCircle2, History, Download, Plus, Trash2, Edit,
-  Send, UserCheck, BookOpen, AlertTriangle, Clock, Layers, Sparkles
+  Send, UserCheck, BookOpen, AlertTriangle, Clock, Layers, Sparkles, X
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { PageHeader, Badge, Loading, ErrorState, EmptyState, formatDate, Note } from '../components/ui';
@@ -32,6 +32,10 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
   const [versions, setVersions] = useState<any[]>([]);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [approverName, setApproverName] = useState('');
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [submitAuthor, setSubmitAuthor] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   // Template Library Modal
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -45,6 +49,9 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
   const [acceptName, setAcceptName] = useState('');
   const [acceptEmail, setAcceptEmail] = useState('');
   const [acceptStats, setAcceptStats] = useState<any | null>(null);
+  const [currencyStats, setCurrencyStats] = useState<any | null>(null);
+  const [reviewDue, setReviewDue] = useState<any | null>(null);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
 
   // JEV Policy-to-Control Modal
   const [showJevModal, setShowJevModal] = useState(false);
@@ -67,20 +74,27 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
+
+    api.get('/policies/review_due')
+      .then(setReviewDue)
+      .catch(() => setReviewDue(null));
   };
 
   useEffect(() => {
     loadPolicies();
   }, [selectedId]);
 
-  // Load acceptances stats when selected policy changes
+  // Load acceptances & currency stats when selected policy changes
   useEffect(() => {
     if (selectedPolicy) {
       api.get(`/policies/${selectedPolicy.id}/acceptances`)
         .then(setAcceptStats)
         .catch(() => setAcceptStats(null));
+      api.get(`/policies/${selectedPolicy.id}/acceptance_status`)
+        .then(setCurrencyStats)
+        .catch(() => setCurrencyStats(null));
     }
-  }, [selectedPolicy?.id]);
+  }, [selectedPolicy?.id, selectedPolicy?.version, selectedPolicy?.approved_version]);
 
   const handleSelect = (policy: DataRecord) => {
     setSelectedPolicy(policy);
@@ -187,10 +201,10 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
     if (!selectedPolicy || !approverName.trim()) return;
     setSaving(true);
     try {
-      const res = await api.post(`/policies/${selectedPolicy.id}/publish`, {
+      const res = await api.post(`/policies/${selectedPolicy.id}/approve`, {
         approver: approverName.trim()
       });
-      notify(`Policy published by ${approverName}`);
+      notify(`Policy approved & published by ${approverName}`);
       setShowPublishModal(false);
       setSelectedPolicy(res);
       loadPolicies();
@@ -198,6 +212,60 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
       notify(err.message, 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPolicy || !submitAuthor.trim()) return;
+    setSaving(true);
+    try {
+      const res = await api.post(`/policies/${selectedPolicy.id}/submit`, {
+        author: submitAuthor.trim()
+      });
+      notify(`Policy submitted for review by ${submitAuthor}`);
+      setShowSubmitModal(false);
+      setSelectedPolicy(res);
+      loadPolicies();
+    } catch (err: any) {
+      notify(err.message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPolicy || !rejectionReason.trim()) return;
+    setSaving(true);
+    try {
+      const res = await api.post(`/policies/${selectedPolicy.id}/reject`, {
+        reason: rejectionReason.trim(),
+        rejector: approverName.trim() || 'Reviewer'
+      });
+      notify('Policy rejected and returned to draft');
+      setShowRejectModal(false);
+      setRejectionReason('');
+      setSelectedPolicy(res);
+      loadPolicies();
+    } catch (err: any) {
+      notify(err.message, 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRestoreVersion = async (v: number) => {
+    if (!selectedPolicy) return;
+    if (!confirm(`Restore Version ${v}? This will create a new draft version copying Version ${v}'s content.`)) return;
+    try {
+      const res = await api.post(`/policies/${selectedPolicy.id}/restore/${v}`, {});
+      notify(`Restored Version ${v} as Version ${res.version} (draft)`);
+      setShowVersions(false);
+      setSelectedPolicy(res);
+      loadPolicies();
+    } catch (err: any) {
+      notify(err.message, 'error');
     }
   };
 
@@ -274,6 +342,49 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
         </button>
       </PageHeader>
 
+      {/* Annual Policy Review SLA Alerts */}
+      {reviewDue?.overdue_count > 0 && (
+        <div style={{
+          background: 'rgba(255, 107, 107, 0.12)',
+          border: '1px solid var(--danger)',
+          borderRadius: '8px',
+          padding: '12px 18px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          fontSize: '13px',
+          color: 'var(--ink)'
+        }}>
+          <AlertTriangle size={18} style={{ color: 'var(--danger)', flexShrink: 0 }} />
+          <div>
+            <strong>Annual Policy Review SLA Alert: </strong>
+            <span>{reviewDue.overdue_count} {reviewDue.overdue_count === 1 ? 'policy is' : 'policies are'} overdue for mandatory annual executive review ({reviewDue.overdue.map((p: any) => p.title).join(', ')}). In-scope SOC 2 governance requires annual re-approval.</span>
+          </div>
+        </div>
+      )}
+
+      {reviewDue?.due_soon_count > 0 && (!reviewDue?.overdue_count || reviewDue.overdue_count === 0) && (
+        <div style={{
+          background: 'rgba(243, 194, 120, 0.12)',
+          border: '1px solid var(--warning)',
+          borderRadius: '8px',
+          padding: '12px 18px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          fontSize: '13px',
+          color: 'var(--ink)'
+        }}>
+          <Clock size={18} style={{ color: 'var(--warning)', flexShrink: 0 }} />
+          <div>
+            <strong>Upcoming Policy Reviews: </strong>
+            <span>{reviewDue.due_soon_count} {reviewDue.due_soon_count === 1 ? 'policy requires' : 'policies require'} review within the next 30 days.</span>
+          </div>
+        </div>
+      )}
+
       <div className="view-split-grid" style={{ display: 'grid', gap: '20px', alignItems: 'start' }}>
         {/* Left Column: Policies List */}
         <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -347,9 +458,24 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
                   <button className="button button-sm" onClick={() => setShowAcceptModal(true)}>
                     <UserCheck size={13} /> Record Acceptance
                   </button>
-                  {selectedPolicy.status !== 'published' && (
-                    <button className="button button-sm button-primary" onClick={() => setShowPublishModal(true)}>
-                      <CheckCircle2 size={13} /> Publish
+                  {selectedPolicy.status === 'draft' && (
+                    <button className="button button-sm button-primary" onClick={() => setShowSubmitModal(true)}>
+                      <Send size={13} /> Submit for Review
+                    </button>
+                  )}
+                  {selectedPolicy.status === 'in_review' && (
+                    <>
+                      <button className="button button-sm" style={{ background: 'var(--danger)', color: '#fff' }} onClick={() => setShowRejectModal(true)}>
+                        <X size={13} /> Reject
+                      </button>
+                      <button className="button button-sm button-primary" onClick={() => setShowPublishModal(true)}>
+                        <CheckCircle2 size={13} /> Approve & Publish
+                      </button>
+                    </>
+                  )}
+                  {selectedPolicy.status === 'published' && (
+                    <button className="button button-sm" onClick={() => setShowPublishModal(true)} title="Re-approve to reset annual review SLA">
+                      <CheckCircle2 size={13} /> Re-approve
                     </button>
                   )}
                   <button className="icon-button" onClick={handleDelete} title="Delete policy" style={{ color: 'var(--danger)' }}>
@@ -357,6 +483,34 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
                   </button>
                 </div>
               </div>
+
+              {/* Review SLA / Status Banners */}
+              {selectedPolicy.status === 'in_review' && (
+                <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid #38bdf8', borderRadius: '6px', padding: '10px 14px', marginBottom: '14px', fontSize: '12px', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Clock size={15} style={{ color: '#38bdf8' }} />
+                  <span>
+                    <strong>In Review:</strong> Submitted by {selectedPolicy.submitted_by || 'Author'} on {formatDate(selectedPolicy.submitted_at)}. Independent executive review and approval required before publishing.
+                  </span>
+                </div>
+              )}
+
+              {selectedPolicy.status === 'draft' && selectedPolicy.rejection_reason && (
+                <div style={{ background: 'rgba(255, 107, 107, 0.12)', border: '1px solid var(--danger)', borderRadius: '6px', padding: '10px 14px', marginBottom: '14px', fontSize: '12px', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AlertTriangle size={15} style={{ color: 'var(--danger)' }} />
+                  <span>
+                    <strong>Revision Rejected:</strong> {selectedPolicy.rejection_reason}. Please address feedback and re-submit for review.
+                  </span>
+                </div>
+              )}
+
+              {selectedPolicy.review_date && new Date(selectedPolicy.review_date) < new Date() && (
+                <div style={{ background: 'rgba(255, 107, 107, 0.12)', border: '1px solid var(--danger)', borderRadius: '6px', padding: '10px 14px', marginBottom: '14px', fontSize: '12px', color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AlertTriangle size={15} style={{ color: 'var(--danger)' }} />
+                  <span>
+                    <strong>Annual Executive Review Overdue:</strong> Review deadline was {formatDate(selectedPolicy.review_date)}. Executive re-approval resets the 365-day SLA.
+                  </span>
+                </div>
+              )}
 
               {/* Policy Metadata & Acceptance Progress Bar */}
               <div className="view-grid-four" style={{ display: 'grid', gap: '12px', background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 16px', marginBottom: '16px', fontSize: '12px' }}>
@@ -382,23 +536,46 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
 
               {/* Workforce Policy Acceptance Scorecard */}
               {acceptStats && (
-                <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 16px', marginBottom: '20px' }}>
-                  <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ink)' }}>
-                      Workforce Acceptance Compliance ({acceptStats.compliant_employees} / {acceptStats.total_employees} Personnel)
-                    </span>
-                    <strong style={{ fontSize: '13px', color: 'var(--accent)' }}>
-                      {acceptStats.compliance_percent}%
-                    </strong>
+                <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '6px', padding: '14px 18px', marginBottom: '20px' }}>
+                  <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <div>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>
+                        Workforce Attestation & Currency
+                      </span>
+                      {selectedPolicy.approved_version && (
+                        <span style={{ fontSize: '11px', color: 'var(--muted)', marginLeft: '8px' }}>
+                          (Latest Approved: v{selectedPolicy.approved_version})
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <strong style={{ fontSize: '13px', color: 'var(--accent)' }}>
+                        {currencyStats ? `${currencyStats.currency_percentage}% Current` : `${acceptStats.compliance_percent}% Compliant`}
+                      </strong>
+                      {currencyStats?.personnel?.length > 0 && (
+                        <button
+                          className="button button-sm"
+                          style={{ padding: '2px 8px', fontSize: '11px' }}
+                          onClick={() => setShowCurrencyModal(true)}
+                        >
+                          View Roster
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ height: '6px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ width: `${acceptStats.compliance_percent}%`, height: '100%', background: 'var(--accent)', borderRadius: '3px' }} />
+                  <div style={{ height: '6px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
+                    <div style={{ width: `${currencyStats ? currencyStats.currency_percentage : acceptStats.compliance_percent}%`, height: '100%', background: 'var(--accent)', borderRadius: '3px' }} />
                   </div>
-                  {acceptStats.items?.length > 0 && (
-                    <small style={{ display: 'block', marginTop: '6px', color: 'var(--muted)', fontSize: '11px' }}>
-                      Latest acceptance: {acceptStats.items[0].person_name} ({acceptStats.items[0].person_email}) on {formatDate(acceptStats.items[0].accepted_at)}
-                    </small>
-                  )}
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '11px', color: 'var(--muted)' }}>
+                    <span>Active Personnel: {currencyStats?.total_active_personnel ?? acceptStats.total_employees}</span>
+                    <span style={{ color: 'var(--success)' }}>Current: {currencyStats?.current_count ?? acceptStats.compliant_employees}</span>
+                    {currencyStats?.stale_count > 0 && (
+                      <span style={{ color: 'var(--warning)', fontWeight: 600 }}>Stale (prior versions): {currencyStats.stale_count}</span>
+                    )}
+                    {currencyStats?.missing_count > 0 && (
+                      <span style={{ color: 'var(--danger)', fontWeight: 600 }}>Missing: {currencyStats.missing_count}</span>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -568,30 +745,87 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
         </Dialog>
       )}
 
-      {/* Publish Modal */}
-      {showPublishModal && (
-        <Dialog title="Publish Policy" subtitle="Publishing creates an approved baseline and sets status to Published." onClose={() => setShowPublishModal(false)}>
-          <form onSubmit={handlePublish}>
-            <div className="dialog-body">
+      {/* Submit for Review Modal */}
+      {showSubmitModal && selectedPolicy && (
+        <Dialog title="Submit Policy for Executive Review" subtitle="Transitions draft policy to In Review for independent approval." onClose={() => setShowSubmitModal(false)}>
+          <form onSubmit={handleSubmitReview}>
+            <div className="dialog-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div className="field">
-                <span>Authorized Approver Name *</span>
+                <span>Author / Submitter Identity *</span>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Jane Doe, Chief Information Security Officer"
+                  placeholder="e.g. security-lead@tofrom.com"
+                  value={submitAuthor}
+                  onChange={e => setSubmitAuthor(e.target.value)}
+                  autoFocus
+                />
+                <small style={{ color: 'var(--muted)', fontSize: '11px', marginTop: '4px' }}>
+                  Segregation of Duties: The designated approver must be an independent identity different from this submitter.
+                </small>
+              </div>
+            </div>
+            <div className="dialog-footer">
+              <button type="button" className="button" onClick={() => setShowSubmitModal(false)}>Cancel</button>
+              <button type="submit" className="button button-primary" disabled={saving || !submitAuthor.trim()}>
+                {saving ? 'Submitting…' : 'Submit for Review'}
+              </button>
+            </div>
+          </form>
+        </Dialog>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && selectedPolicy && (
+        <Dialog title="Reject Policy Revision" subtitle="Returns policy to Draft with recorded audit feedback." onClose={() => setShowRejectModal(false)}>
+          <form onSubmit={handleReject}>
+            <div className="dialog-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className="field">
+                <span>Rejection Reason & Required Remediation *</span>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="Explain why this revision cannot be approved and what changes the author must make..."
+                  value={rejectionReason}
+                  onChange={e => setRejectionReason(e.target.value)}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="dialog-footer">
+              <button type="button" className="button" onClick={() => setShowRejectModal(false)}>Cancel</button>
+              <button type="submit" className="button" style={{ background: 'var(--danger)', color: '#fff' }} disabled={saving || !rejectionReason.trim()}>
+                {saving ? 'Rejecting…' : 'Confirm Rejection'}
+              </button>
+            </div>
+          </form>
+        </Dialog>
+      )}
+
+      {/* Publish / Approve Modal */}
+      {showPublishModal && (
+        <Dialog title="Approve & Publish Policy" subtitle="Approving creates an immutable baseline and sets review date to +365 days." onClose={() => setShowPublishModal(false)}>
+          <form onSubmit={handlePublish}>
+            <div className="dialog-body">
+              <div className="field">
+                <span>Authorized Executive Approver *</span>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. ciso@tofrom.com"
                   value={approverName}
                   onChange={e => setApproverName(e.target.value)}
                   autoFocus
                 />
+                <small style={{ color: 'var(--muted)', fontSize: '11px', marginTop: '4px' }}>
+                  Segregation of Duties: The approver cannot be the author/submitter ({selectedPolicy?.submitted_by || selectedPolicy?.owner || 'Author'}).
+                </small>
               </div>
-              <p style={{ marginTop: '12px', fontSize: '12px', color: 'var(--muted)' }}>
-                By publishing, this policy version becomes available for questionnaire suggestion matching and Trust Center disclosure.
-              </p>
             </div>
             <div className="dialog-footer">
               <button type="button" className="button" onClick={() => setShowPublishModal(false)}>Cancel</button>
               <button type="submit" className="button button-primary" disabled={saving || !approverName.trim()}>
-                {saving ? 'Publishing…' : 'Confirm Publication'}
+                {saving ? 'Approving…' : 'Approve & Publish'}
               </button>
             </div>
           </form>
@@ -607,12 +841,26 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {versions.map((v: any) => (
-                  <div key={v.version} style={{ border: '1px solid var(--border)', borderRadius: '6px', padding: '12px 16px' }}>
-                    <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <strong>Version {v.version}</strong>
-                      <span className="mono" style={{ fontSize: '12px', color: 'var(--muted)' }}>{formatDate(v.created_at)}</span>
+                  <div key={v.version} style={{ border: '1px solid var(--border)', borderRadius: '6px', padding: '14px 18px', background: 'var(--surface-raised)' }}>
+                    <div className="view-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <div>
+                        <strong style={{ fontSize: '14px', color: 'var(--ink)' }}>Version {v.version}</strong>
+                        {v.approved_by && (
+                          <span className="badge badge-success" style={{ marginLeft: '8px', fontSize: '10px' }}>
+                            Approved by {v.approved_by}
+                          </span>
+                        )}
+                        <span className="mono" style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '8px' }}>{formatDate(v.created_at)}</span>
+                      </div>
+                      <button
+                        className="button button-sm"
+                        style={{ padding: '2px 8px', fontSize: '11px' }}
+                        onClick={() => handleRestoreVersion(v.version)}
+                      >
+                        Restore as Draft
+                      </button>
                     </div>
-                    <pre style={{ maxHeight: '140px', overflowY: 'auto', background: 'var(--surface-raised)', padding: '8px', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
+                    <pre style={{ maxHeight: '140px', overflowY: 'auto', background: 'var(--card-bg)', border: '1px solid var(--border)', padding: '10px', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
                       {v.content}
                     </pre>
                   </div>
@@ -622,6 +870,52 @@ export function PoliciesView({ schema, notify, onNavigate, selectedId }: { schem
           </div>
           <div className="dialog-footer">
             <button type="button" className="button" onClick={() => setShowVersions(false)}>Close</button>
+          </div>
+        </Dialog>
+      )}
+
+      {/* Workforce Attestation Roster Modal */}
+      {showCurrencyModal && currencyStats && (
+        <Dialog title={`Workforce Attestation Currency: ${selectedPolicy?.title}`} wide onClose={() => setShowCurrencyModal(false)}>
+          <div className="dialog-body">
+            <p style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '14px' }}>
+              Tracking workforce signature currency for approved Version {currencyStats.approved_version || selectedPolicy?.version}. Prior version signatures are flagged stale.
+            </p>
+            <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+              <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--muted)' }}>
+                    <th style={{ padding: '6px 8px' }}>Name</th>
+                    <th style={{ padding: '6px 8px' }}>Email</th>
+                    <th style={{ padding: '6px 8px' }}>Status</th>
+                    <th style={{ padding: '6px 8px' }}>Signed Version</th>
+                    <th style={{ padding: '6px 8px' }}>Attested At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currencyStats.personnel?.map((p: any) => (
+                    <tr key={p.person_id || p.email} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '8px', fontWeight: 500 }}>{p.name}</td>
+                      <td style={{ padding: '8px', color: 'var(--muted)' }}>{p.email}</td>
+                      <td style={{ padding: '8px' }}>
+                        <span className={`badge badge-${p.status === 'current' ? 'success' : p.status === 'stale' ? 'warning' : 'danger'}`}>
+                          {p.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px', fontFamily: 'var(--font-mono)' }}>
+                        {p.accepted_version ? `v${p.accepted_version}` : '—'}
+                      </td>
+                      <td style={{ padding: '8px', color: 'var(--muted)' }}>
+                        {p.accepted_at ? formatDate(p.accepted_at) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="dialog-footer">
+            <button type="button" className="button" onClick={() => setShowCurrencyModal(false)}>Close</button>
           </div>
         </Dialog>
       )}

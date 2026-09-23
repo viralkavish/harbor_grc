@@ -50,9 +50,16 @@ RESOURCES = {
         field('catalog_vintage',default='TSC-2017-2022'),
         field('version','number',1,readonly=True),
         field('is_latest','boolean',True,readonly=True)]),
-    'policies': resource('Policies','Policy','draft,in_review,published,archived',[
+    'policies': resource('Policies','Policy','draft,in_review,published,archived,rejected',[
         field('content','textarea',max_length=500000),ref('control_ids','controls',True),*dates('review_date'),
-        field('version','number',1,readonly=True),field('approved_at',default=None,readonly=True),field('approver')]),
+        field('version','number',1,readonly=True),
+        field('approved_version','number',default=None,readonly=True),
+        field('approved_at',default=None,readonly=True),
+        field('approved_by',default='',readonly=True),
+        field('approver',default=''),
+        field('submitted_by',default='',readonly=True),
+        field('submitted_at',default=None,readonly=True),
+        field('rejection_reason',default='',readonly=True)]),
     'vendors': resource('Vendors','Vendor','intake,in_review,approved,rejected,offboarded',[
         field('website','url'),field('category'),choice('tier','low,medium,high,critical','medium'),field('data_access','textarea'),
         field('contact_email','email'),*dates('renewal_date','review_date'),*SCORES,field('assessment_notes','textarea'),ref('evidence_ids','evidence',True)]),

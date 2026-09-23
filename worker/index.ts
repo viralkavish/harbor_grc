@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.13.0"
+        version: "0.14.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -1374,6 +1374,54 @@ export default {
       // GET /api/policies/:id/versions
       if (apiPath.startsWith("/policies/") && apiPath.endsWith("/versions")) {
         return new Response(JSON.stringify({ versions: [] }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/policies/review_due") {
+        return new Response(JSON.stringify({ overdue: [], due_soon: [], overdue_count: 0, due_soon_count: 0 }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath.startsWith("/policies/") && apiPath.endsWith("/acceptance_status")) {
+        const polId = apiPath.split("/")[2];
+        return new Response(JSON.stringify({
+          policy_id: polId,
+          approved_version: 1,
+          total_active_personnel: 0,
+          current_count: 0,
+          stale_count: 0,
+          missing_count: 0,
+          currency_percentage: 100.0,
+          personnel: []
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath.startsWith("/policies/") && apiPath.endsWith("/acceptances")) {
+        const polId = apiPath.split("/")[2];
+        return new Response(JSON.stringify({
+          policy_id: polId,
+          version: 1,
+          items: [],
+          total: 0,
+          compliant_employees: 0,
+          total_employees: 0,
+          compliance_percent: 100.0
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath.startsWith("/policies/") && apiPath.endsWith("/approved")) {
+        const polId = apiPath.split("/")[2];
+        return new Response(JSON.stringify({
+          policy_id: polId,
+          title: "Approved Policy",
+          version: 1,
+          content: "# Approved Security Policy",
+          status: "approved"
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (request.method === "POST" && apiPath.startsWith("/policies/")) {
+        if (apiPath.endsWith("/submit") || apiPath.endsWith("/approve") || apiPath.endsWith("/reject") || apiPath.includes("/restore/")) {
+          return new Response(JSON.stringify({ status: "success", version: 1 }), { headers: { "Content-Type": "application/json" } });
+        }
       }
 
       if (apiPath === "/controls/catalog_meta") {

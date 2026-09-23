@@ -1,6 +1,7 @@
 """Loopback trust boundary and CSRF; deliberately not account authentication."""
 import secrets
 import time
+from fastapi import HTTPException
 from starlette.responses import JSONResponse
 
 HOSTS = {'127.0.0.1', 'localhost', '[::1]'}
@@ -16,7 +17,16 @@ def install_security(app, store):
             return JSONResponse({'detail':'Host is not permitted'}, status_code=400)
         if (request.headers.get('origin') is not None and request.headers['origin'] not in ORIGINS) or request.headers.get('sec-fetch-site') == 'cross-site':
             return JSONResponse({'detail':'Cross-site requests are not permitted'}, status_code=403)
-        if request.method not in {'GET', 'HEAD', 'OPTIONS'} and not request.url.path.startswith('/api/mcp'):
+
+        from .auditor_auth import resolve_auditor_identity, enforce_auditor_permissions
+        try:
+            auditor_identity = resolve_auditor_identity(request, store)
+            request.state.auditor_identity = auditor_identity
+            enforce_auditor_permissions(request, auditor_identity)
+        except HTTPException as exc:
+            return JSONResponse({'detail': exc.detail}, status_code=exc.status_code)
+
+        if not auditor_identity and request.method not in {'GET', 'HEAD', 'OPTIONS'} and not request.url.path.startswith('/api/mcp'):
             sid, token = request.cookies.get(COOKIE, ''), request.headers.get('x-csrf-token', '')
             with store.transaction() as db:
                 session = db.execute('SELECT token,expires FROM sessions WHERE id=?', (sid,)).fetchone()

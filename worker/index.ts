@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.12.0"
+        version: "0.13.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -1484,6 +1484,62 @@ export default {
         return new Response(JSON.stringify([
           { seq: 1, id: "genesis-01", actor: "system", action: "genesis", prev_hash: "GENESIS" }
         ]), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/engagements") {
+        return new Response(JSON.stringify({
+          items: [
+            {
+              id: "eng-soc2-2027",
+              framework: "SOC 2 Type II",
+              audit_period_start: "2027-01-01",
+              audit_period_end: "2027-12-31",
+              criteria_in_scope: ["Security", "Availability", "Confidentiality"],
+              auditor_name: "External Auditor, CPA",
+              auditor_email: "auditor@cpafirm.com",
+              status: "active",
+              early_access: true,
+              downloads_enabled: true
+            }
+          ],
+          total: 1
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/auditor/me") {
+        return new Response(JSON.stringify({
+          role: "auditor",
+          engagement_id: "eng-soc2-2027",
+          framework: "SOC 2 Type II",
+          auditor_name: "External Auditor, CPA",
+          auditor_email: "auditor@cpafirm.com",
+          downloads_enabled: true,
+          criteria_in_scope: ["Security", "Availability", "Confidentiality"],
+          audit_period_start: "2027-01-01",
+          audit_period_end: "2027-12-31"
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/auditor/pbc") {
+        return new Response(JSON.stringify({
+          items: [
+            { id: "pbc-01", title: "Management Assertion & Organization Chart", status: "accepted", criterion_refs: ["CC1.1"], staged_evidence_ids: ["ev-01"] },
+            { id: "pbc-06", title: "MFA Enforcement Across IdP & Cloud Consoles", status: "staged", criterion_refs: ["CC6.1"], staged_evidence_ids: ["ev-06"] }
+          ],
+          total: 2
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/auditor/rfis") {
+        return new Response(JSON.stringify({ items: [], total: 0 }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/auditor/testing_support") {
+        return new Response(JSON.stringify({
+          independence_statement: "Independence Principle (AU-C 500): tofromGRC is the entity's system of record, not the auditor.",
+          total_controls: 61,
+          items: []
+        }), { headers: { "Content-Type": "application/json" } });
       }
 
       // Generic Resource Read & List Endpoints

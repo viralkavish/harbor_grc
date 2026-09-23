@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.12.0';
+export const APP_VERSION = '0.13.0';
 export const RELEASE_DATE = '2026-09-23';
 
 export interface ChangelogEntry {
@@ -11,9 +11,23 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.12.0',
+    version: '0.13.0',
     date: '2026-09-23',
     badge: 'Latest',
+    title: "R4: Auditor Portal, Engagement Scoping, RFI & Workpapers",
+    highlights: [
+      "Engagement lifecycle management (/api/engagements) with SHA-256 hashed bearer tokens and observation window gating",
+      "Auditor identity model with default-deny write protection (403 on staff mutations, explicit RFI/PBC allowlist)",
+      "Full RFI communication workflow with auditable message threads and evidence attachments",
+      "21-item Provided By Client (PBC) lifecycle with staff staging and auditor acceptance determinations",
+      "Testing support view enforcing AU-C 500 entity independence, workpaper ZIP exports, and immutable pre-audit snapshots",
+      "Dedicated standalone Auditor Portal UI (AuditorPortalView.tsx) with in-memory token authentication"
+    ]
+  },
+  {
+    version: '0.12.0',
+    date: '2026-09-23',
+    badge: 'Stable',
     title: "R3: Tamper-Evident Hash-Chained Audit Log",
     highlights: [
       "Append-only cryptographic audit log with SHA-256 hash chaining (prev_hash, entry_hash) rooted at GENESIS",

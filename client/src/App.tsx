@@ -24,6 +24,7 @@ import { PeopleView } from './views/PeopleView';
 import { SettingsView } from './views/SettingsView';
 import { FrameworksView } from './views/FrameworksView';
 import { ActivityView } from './views/ActivityView';
+import { AuditorPortalView } from './views/AuditorPortalView';
 import { ChangelogModal } from './components/ChangelogModal';
 import { APP_VERSION } from './version';
 import type { Schema, Bootstrap } from './lib/types';
@@ -64,6 +65,10 @@ export function App() {
   useEffect(() => {
     const handleHash = () => {
       const hash = window.location.hash.replace(/^#\/?/, '');
+      if (window.location.pathname.startsWith('/auditor') || hash.startsWith('auditor')) {
+        setActiveView('auditor');
+        return;
+      }
       if (hash) {
         const parts = hash.split('/');
         setActiveView(parts[0]);
@@ -190,6 +195,10 @@ export function App() {
 
           {activeView === 'activity' && (
             <ActivityView notify={notify} onNavigate={navigate} />
+          )}
+
+          {activeView === 'auditor' && (
+            <AuditorPortalView notify={notify} />
           )}
 
           {/* Compliance Frameworks & Harmonization */}

@@ -24,6 +24,19 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.13.0] - 2026-09-23
+
+### Added
+- **R4: Auditor Portal, Engagement Scoping, RFI & Workpapers**
+- Engagement lifecycle management (/api/engagements) with SHA-256 hashed bearer tokens and observation window gating
+- Auditor identity model with default-deny write protection (403 on staff mutations, explicit RFI/PBC allowlist)
+- Full RFI communication workflow with auditable message threads and evidence attachments
+- 21-item Provided By Client (PBC) lifecycle with staff staging and auditor acceptance determinations
+- Testing support view enforcing AU-C 500 entity independence, workpaper ZIP exports, and immutable pre-audit snapshots
+- Dedicated standalone Auditor Portal UI (AuditorPortalView.tsx) with in-memory token authentication
+
+---
+
 ## [0.12.0] - 2026-09-23
 
 ### Added

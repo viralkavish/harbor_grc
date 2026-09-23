@@ -131,6 +131,39 @@ class Store:
                     jev_verdict TEXT, jev_confidence REAL, jev_score REAL, jev_decided_by TEXT,
                     jev_summary TEXT, human_verdict TEXT, graded_at TEXT,
                     FOREIGN KEY(pilot_id) REFERENCES pilots(id) ON DELETE CASCADE);
+                CREATE TABLE IF NOT EXISTS engagements (
+                    id TEXT PRIMARY KEY, framework TEXT NOT NULL DEFAULT 'SOC 2',
+                    audit_period_start TEXT NOT NULL DEFAULT '2027-01-01',
+                    audit_period_end TEXT NOT NULL DEFAULT '2027-12-31',
+                    criteria_in_scope TEXT NOT NULL, auditor_name TEXT NOT NULL,
+                    auditor_email TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active',
+                    early_access INTEGER NOT NULL DEFAULT 0, downloads_enabled INTEGER NOT NULL DEFAULT 1,
+                    access_token_hash TEXT, token_expires_at TEXT, revoked INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS rfis (
+                    id TEXT PRIMARY KEY, engagement_id TEXT NOT NULL, author TEXT NOT NULL,
+                    author_role TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL,
+                    criterion_refs TEXT NOT NULL DEFAULT '[]', control_refs TEXT NOT NULL DEFAULT '[]',
+                    status TEXT NOT NULL DEFAULT 'open', created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+                    FOREIGN KEY(engagement_id) REFERENCES engagements(id) ON DELETE CASCADE);
+                CREATE TABLE IF NOT EXISTS rfi_messages (
+                    id TEXT PRIMARY KEY, rfi_id TEXT NOT NULL, author TEXT NOT NULL,
+                    author_role TEXT NOT NULL, message TEXT NOT NULL,
+                    evidence_ids TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL,
+                    FOREIGN KEY(rfi_id) REFERENCES rfis(id) ON DELETE CASCADE);
+                CREATE TABLE IF NOT EXISTS pbc_requests (
+                    id TEXT NOT NULL, engagement_id TEXT NOT NULL,
+                    criterion_refs TEXT NOT NULL DEFAULT '[]', control_refs TEXT NOT NULL DEFAULT '[]',
+                    title TEXT NOT NULL, description TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'requested',
+                    staged_evidence_ids TEXT NOT NULL DEFAULT '[]', notes TEXT DEFAULT '',
+                    history TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+                    PRIMARY KEY(id, engagement_id),
+                    FOREIGN KEY(engagement_id) REFERENCES engagements(id) ON DELETE CASCADE);
+                CREATE TABLE IF NOT EXISTS audit_snapshots (
+                    id TEXT PRIMARY KEY, engagement_id TEXT NOT NULL, created_at TEXT NOT NULL,
+                    audit_log_head_hash TEXT NOT NULL, manifest TEXT NOT NULL,
+                    content_bytes BLOB NOT NULL, sha256 TEXT NOT NULL,
+                    FOREIGN KEY(engagement_id) REFERENCES engagements(id) ON DELETE CASCADE);
             ''')
             from .audit_ops import ensure_audit_log_initialized
             ensure_audit_log_initialized(db)

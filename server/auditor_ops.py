@@ -836,6 +836,28 @@ def auditor_router(store: Store):
 
                 zf.writestr('MANIFEST.csv', csv_buf.getvalue())
 
+                # 5. Risk Register Export (R8)
+                risk_rows = db.execute("SELECT id, title, category, owner, likelihood, impact, inherent_score, residual_likelihood, residual_impact, residual_score, treatment, mitigating_control_refs, status FROM risks").fetchall()
+                risk_csv_buf = io.StringIO()
+                risk_writer = csv.writer(risk_csv_buf)
+                risk_writer.writerow([
+                    "id", "title", "category", "owner", "likelihood", "impact",
+                    "inherent_score", "residual_likelihood", "residual_impact", "residual_score",
+                    "treatment", "mitigating_controls", "status"
+                ])
+                for rk in risk_rows:
+                    risk_writer.writerow([
+                        rk[0], sanitize_csv_field(rk[1]), rk[2], sanitize_csv_field(rk[3]),
+                        rk[4] or '', rk[5] or '', rk[6] or '', rk[7] or '', rk[8] or '', rk[9] or '',
+                        rk[10], sanitize_csv_field(rk[11]), rk[12]
+                    ])
+                zf.writestr('RISK_REGISTER.csv', risk_csv_buf.getvalue())
+
+                # 5b. Latest Risk Assessment Minutes (PBC GV.1)
+                latest_minutes_row = db.execute("SELECT value FROM settings WHERE key LIKE 'assessment_minutes:%' ORDER BY rowid DESC LIMIT 1").fetchone()
+                if latest_minutes_row:
+                    zf.writestr('LATEST_ASSESSMENT_MINUTES.json', latest_minutes_row[0])
+
             append_audit_log(
                 db,
                 actor=actor,

@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.16.0"
+        version: "0.17.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -1373,6 +1373,20 @@ export default {
 
       if (apiPath.startsWith("/sampling")) {
         return new Response(JSON.stringify({ items: [], total: 0 }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/risks/matrix") {
+        return new Response(JSON.stringify({
+          likelihood_scale: [],
+          impact_scale: [],
+          appetite_threshold: 12,
+          inherent_grid: {},
+          residual_grid: {}
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/risks/reviews_due") {
+        return new Response(JSON.stringify({ overdue: [], due_soon: [], overdue_count: 0, due_soon_count: 0 }), { headers: { "Content-Type": "application/json" } });
       }
 
       if (apiPath.startsWith("/monitoring")) {

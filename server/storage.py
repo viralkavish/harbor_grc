@@ -183,6 +183,19 @@ class Store:
                     sample_items TEXT NOT NULL, generated_at TEXT NOT NULL,
                     generated_by TEXT NOT NULL, criterion_refs TEXT NOT NULL,
                     control_refs TEXT NOT NULL, notes TEXT);
+                CREATE TABLE IF NOT EXISTS risks (
+                    id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL DEFAULT '',
+                    category TEXT NOT NULL DEFAULT 'operational', owner TEXT NOT NULL DEFAULT '',
+                    due_date TEXT, tags TEXT NOT NULL DEFAULT '[]',
+                    likelihood INTEGER, impact INTEGER, inherent_score INTEGER,
+                    mitigating_control_refs TEXT NOT NULL DEFAULT '[]',
+                    treatment TEXT NOT NULL DEFAULT 'mitigate', treatment_plan TEXT NOT NULL DEFAULT '',
+                    residual_likelihood INTEGER, residual_impact INTEGER, residual_score INTEGER,
+                    risk_appetite TEXT NOT NULL DEFAULT 'within', status TEXT NOT NULL DEFAULT 'open',
+                    review_cadence_days INTEGER NOT NULL DEFAULT 90, last_reviewed_at TEXT, next_review_at TEXT,
+                    accepted_by TEXT, accepted_at TEXT, acceptance_expiry TEXT, acceptance_rationale TEXT,
+                    review_history TEXT NOT NULL DEFAULT '[]', reopen_reason TEXT, closure_rationale TEXT,
+                    created_at TEXT NOT NULL, updated_at TEXT NOT NULL, closed_at TEXT);
             ''')
             from .audit_ops import ensure_audit_log_initialized
             ensure_audit_log_initialized(db)
@@ -194,6 +207,39 @@ class Store:
                 db.execute("ALTER TABLE policy_versions ADD COLUMN approved_at TEXT")
             except Exception:
                 pass
+
+            # Migrate existing generic risks into dedicated risks table (K10)
+            try:
+                for row in db.execute("SELECT body FROM records WHERE resource='risks'").fetchall():
+                    r = json.loads(row[0])
+                    rid = r.get('id')
+                    if rid and not db.execute("SELECT id FROM risks WHERE id=?", (rid,)).fetchone():
+                        l = r.get('likelihood')
+                        i = r.get('impact')
+                        rl = r.get('residual_likelihood')
+                        ri = r.get('residual_impact')
+                        inh = (l * i) if (isinstance(l, int) and isinstance(i, int)) else None
+                        res_sc = (rl * ri) if (isinstance(rl, int) and isinstance(ri, int)) else None
+                        ctrl_refs = r.get('control_ids') or r.get('mitigating_control_refs') or []
+                        db.execute(
+                            """INSERT OR IGNORE INTO risks
+                               (id, title, description, category, owner, likelihood, impact, inherent_score,
+                                mitigating_control_refs, treatment, treatment_plan, residual_likelihood, residual_impact,
+                                residual_score, status, review_cadence_days, created_at, updated_at)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                            (
+                                rid, r.get('title', 'Migrated Risk'), r.get('description', ''),
+                                r.get('category', 'operational'), r.get('owner', ''),
+                                l, i, inh, json.dumps(ctrl_refs),
+                                r.get('treatment', 'mitigate'), r.get('treatment_plan', ''),
+                                rl, ri, res_sc, r.get('status', 'open'),
+                                r.get('review_cadence_days', 90),
+                                r.get('created_at', now()), r.get('updated_at', now())
+                            )
+                        )
+            except Exception:
+                pass
+
             db.execute('INSERT OR IGNORE INTO settings VALUES (?,?)', ('workspace', json.dumps(WORKSPACE)))
         self.path.chmod(0o600)
 

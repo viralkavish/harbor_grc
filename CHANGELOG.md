@@ -24,6 +24,19 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.17.0] - 2026-09-23
+
+### Added
+- **R8: Risk Register Hardening, 5x5 Heatmap & Assessment Minutes**
+- Created dedicated risks table (/api/risks) with server-side inherent and residual scoring
+- Implemented interactive 5x5 likelihood and impact risk matrix heatmap (/api/risks/matrix)
+- Enforced R1 control linkage and blocked closure of unmitigated risks (HTTP 422)
+- Added Segregation of Duties on risk acceptance with required expiration dates and automated re-opening
+- Built review cadence engine with immutable append-only review history and review SLA tracking
+- Generated formal Executive Risk Assessment Minutes (PBC GV.1 deliverable) with workpaper exports
+
+---
+
 ## [0.16.0] - 2026-09-23
 
 ### Added

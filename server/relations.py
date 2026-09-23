@@ -8,6 +8,8 @@ from .storage import Store, now
 def validate_links(db, resource, item):
     for f in RESOURCES[resource]['fields']:
         if 'ref' in f:
+            if f['key'] not in item:
+                continue
             values = item[f['key']] if f['type']=='multiselect' else [item[f['key']]]
             for value in values:
                 if value is not None and not Store.get(db, f['ref'],value):
@@ -17,8 +19,12 @@ def validate_links(db, resource, item):
         if bool(kind) != bool(record_id) or (kind and (kind not in RESOURCES or not Store.get(db,kind,record_id))):
             fail('related_type/related_id','must be empty together or reference an existing record')
     if resource=='risks':
-        item['inherent_score'] = item['likelihood'] * item['impact']
-        item['residual_score'] = item['residual_likelihood'] * item['residual_impact']
+        l = item.get('likelihood')
+        imp = item.get('impact')
+        rl = item.get('residual_likelihood')
+        ri = item.get('residual_impact')
+        item['inherent_score'] = (l * imp) if (isinstance(l, int) and isinstance(imp, int)) else None
+        item['residual_score'] = (rl * ri) if (isinstance(rl, int) and isinstance(ri, int)) else None
 
 
 def write_linked(db, resource, item):
@@ -68,6 +74,18 @@ def clean_links(db, resource, record_id):
                         changed = True
             if changed:
                 write_linked(db,kind,row)
+    if resource=='controls':
+        try:
+            for rk in db.execute("SELECT id, mitigating_control_refs FROM risks").fetchall():
+                try:
+                    c_refs = json.loads(rk[1]) if rk[1] else []
+                except Exception:
+                    c_refs = []
+                if record_id in c_refs:
+                    c_refs = [c for c in c_refs if c != record_id]
+                    db.execute("UPDATE risks SET mitigating_control_refs=? WHERE id=?", (json.dumps(c_refs), rk[0]))
+        except Exception:
+            pass
     if resource in {'policies','evidence'}:
         workspace = Store.workspace(db)
         key = 'trust_policy_ids' if resource=='policies' else 'trust_evidence_ids'

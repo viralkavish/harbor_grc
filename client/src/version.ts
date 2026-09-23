@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.16.0';
+export const APP_VERSION = '0.17.0';
 export const RELEASE_DATE = '2026-09-23';
 
 export interface ChangelogEntry {
@@ -11,9 +11,23 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.16.0',
+    version: '0.17.0',
     date: '2026-09-23',
     badge: 'Latest',
+    title: "R8: Risk Register Hardening, 5x5 Heatmap & Assessment Minutes",
+    highlights: [
+      "Created dedicated risks table (/api/risks) with server-side inherent and residual scoring",
+      "Implemented interactive 5x5 likelihood and impact risk matrix heatmap (/api/risks/matrix)",
+      "Enforced R1 control linkage and blocked closure of unmitigated risks (HTTP 422)",
+      "Added Segregation of Duties on risk acceptance with required expiration dates and automated re-opening",
+      "Built review cadence engine with immutable append-only review history and review SLA tracking",
+      "Generated formal Executive Risk Assessment Minutes (PBC GV.1 deliverable) with workpaper exports"
+    ]
+  },
+  {
+    version: '0.16.0',
+    date: '2026-09-23',
+    badge: 'Stable',
     title: "R7: Sampling-Engine Upgrade, Seeded Reproducibility & Zero Fabricated Attributes",
     highlights: [
       "Built persistent samples table (/api/sampling) with mandatory AU-C 530 completeness statements",

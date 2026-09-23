@@ -9,6 +9,7 @@ import {
   Settings as SettingsIcon,
   Target,
   Activity,
+  AlertTriangle,
 } from 'lucide-react';
 import { api } from './lib/api';
 import { Loading, ErrorState, Toast, Badge } from './components/ui';
@@ -27,6 +28,7 @@ import { FrameworksView } from './views/FrameworksView';
 import { ActivityView } from './views/ActivityView';
 import { AuditorPortalView } from './views/AuditorPortalView';
 import { MonitoringView } from './views/MonitoringView';
+import { RiskRegisterView } from './views/RiskRegisterView';
 import { ChangelogModal } from './components/ChangelogModal';
 import { APP_VERSION } from './version';
 import type { Schema, Bootstrap } from './lib/types';
@@ -137,6 +139,7 @@ export function App() {
         { id: 'pilot', label: 'Blind Pilot', icon: Target },
         { id: 'policies', label: 'Policies', icon: FileText, countKey: 'policies' },
         { id: 'evidence', label: 'Evidence', icon: FileCheck, countKey: 'evidence' },
+        { id: 'risks', label: 'Risk Register', icon: AlertTriangle, countKey: 'risks' },
         { id: 'frameworks', label: 'Frameworks & Controls', icon: Shield, countKey: 'controls' },
         { id: 'people', label: 'People', icon: Users, countKey: 'people' },
         { id: 'settings', label: 'Settings', icon: SettingsIcon }
@@ -190,6 +193,10 @@ export function App() {
 
           {activeView === 'evidence' && (
             <EvidenceView schema={schema} notify={notify} onNavigate={navigate} />
+          )}
+
+          {activeView === 'risks' && (
+            <RiskRegisterView notify={notify} onNavigate={navigate} />
           )}
 
           {activeView === 'people' && (

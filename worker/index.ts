@@ -400,7 +400,7 @@ export default {
     if (url.pathname === "/api/health") {
       return new Response(JSON.stringify({
         status: "ok",
-        version: "0.9.1"
+        version: "0.10.0"
       }), {
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
       });
@@ -1373,6 +1373,24 @@ export default {
 
       // GET /api/policies/:id/versions
       if (apiPath.startsWith("/policies/") && apiPath.endsWith("/versions")) {
+        return new Response(JSON.stringify({ versions: [] }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath === "/controls/catalog_meta") {
+        return new Response(JSON.stringify({
+          vintage: "TSC-2017-2022",
+          total_criteria: 61,
+          breakdown: {
+            common_criteria: 33,
+            availability: 3,
+            confidentiality: 2,
+            processing_integrity: 5,
+            privacy: 18
+          }
+        }), { headers: { "Content-Type": "application/json" } });
+      }
+
+      if (apiPath.startsWith("/controls/") && apiPath.includes("/versions")) {
         return new Response(JSON.stringify({ versions: [] }), { headers: { "Content-Type": "application/json" } });
       }
 

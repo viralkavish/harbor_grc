@@ -8,11 +8,13 @@ import json
 from uuid import uuid4
 try:
     from .storage import now, Store
+    from .tsc_catalog import TSC_CATALOG, CATALOG_VINTAGE
 except ImportError:
     import sys
     from pathlib import Path
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from server.storage import now, Store
+    from server.tsc_catalog import TSC_CATALOG, CATALOG_VINTAGE
 
 FRAMEWORKS_SEED = [
     {
@@ -593,8 +595,8 @@ CONTROLS_SEED = [
 def seed_starter_data(store: Store) -> None:
     """Idempotently seed frameworks, controls, and policies if not already present."""
     with store.transaction() as db:
-        seeded = db.execute("SELECT value FROM settings WHERE key='starter_seeded'").fetchone()
-        if seeded and seeded[0] == 'true':
+        vintage_seeded = db.execute("SELECT value FROM settings WHERE key='tsc_catalog_vintage'").fetchone()
+        if vintage_seeded and vintage_seeded[0] == CATALOG_VINTAGE:
             return
 
         # Seed frameworks
@@ -625,16 +627,66 @@ def seed_starter_data(store: Store) -> None:
                     (pol['id'], json.dumps(record))
                 )
 
-        # Seed controls & link to policies
-        for ctl in CONTROLS_SEED:
+        # Migration: Map any legacy ctl-* references to new TF-* controls
+        LEGACY_MAP = {
+            "ctl-01": "TF-CC6.1-01",
+            "ctl-02": "TF-CC6.2-01",
+            "ctl-03": "TF-CC6.3-01",
+            "ctl-04": "TF-CC6.4-01",
+            "ctl-05": "TF-CC6.6-01",
+            "ctl-06": "TF-CC6.7-01",
+            "ctl-07": "TF-CC7.1-01",
+            "ctl-08": "TF-CC7.2-01",
+            "ctl-09": "TF-CC7.3-01",
+            "ctl-10": "TF-CC8.1-01",
+            "ctl-11": "TF-CC9.1-01",
+            "ctl-12": "TF-A1.2-01",
+            "ctl-13": "TF-A1.3-01",
+            "ctl-14": "TF-C1.1-01",
+            "ctl-15": "TF-C1.2-01",
+            "ctl-16": "TF-PI1.1-01",
+            "ctl-17": "TF-P1.1-01",
+            "ctl-18": "TF-P4.1-01",
+        }
+        # Migrate evidence linked to legacy controls
+        for old_id, new_id in LEGACY_MAP.items():
+            old_ctl = Store.get(db, 'controls', old_id)
+            if old_ctl and old_ctl.get('evidence_ids'):
+                new_ctl = Store.get(db, 'controls', new_id)
+                if new_ctl:
+                    new_ctl['evidence_ids'] = list(dict.fromkeys(new_ctl.get('evidence_ids', []) + old_ctl['evidence_ids']))
+                    db.execute("UPDATE records SET body=? WHERE resource='controls' AND id=?", (json.dumps(new_ctl), new_id))
+            # Remove legacy control
+            db.execute("DELETE FROM records WHERE resource='controls' AND id=?", (old_id,))
+
+        POLICY_CONTROL_MAP = {
+            "pol-sec-01": ["TF-CC1.1-01", "TF-CC1.2-01", "TF-CC5.1-01", "TF-CC5.3-01", "TF-CC6.1-01"],
+            "pol-acc-02": ["TF-CC6.1-01", "TF-CC6.2-01", "TF-CC6.3-01", "TF-CC6.4-01"],
+            "pol-chg-03": ["TF-CC8.1-01"],
+            "pol-inc-04": ["TF-CC7.3-01", "TF-CC7.4-01", "TF-CC7.5-01"],
+            "pol-bck-05": ["TF-A1.2-01", "TF-A1.3-01"],
+            "pol-dta-06": ["TF-C1.1-01", "TF-C1.2-01", "TF-P1.1-01", "TF-P4.1-01"],
+            "pol-ven-07": ["TF-CC9.1-01", "TF-CC9.2-01"],
+            "pol-vul-08": ["TF-CC7.1-01", "TF-CC6.8-01"],
+            "pol-hr-09": ["TF-CC1.4-01", "TF-CC1.5-01"],
+            "pol-log-10": ["TF-CC7.2-01", "TF-PI1.5-01"]
+        }
+
+        # Seed authoritative 61-criteria TSC Control Catalog (TSC-2017-2022)
+        for ctl in TSC_CATALOG:
             existing = Store.get(db, 'controls', ctl['id'])
+            linked_pols = [pid for pid, cids in POLICY_CONTROL_MAP.items() if ctl['id'] in cids]
             if not existing:
                 record = {
                     **ctl,
-                    "description": ctl.get("implementation", ""),
-                    "owner": "",
+                    "catalog_vintage": CATALOG_VINTAGE,
+                    "version": 1,
+                    "is_latest": True,
+                    "status": ctl.get("status", "not_started"),
+                    "policy_ids": linked_pols,
+                    "evidence_ids": [],
                     "due_date": None,
-                    "tags": ["starter-control"],
+                    "tags": ["tsc-2017-2022", "soc2"],
                     "created_at": now(),
                     "updated_at": now()
                 }
@@ -642,12 +694,25 @@ def seed_starter_data(store: Store) -> None:
                     "INSERT INTO records (resource, id, body) VALUES ('controls', ?, ?)",
                     (ctl['id'], json.dumps(record))
                 )
+            else:
+                # Update schema fields if vintage or mapping is missing
+                updated = False
+                for k in ("catalog_vintage", "points_of_focus", "criterion_mapping", "test_procedure", "evidence_requirement", "type", "nature"):
+                    if k not in existing or not existing[k]:
+                        existing[k] = ctl.get(k)
+                        updated = True
+                if updated:
+                    existing['updated_at'] = now()
+                    db.execute(
+                        "UPDATE records SET body=? WHERE resource='controls' AND id=?",
+                        (json.dumps(existing), ctl['id'])
+                    )
 
-        # Now link controls to policies on policies records
+        # Link controls to policies on policies records
         for pol in POLICIES_SEED:
             policy_row = Store.get(db, 'policies', pol['id'])
             if policy_row:
-                linked_controls = [c['id'] for c in CONTROLS_SEED if pol['id'] in c['policy_ids']]
+                linked_controls = POLICY_CONTROL_MAP.get(pol['id'], [])
                 policy_row['control_ids'] = list(dict.fromkeys(policy_row.get('control_ids', []) + linked_controls))
                 db.execute(
                     "UPDATE records SET body=? WHERE resource='policies' AND id=?",
@@ -655,6 +720,7 @@ def seed_starter_data(store: Store) -> None:
                 )
 
         db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('starter_seeded', 'true')")
+        db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('tsc_catalog_vintage', ?)", (CATALOG_VINTAGE,))
 
 
 if __name__ == "__main__":

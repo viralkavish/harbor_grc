@@ -53,6 +53,16 @@ def update_record(db, resource, record_id, payload):
             item['approved_at'] = None
             item['approver'] = ''
 
+    if resource == 'controls':
+        defn_fields = ['title', 'description', 'points_of_focus', 'test_procedure', 'evidence_requirement', 'type', 'nature', 'frequency', 'owner', 'criterion_mapping']
+        if any(previous.get(k) != item.get(k) for k in defn_fields if k in payload):
+            prev_version = previous.get('version', 1)
+            db.execute(
+                "INSERT INTO control_versions (id, control_id, version, body, created_at) VALUES (?, ?, ?, ?, ?)",
+                (str(uuid4()), record_id, prev_version, json.dumps(previous), now())
+            )
+            item['version'] = prev_version + 1
+
     item['updated_at'] = now()
     save(db, resource, item)
     sync_links(db, resource, item, previous)
@@ -65,6 +75,8 @@ def delete_record(db, resource, record_id):
     clean_links(db, resource, record_id)
     if resource == 'policies':
         db.execute('DELETE FROM policy_versions WHERE policy_id=?', (record_id,))
+    elif resource == 'controls':
+        db.execute('DELETE FROM control_versions WHERE control_id=?', (record_id,))
     db.execute('DELETE FROM records WHERE resource=? AND id=?', (resource, record_id))
     log(db, 'delete', resource, item)
     return item

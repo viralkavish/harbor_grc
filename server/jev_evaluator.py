@@ -304,6 +304,32 @@ CONTROL_RUBRICS: dict[str, dict[str, Any]] = {
 }
 
 
+BASE_CODE_ALIASES: dict[str, str] = {
+    "CC6.1": "CC6.1-MFA",
+    "CC6.2": "CC6.2-PROV",
+    "CC6.3": "CC6.3-REVOKE",
+    "CC6.4": "CC6.4-RECERT",
+    "CC6.6": "CC6.6-ENC-TRANSIT",
+    "CC6.7": "CC6.7-ENC-REST",
+    "CC7.1": "CC7.1-VULN-SCAN",
+    "CC7.2": "CC7.2-LOG-MON",
+    "CC7.3": "CC7.3-INCIDENT",
+    "CC8.1": "CC8.1-CHANGE-PR",
+    "CC9.1": "CC9.1-VENDOR-ASSESS",
+    "A1.2": "A1.2-BACKUP-DAILY",
+    "A1.3": "A1.3-DR-TEST",
+    "C1.1": "C1.1-DATA-CLASSIFY",
+    "C1.2": "C1.2-DATA-DISPOSAL",
+    "PI1.1": "PI1.1-INPUT-VALIDATE",
+    "P1.1": "P1.1-PRIVACY-NOTICE",
+    "P4.1": "P4.1-RETENTION-POLICY",
+}
+
+for _base, _legacy in list(BASE_CODE_ALIASES.items()):
+    if _legacy in CONTROL_RUBRICS and _base not in CONTROL_RUBRICS:
+        CONTROL_RUBRICS[_base] = CONTROL_RUBRICS[_legacy]
+
+
 def extract_matched_excerpts(content: str, pattern: str, max_chars: int = 240) -> list[str]:
     """Finds natural sentences or clauses in the policy matching the given regex pattern."""
     matches = []
@@ -388,6 +414,10 @@ def evaluate_policy_against_controls(
                         "conflict": f"Explicitly contradicts, exempts, or bypasses {title}."
                     }
                 }
+                legacy_code = BASE_CODE_ALIASES.get(code)
+                if legacy_code and legacy_code != code:
+                    legacy_safe = f"q_{legacy_code.replace('.', '_').replace('-', '_')}"
+                    ts_questions[legacy_safe] = ts_questions[safe_key]
                 if len(ts_questions) >= 16:
                     break
 
@@ -403,9 +433,11 @@ def evaluate_policy_against_controls(
         category = c.get('category', 'Control')
         rubric = CONTROL_RUBRICS.get(code)
         safe_key = f"q_{code.replace('.', '_').replace('-', '_')}"
+        legacy_code = BASE_CODE_ALIASES.get(code)
+        legacy_safe = f"q_{legacy_code.replace('.', '_').replace('-', '_')}" if legacy_code else None
 
         # 0. Live TypeSafe JEV System One Choice answer evaluation (B1, B3)
-        ts_ans = typesafe_answers.get(safe_key)
+        ts_ans = typesafe_answers.get(safe_key) or (typesafe_answers.get(legacy_safe) if legacy_safe else None)
         if ts_ans and isinstance(ts_ans, dict) and ts_ans.get("choice"):
             choice = str(ts_ans.get("choice")).lower().strip()
             raw_conf = ts_ans.get("confidence")

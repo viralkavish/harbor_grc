@@ -2,11 +2,12 @@
 from copy import deepcopy
 from datetime import date
 import re
+from typing import Any
 from urllib.parse import urlsplit
 from fastapi import HTTPException
 
 
-def field(key, type='text', default='', **extras):
+def field(key, type='text', default: Any = '', **extras):
     return dict(key=key, label=key.replace('_', ' ').capitalize(), type=type, default=default, **extras)
 
 
@@ -40,7 +41,15 @@ RESOURCES = {
         field('code'),field('version'),field('source_url','url'),field('guidance','textarea')]),
     'controls': resource('Controls','Control','not_started,in_progress,implemented,not_applicable',[
         field('code'),field('category'),ref('framework_ids','frameworks',True),field('implementation','textarea'),
-        ref('evidence_ids','evidence',True),ref('policy_ids','policies',True),choice('frequency','annual,quarterly,monthly,continuous')]),
+        ref('evidence_ids','evidence',True),ref('policy_ids','policies',True),
+        choice('frequency','annual,quarterly,monthly,weekly,daily,continuous','annual'),
+        field('criterion_mapping'),field('points_of_focus','json',[]),
+        field('test_procedure','textarea'),field('evidence_requirement','textarea'),
+        choice('type','preventive,detective,corrective','preventive'),
+        choice('nature','manual,automated','manual'),
+        field('catalog_vintage',default='TSC-2017-2022'),
+        field('version','number',1,readonly=True),
+        field('is_latest','boolean',True,readonly=True)]),
     'policies': resource('Policies','Policy','draft,in_review,published,archived',[
         field('content','textarea',max_length=500000),ref('control_ids','controls',True),*dates('review_date'),
         field('version','number',1,readonly=True),field('approved_at',default=None,readonly=True),field('approver')]),

@@ -44,8 +44,8 @@ def test_jev_evaluate_policy_content(client: TestClient):
     assert 'results' in data
     assert data['summary']['compatible_count'] >= 3
 
-    # Check CC6.1-MFA
-    mfa = next((r for r in data['results'] if r['control_code'] == 'CC6.1-MFA'), None)
+    # Check CC6.1
+    mfa = next((r for r in data['results'] if r['control_code'] in ('CC6.1-MFA', 'CC6.1')), None)
     assert mfa is not None
     assert mfa['verdict'] == 'compatible'
     assert mfa['score'] >= 0.90
@@ -54,13 +54,13 @@ def test_jev_evaluate_policy_content(client: TestClient):
     assert mfa['confidence'] is None
     assert mfa['heuristic_score'] >= 0.90
 
-    # Check CC6.4-RECERT
-    recert = next((r for r in data['results'] if r['control_code'] == 'CC6.4-RECERT'), None)
+    # Check CC6.4
+    recert = next((r for r in data['results'] if r['control_code'] in ('CC6.4-RECERT', 'CC6.4')), None)
     assert recert is not None
     assert recert['verdict'] == 'compatible'
 
-    # Check CC6.3-REVOKE
-    revoke = next((r for r in data['results'] if r['control_code'] == 'CC6.3-REVOKE'), None)
+    # Check CC6.3
+    revoke = next((r for r in data['results'] if r['control_code'] in ('CC6.3-REVOKE', 'CC6.3')), None)
     assert revoke is not None
     assert revoke['verdict'] == 'compatible'
 
@@ -72,7 +72,7 @@ def test_jev_conflict_detection(client: TestClient):
     })
     assert res.status_code == 200
     data = res.json()
-    mfa = next((r for r in data['results'] if r['control_code'] == 'CC6.1-MFA'), None)
+    mfa = next((r for r in data['results'] if r['control_code'] in ('CC6.1-MFA', 'CC6.1')), None)
     assert mfa is not None
     assert mfa['verdict'] == 'conflict'
     assert len(mfa['gaps']) > 0
@@ -89,7 +89,7 @@ def test_jev_gap_detection(client: TestClient):
     })
     assert res.status_code == 200
     data = res.json()
-    recert = next((r for r in data['results'] if r['control_code'] == 'CC6.4-RECERT'), None)
+    recert = next((r for r in data['results'] if r['control_code'] in ('CC6.4-RECERT', 'CC6.4')), None)
     assert recert is not None
     assert recert['verdict'] == 'gap'
     assert len(recert['recommendations']) > 0
@@ -192,8 +192,8 @@ def test_live_typesafe_answers_drive_verdicts_and_model_pinned(client: TestClien
     assert len(captured_requests) > 0
     assert captured_requests[0]["model"] == "jev-1.13.0"
 
-    # Assert CC6.1-MFA verdict was driven by live answer (gap, NOT compatible)
-    mfa = next((r for r in data['results'] if r['control_code'] == 'CC6.1-MFA'), None)
+    # Assert CC6.1 verdict was driven by live answer (gap, NOT compatible)
+    mfa = next((r for r in data['results'] if r['control_code'] in ('CC6.1-MFA', 'CC6.1')), None)
     assert mfa is not None
     assert mfa['verdict'] == 'gap'
     assert mfa['decided_by'] == 'jev-live'

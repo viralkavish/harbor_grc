@@ -121,6 +121,9 @@ class Store:
                     id TEXT PRIMARY KEY, name TEXT NOT NULL, status TEXT NOT NULL,
                     created_at TEXT NOT NULL, policy_ids TEXT NOT NULL, sample_size INTEGER NOT NULL,
                     seed INTEGER, revealed_at TEXT, results TEXT);
+                CREATE TABLE IF NOT EXISTS control_versions (
+                    id TEXT PRIMARY KEY, control_id TEXT NOT NULL, version INTEGER NOT NULL,
+                    body TEXT NOT NULL, created_at TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS pilot_pairs (
                     id TEXT PRIMARY KEY, pilot_id TEXT NOT NULL, policy_id TEXT NOT NULL,
                     policy_title TEXT NOT NULL, policy_snippet TEXT NOT NULL, control_id TEXT NOT NULL,

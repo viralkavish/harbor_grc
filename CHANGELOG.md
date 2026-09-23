@@ -24,6 +24,18 @@ All version increments must be kept synchronized across:
 
 ---
 
+## [0.10.0] - 2026-09-23
+
+### Added
+- **R1: Versioned TSC-2017-2022 Control Catalog & Immutable Versioning**
+- Authoritative 61-criteria Trust Services Criteria catalog (CC1.1-CC9.2, A1.1-A1.3, C1.1-C1.2, PI1.1-PI1.5, P1.1-P8.1)
+- Immutable control definition versioning table (control_versions) with auditor observation window inspection
+- Auditor-style test procedures, 2022 revised points of focus, and evidence requirements across all 61 criteria
+- Catalog metadata endpoint (/api/controls/catalog_meta) and historical version endpoints (/api/controls/:id/versions)
+- Enhanced UI displaying catalog vintage badge, control specifications, and audit observation window version history
+
+---
+
 ## [0.9.1] - 2026-09-23
 
 ### Fixed

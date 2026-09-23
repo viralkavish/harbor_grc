@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.9.1';
+export const APP_VERSION = '0.10.0';
 export const RELEASE_DATE = '2026-09-23';
 
 export interface ChangelogEntry {
@@ -11,9 +11,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: '0.9.1',
+    version: '0.10.0',
     date: '2026-09-23',
     badge: 'Latest',
+    title: "R1: Versioned TSC-2017-2022 Control Catalog & Immutable Versioning",
+    highlights: [
+      "Authoritative 61-criteria Trust Services Criteria catalog (CC1.1-CC9.2, A1.1-A1.3, C1.1-C1.2, PI1.1-PI1.5, P1.1-P8.1)",
+      "Immutable control definition versioning table (control_versions) with auditor observation window inspection",
+      "Auditor-style test procedures, 2022 revised points of focus, and evidence requirements across all 61 criteria",
+      "Catalog metadata endpoint (/api/controls/catalog_meta) and historical version endpoints (/api/controls/:id/versions)",
+      "Enhanced UI displaying catalog vintage badge, control specifications, and audit observation window version history"
+    ]
+  },
+  {
+    version: '0.9.1',
+    date: '2026-09-23',
+    badge: 'Stable',
     title: "Brand identity alignment: tofromGRC",
     highlights: [
       "Rebrand brand mark and headers to tofromGRC across all interfaces",
